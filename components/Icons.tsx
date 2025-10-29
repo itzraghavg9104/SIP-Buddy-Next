@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 type IconProps = {
@@ -16,6 +15,21 @@ export const IconSparkles: React.FC<IconProps> = (props) => (
         <path d="M12 6a6 6 0 0 0 -6 6" />
     </svg>
 );
+
+export const IconCalculator: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-calculator" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <rect x="4" y="3" width="16" height="18" rx="2" />
+        <rect x="8" y="7" width="8" height="3" rx="1" />
+        <line x1="8" y1="14" x2="8" y2="14.01" />
+        <line x1="12" y1="14" x2="12" y2="14.01" />
+        <line x1="16" y1="14" x2="16" y2="14.01" />
+        <line x1="8" y1="17" x2="8" y2="17.01" />
+        <line x1="12" y1="17" x2="12" y2="17.01" />
+        <line x1="16" y1="17" x2="16" y2="17.01" />
+    </svg>
+);
+
 
 export const IconTarget: React.FC<IconProps> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-target" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -163,4 +177,3 @@ export const learnIcons: { [key: string]: React.FC<IconProps> } = {
   ),
   'Important Disclaimer': (props) => <IconInfoCircle {...props} />,
 };
-

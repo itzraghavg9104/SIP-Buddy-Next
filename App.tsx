@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import Header from './components/Header';
 import Planner from './pages/Planner';
 import Dashboard from './pages/Dashboard';
 import Learn from './pages/Learn';
+import Calculator from './pages/Calculator';
 import Chatbot from './components/Chatbot';
 import { Page, InvestmentPlan, UserProfile } from './types';
 
@@ -42,6 +42,8 @@ const App: React.FC = () => {
         return investmentPlan && userProfile ? <Dashboard investmentPlan={investmentPlan} userProfile={userProfile} onCreateNewPlan={handleCreateNewPlan} /> : <Planner onPlanGenerated={handlePlanGenerated} />;
       case Page.Learn:
         return <Learn />;
+      case Page.Calculator:
+        return <Calculator />;
       default:
         return <Planner onPlanGenerated={handlePlanGenerated} />;
     }

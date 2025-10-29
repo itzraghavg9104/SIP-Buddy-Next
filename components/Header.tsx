@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Page } from '../types';
-import { IconChartPie, IconLayoutDashboard, IconBook, IconSparkles, IconTarget } from './Icons';
+import { IconChartPie, IconLayoutDashboard, IconBook, IconSparkles, IconTarget, IconCalculator } from './Icons';
 
 
 interface HeaderProps {
@@ -35,7 +34,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
              <IconTarget className="h-8 w-8 text-blue-600" />
-            <span className="ml-2 text-xl font-bold text-slate-800">SIP Planner</span>
+            <span className="ml-2 text-xl font-bold text-slate-800">SIP Buddy</span>
           </div>
           <div className="hidden md:flex items-center space-x-2 bg-slate-100 p-1 rounded-lg">
             <NavItem
@@ -56,13 +55,19 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               isActive={currentPage === Page.Learn}
               onClick={() => navigateTo(Page.Learn)}
             />
+            <NavItem
+              label="Calculator"
+              icon={<IconCalculator className="h-5 w-5" />}
+              isActive={currentPage === Page.Calculator}
+              onClick={() => navigateTo(Page.Calculator)}
+            />
           </div>
           <div className="flex items-center md:hidden">
             {/* Mobile menu could be implemented here */}
           </div>
         </div>
       </div>
-       <div className="md:hidden flex items-center justify-center space-x-2 bg-slate-100 p-2 m-2 rounded-lg">
+       <div className="md:hidden flex items-center justify-center space-x-1 bg-slate-100 p-1 m-2 rounded-lg text-xs">
             <NavItem
               label="Planner"
               icon={<IconChartPie className="h-5 w-5" />}
@@ -80,6 +85,12 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               icon={<IconBook className="h-5 w-5" />}
               isActive={currentPage === Page.Learn}
               onClick={() => navigateTo(Page.Learn)}
+            />
+            <NavItem
+              label="Calculator"
+              icon={<IconCalculator className="h-5 w-5" />}
+              isActive={currentPage === Page.Calculator}
+              onClick={() => navigateTo(Page.Calculator)}
             />
         </div>
     </header>

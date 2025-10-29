@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { InvestmentPlan, UserProfile, Fund } from '../types';
 import {
@@ -36,7 +35,7 @@ const CustomTooltip = ({ active, payload }: any) => {
     return null;
   };
   
-const formatCurrency = (value: number) => `₹${new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(value)}`;
+const formatCurrency = (value: number) => `₹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(value)}`;
 const formatLargeCurrency = (value: number) => {
     if (value >= 100000) {
         return `₹${(value / 100000).toFixed(1)}L`;
@@ -60,6 +59,8 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
   
   const [selectedFundsForComparison, setSelectedFundsForComparison] = useState<Fund[]>([]);
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
+  const [projectionView, setProjectionView] = useState<'chart' | 'table'>('chart');
+
 
   const toggleSection = (category: string) => {
     setOpenSections(prev => ({ ...prev, [category]: !prev[category] }));
@@ -141,24 +142,64 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
       
        {/* Investment Growth Projections */}
        <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
-            <h2 className="text-xl font-semibold mb-2">Investment Growth Projections</h2>
-            <p className="text-slate-500 mb-6">See how your {formatCurrency(investmentPlan.monthlySip)} monthly SIP could grow under different market scenarios.</p>
-            <div className="h-96">
-                <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={investmentPlan.growthProjections} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="year" tick={{ fontSize: 12 }} label={{ value: 'Years', position: 'insideBottom', offset: -10 }} />
-                        <YAxis tickFormatter={formatLargeCurrency} tick={{ fontSize: 12 }} />
-                        <RechartsTooltip formatter={(value: number) => formatCurrency(value)} />
-                        <Legend wrapperStyle={{fontSize: "12px", paddingTop: "20px"}}/>
-                        <Line type="monotone" dataKey="amountInvested" name="Amount Invested" stroke="#8884d8" strokeDasharray="5 5" dot={false} />
-                        <Line type="monotone" dataKey="conservative" name="Conservative (Bear Market)" stroke="#ef4444" dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                        <Line type="monotone" dataKey="expected" name="Expected (Normal Market)" stroke="#3b82f6" dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                        <Line type="monotone" dataKey="aggressive" name="Aggressive (Bull Market)" stroke="#10b981" dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                        <Line type="monotone" dataKey="recovery" name="Recovery (Crash Scenario)" stroke="#f97316" dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                    </LineChart>
-                </ResponsiveContainer>
+            <div className="flex justify-between items-center mb-2">
+                <div>
+                    <h2 className="text-xl font-semibold">Investment Growth Projections</h2>
+                    <p className="text-slate-500 mt-1">See how your {formatCurrency(investmentPlan.monthlySip)} monthly SIP could grow.</p>
+                </div>
+                <div className="flex items-center bg-slate-100 p-1 rounded-lg">
+                    <button onClick={() => setProjectionView('chart')} className={`px-3 py-1 text-sm font-semibold rounded-md ${projectionView === 'chart' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Chart</button>
+                    <button onClick={() => setProjectionView('table')} className={`px-3 py-1 text-sm font-semibold rounded-md ${projectionView === 'table' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Table</button>
+                </div>
             </div>
+            {projectionView === 'chart' ? (
+                <div className="h-96 mt-6">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={investmentPlan.growthProjections} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="year" tick={{ fontSize: 12 }} label={{ value: 'Years', position: 'insideBottom', offset: -10 }} />
+                            <YAxis tickFormatter={formatLargeCurrency} tick={{ fontSize: 12 }} />
+                            <RechartsTooltip formatter={(value: number) => formatCurrency(value)} />
+                            <Legend wrapperStyle={{fontSize: "12px", paddingTop: "20px"}}/>
+                            <Line type="monotone" dataKey="amountInvested" name="Amount Invested" stroke="#8884d8" strokeDasharray="5 5" dot={false} />
+                            <Line type="monotone" dataKey="conservative" name="Conservative" stroke="#ef4444" dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                            <Line type="monotone" dataKey="expected" name="Expected" stroke="#3b82f6" dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                            <Line type="monotone" dataKey="aggressive" name="Aggressive" stroke="#10b981" dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                            <Line type="monotone" dataKey="recovery" name="Recovery" stroke="#f97316" dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                            <Line type="monotone" dataKey="crash" name="Crash" stroke="#6b7280" dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            ) : (
+                <div className="mt-6 overflow-x-auto">
+                    <table className="w-full text-sm text-left text-slate-500">
+                        <thead className="text-xs text-slate-700 uppercase bg-slate-50">
+                            <tr>
+                                <th scope="col" className="px-6 py-3">Year</th>
+                                <th scope="col" className="px-6 py-3">Invested</th>
+                                <th scope="col" className="px-6 py-3 text-red-600">Conservative</th>
+                                <th scope="col" className="px-6 py-3 text-blue-600">Expected</th>
+                                <th scope="col" className="px-6 py-3 text-green-600">Aggressive</th>
+                                <th scope="col" className="px-6 py-3 text-orange-600">Recovery</th>
+                                <th scope="col" className="px-6 py-3 text-gray-600">Crash</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {investmentPlan.growthProjections.map(item => (
+                                <tr key={item.year} className="bg-white border-b hover:bg-slate-50">
+                                    <th scope="row" className="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">{item.year}</th>
+                                    <td className="px-6 py-4">{formatCurrency(item.amountInvested)}</td>
+                                    <td className="px-6 py-4">{formatCurrency(item.conservative)}</td>
+                                    <td className="px-6 py-4">{formatCurrency(item.expected)}</td>
+                                    <td className="px-6 py-4">{formatCurrency(item.aggressive)}</td>
+                                    <td className="px-6 py-4">{formatCurrency(item.recovery)}</td>
+                                    <td className="px-6 py-4">{formatCurrency(item.crash)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
 
       {/* Fund Recommendations */}

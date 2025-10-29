@@ -1,8 +1,8 @@
-
 export enum Page {
   Planner = 'Planner',
   Dashboard = 'Dashboard',
   Learn = 'Learn',
+  Calculator = 'Calculator',
 }
 
 export enum RiskTolerance {
