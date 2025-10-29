@@ -6,11 +6,13 @@ import Learn from './pages/Learn';
 import Calculator from './pages/Calculator';
 import Chatbot from './components/Chatbot';
 import { Page, InvestmentPlan, UserProfile } from './types';
+import NotificationModal from './components/NotificationModal';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(Page.Planner);
   const [investmentPlan, setInvestmentPlan] = useState<InvestmentPlan | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [showDashboardWarning, setShowDashboardWarning] = useState(false);
 
 
   const handlePlanGenerated = (plan: InvestmentPlan, profile: UserProfile) => {
@@ -27,8 +29,8 @@ const App: React.FC = () => {
   
   const navigateTo = (page: Page) => {
     if(page === Page.Dashboard && !investmentPlan) {
-        // Stay on planner if no plan is generated
-        setCurrentPage(Page.Planner);
+        // Show a warning pop-up instead of silently failing
+        setShowDashboardWarning(true);
     } else {
         setCurrentPage(page);
     }
@@ -56,6 +58,12 @@ const App: React.FC = () => {
         {renderPage()}
       </main>
       <Chatbot />
+      <NotificationModal
+        isOpen={showDashboardWarning}
+        onClose={() => setShowDashboardWarning(false)}
+        title="No Plan Generated"
+        message="Please create an investment plan from the 'Planner' page first to access your dashboard."
+      />
     </div>
   );
 };
