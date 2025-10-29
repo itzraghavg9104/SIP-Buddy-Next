@@ -1,0 +1,181 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { IconBrandMessenger, IconSend, IconX, IconSparkles, IconUser } from './Icons';
+import { sendMessageToChat, startChat } from '../services/geminiService';
+import { ChatMessage } from '../types';
+
+// A simple markdown to HTML converter to handle bold text and lists.
+const parseMarkdownToHTML = (markdown: string): string => {
+    const lines = markdown.split('\n');
+    let html = '';
+    let inList = false;
+  
+    for (let line of lines) {
+      // Bold text
+      line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+      // List items
+      if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
+        if (!inList) {
+          html += '<ul>';
+          inList = true;
+        }
+        html += `<li>${line.trim().substring(2)}</li>`;
+      } else {
+        if (inList) {
+          html += '</ul>';
+          inList = false;
+        }
+        if (line.trim().length > 0) {
+          html += `<p>${line}</p>`;
+        }
+      }
+    }
+  
+    if (inList) {
+      html += '</ul>';
+    }
+  
+    return html;
+};
+
+
+const Chatbot: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: 'model',
+      text: "Hi there! I'm your AI Assistant. Ask me anything about SIPs, mutual funds, or risk, or financial planning!",
+    },
+  ]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      startChat();
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (input.trim() === '' || isLoading) return;
+
+    const userMessage: ChatMessage = { role: 'user', text: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const responseText = await sendMessageToChat(input);
+      const modelMessage: ChatMessage = { role: 'model', text: responseText };
+      setMessages((prev) => [...prev, modelMessage]);
+    } catch (error) {
+      console.error('Chatbot error:', error);
+      const errorMessage: ChatMessage = {
+        role: 'model',
+        text: 'Sorry, I encountered an error. Please try again.',
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSend();
+    }
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-110 z-50"
+        aria-label="Toggle Chatbot"
+      >
+        {isOpen ? <IconX /> : <IconBrandMessenger />}
+      </button>
+
+      {isOpen && (
+        <div className="fixed bottom-20 right-6 w-full max-w-sm h-[70vh] max-h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 transition-all duration-300 ease-in-out origin-bottom-right transform scale-100 opacity-100">
+          <header className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50 rounded-t-2xl">
+            <div className="flex items-center">
+              <IconSparkles className="h-6 w-6 text-blue-600" />
+              <h2 className="text-lg font-semibold ml-2 text-slate-800">AI Assistant</h2>
+            </div>
+            <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <IconX />
+            </button>
+          </header>
+          <div className="flex-1 p-4 overflow-y-auto bg-slate-100/50">
+            {messages.map((msg, index) => (
+              <div key={index} className={`flex items-start gap-3 my-4 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                {msg.role === 'model' && (
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <IconSparkles className="h-5 w-5 text-blue-600" />
+                  </div>
+                )}
+                <div className={`max-w-xs md:max-w-md px-4 py-2.5 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none shadow-sm'}`}>
+                    {msg.role === 'model' ? (
+                        <div
+                        className="prose prose-sm prose-slate max-w-none break-words"
+                        dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(msg.text) }}
+                        />
+                    ) : (
+                        <p className="text-sm break-words">{msg.text}</p>
+                    )}
+                </div>
+                 {msg.role === 'user' && (
+                  <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0">
+                    <IconUser className="h-5 w-5 text-slate-600" />
+                  </div>
+                )}
+              </div>
+            ))}
+             {isLoading && (
+              <div className="flex items-start gap-3 my-4">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <IconSparkles className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="max-w-xs md:max-w-md px-4 py-2.5 rounded-2xl bg-white text-slate-700 rounded-bl-none shadow-sm flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                  <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s] mx-1"></span>
+                  <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></span>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          <footer className="p-4 border-t border-slate-200 bg-white rounded-b-2xl">
+            <div className="relative">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask about investments, create your plan..."
+                className="w-full px-4 py-3 pr-12 bg-slate-100 rounded-full border-transparent focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                disabled={isLoading}
+              />
+              <button
+                onClick={handleSend}
+                disabled={isLoading}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
+              >
+                <IconSend className="h-5 w-5" />
+              </button>
+            </div>
+          </footer>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default Chatbot;

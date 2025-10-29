@@ -1,0 +1,5 @@
+{
+  "name": "AI SIP Planner",
+  "description": "A smart investment planner that provides personalized SIP recommendations based on your financial profile with AI-powered analysis and real fund suggestions.",
+  "requestFramePermissions": []
+}
