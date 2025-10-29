@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { InvestmentPlan, UserProfile } from '../types';
+import React, { useState } from 'react';
+import { InvestmentPlan, UserProfile, Fund } from '../types';
 import {
   ResponsiveContainer,
   PieChart,
@@ -15,6 +15,7 @@ import {
   Legend,
 } from 'recharts';
 import { IconChevronDown, IconInfoCircle } from '../components/Icons';
+import ComparisonModal from '../components/ComparisonModal';
 
 interface DashboardProps {
   investmentPlan: InvestmentPlan;
@@ -56,9 +57,23 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
   const [openSections, setOpenSections] = React.useState<Record<string, boolean>>(
     investmentPlan.fundRecommendations.reduce((acc, cat) => ({ ...acc, [cat.category]: cat.category.toLowerCase().includes('large cap') }), {})
   );
+  
+  const [selectedFundsForComparison, setSelectedFundsForComparison] = useState<Fund[]>([]);
+  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
 
   const toggleSection = (category: string) => {
     setOpenSections(prev => ({ ...prev, [category]: !prev[category] }));
+  };
+
+  const handleCompareSelect = (fund: Fund) => {
+    setSelectedFundsForComparison(prevSelected => {
+      const isSelected = prevSelected.some(f => f.name === fund.name);
+      if (isSelected) {
+        return prevSelected.filter(f => f.name !== fund.name);
+      } else {
+        return [...prevSelected, fund];
+      }
+    });
   };
 
   return (
@@ -148,8 +163,18 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
 
       {/* Fund Recommendations */}
       <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
-        <h2 className="text-xl font-semibold mb-2">Fund Recommendations</h2>
-        <p className="text-slate-500 mb-6">AI-suggested mutual funds based on current market data.</p>
+        <div className="flex justify-between items-center mb-2">
+            <h2 className="text-xl font-semibold">Fund Recommendations</h2>
+            {selectedFundsForComparison.length >= 2 && (
+                <button 
+                    onClick={() => setIsComparisonModalOpen(true)}
+                    className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-sm hover:bg-green-700 transition-colors text-sm animate-fade-in"
+                >
+                    Compare {selectedFundsForComparison.length} Funds
+                </button>
+            )}
+        </div>
+        <p className="text-slate-500 mb-6">AI-suggested mutual funds. Select two or more to compare.</p>
         <div className="space-y-4">
           {investmentPlan.fundRecommendations.map((category) => (
             <div key={category.category} className="border border-slate-200 rounded-lg">
@@ -167,9 +192,18 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
                   {category.funds.map((fund, index) => (
                     <div key={fund.name} className={`p-4 ${index > 0 ? 'border-t border-slate-200' : ''}`}>
                         <div className="flex justify-between items-start mb-3">
-                            <div>
-                                <h4 className="font-semibold text-slate-800">{fund.name}</h4>
-                                <p className="text-sm text-slate-500">{fund.fundHouse}</p>
+                            <div className="flex items-center gap-4">
+                                <input 
+                                    type="checkbox"
+                                    id={`compare-${fund.name.replace(/\s/g, '-')}`}
+                                    className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                    checked={selectedFundsForComparison.some(f => f.name === fund.name)}
+                                    onChange={() => handleCompareSelect(fund)}
+                                />
+                                <div>
+                                    <label htmlFor={`compare-${fund.name.replace(/\s/g, '-')}`} className="font-semibold text-slate-800 cursor-pointer">{fund.name}</label>
+                                    <p className="text-sm text-slate-500">{fund.fundHouse}</p>
+                                </div>
                             </div>
                             <span className="text-xs font-semibold text-green-700 bg-green-100 px-3 py-1 rounded-full">Recommended</span>
                         </div>
@@ -209,6 +243,22 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
               </div>
           </div>
       </div>
+      
+      {isComparisonModalOpen && (
+        <ComparisonModal 
+            funds={selectedFundsForComparison} 
+            onClose={() => setIsComparisonModalOpen(false)} 
+        />
+      )}
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(-5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };

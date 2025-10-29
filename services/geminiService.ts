@@ -49,7 +49,7 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
     Here are the requirements for the plan:
     1.  A recommended monthly SIP amount.
     2.  A detailed investment rationale explaining the strategy.
-    3.  A diversified asset allocation across various classes (e.g., Large Cap, Mid Cap, Small Cap, Flexi Cap, Gold, Debt, Hybrid). The total allocation must sum to 100%.
+    3.  A diversified asset allocation across various classes (e.g., Large Cap, Mid Cap, Small Cap, Flexi Cap, Gold, Debt, Hybrid, International Funds). The total allocation must sum to 100%.
     4.  Investment growth projections for the entire time horizon, with data points for years 0, 1, 3, 5, and the final year. Projections should cover 'Conservative (Bear Market)', 'Expected (Normal Market)', 'Aggressive (Bull Market)', 'Recovery Scenario', and 'Crash Scenario'. Also include the total 'Amount Invested' for each year.
     5.  Specific mutual fund recommendations for each allocated asset class. Use Google Search to find 2 top-performing, currently recommended funds for each category. Provide their latest 3Y and 5Y CAGR returns, expense ratio, and a brief investment thesis.
     
