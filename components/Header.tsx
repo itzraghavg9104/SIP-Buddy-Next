@@ -8,24 +8,36 @@ interface HeaderProps {
   navigateTo: (page: Page) => void;
 }
 
-const NavItem: React.FC<{
+interface NavItemProps {
   label: string;
   icon: React.ReactNode;
   isActive: boolean;
   onClick: () => void;
-}> = ({ label, icon, isActive, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-      isActive
-        ? 'bg-white text-blue-600 shadow-sm'
-        : 'text-slate-500 hover:bg-slate-100'
-    }`}
-  >
-    {icon}
-    <span className="ml-2">{label}</span>
-  </button>
-);
+  showLabelOnlyWhenActive?: boolean;
+}
+
+const NavItem: React.FC<NavItemProps> = ({ label, icon, isActive, onClick, showLabelOnlyWhenActive = false }) => {
+  const showLabel = !showLabelOnlyWhenActive || isActive;
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center rounded-md font-medium transition-colors ${
+        showLabel ? 'px-4 py-2' : 'p-2'
+      } ${
+        !showLabelOnlyWhenActive ? 'text-sm' : ''
+      } ${
+        isActive
+          ? 'bg-white text-blue-600 shadow-sm'
+          : 'text-slate-500 hover:bg-slate-100'
+      }`}
+    >
+      {icon}
+      {showLabel && <span className="ml-2">{label}</span>}
+    </button>
+  );
+};
+
 
 const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
   return (
@@ -73,24 +85,28 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               icon={<IconChartPie className="h-5 w-5" />}
               isActive={currentPage === Page.Planner}
               onClick={() => navigateTo(Page.Planner)}
+              showLabelOnlyWhenActive
             />
             <NavItem
               label="Dashboard"
               icon={<IconLayoutDashboard className="h-5 w-5" />}
               isActive={currentPage === Page.Dashboard}
               onClick={() => navigateTo(Page.Dashboard)}
+              showLabelOnlyWhenActive
             />
             <NavItem
               label="Learn"
               icon={<IconBook className="h-5 w-5" />}
               isActive={currentPage === Page.Learn}
               onClick={() => navigateTo(Page.Learn)}
+              showLabelOnlyWhenActive
             />
             <NavItem
               label="Calculator"
               icon={<IconCalculator className="h-5 w-5" />}
               isActive={currentPage === Page.Calculator}
               onClick={() => navigateTo(Page.Calculator)}
+              showLabelOnlyWhenActive
             />
         </div>
     </header>
