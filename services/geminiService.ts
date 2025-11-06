@@ -1,4 +1,6 @@
-import { GoogleGenAI, Chat } from "@google/genai";
+
+
+import { GoogleGenAI, Chat, Type } from "@google/genai";
 import { UserProfile, InvestmentPlan } from '../types';
 
 const API_KEY = process.env.API_KEY;
@@ -21,58 +23,40 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
     - Risk Tolerance: ${profile.riskTolerance}
     - Investment Goal: "${profile.investmentGoal}"
 
-    Please provide a comprehensive investment plan. The response MUST be a single valid JSON object.
+    Please provide a comprehensive investment plan.
     
-    Your response should follow this structure:
-    {
-        "monthlySip": number,
-        "riskProfile": string,
-        "timeHorizon": number,
-        "assetClasses": number,
-        "investmentRationale": string,
-        "assetAllocation": [{ "name": string, "value": number }],
-        "growthProjections": [{ "year": number, "amountInvested": number, "conservative": number, "expected": number, "aggressive": number, "recovery": number, "crash": number }],
-        "fundRecommendations": [{
-            "category": string,
-            "allocationPercentage": number,
-            "funds": [{
-                "name": string,
-                "fundHouse": string,
-                "threeYearReturns": string,
-                "fiveYearReturns": string,
-                "expenseRatio": string,
-                "description": string
-            }]
-        }]
-    }
-
     Here are the requirements for the plan:
     1.  A recommended monthly SIP amount.
     2.  A detailed investment rationale explaining the strategy.
-    3.  A diversified asset allocation across various classes (e.g., Large Cap, Mid Cap, Small Cap, Flexi Cap, Gold, Debt, Hybrid, International Funds). The total allocation must sum to 100%.
+    3.  A diversified asset allocation based on SEBI's official mutual fund categorization. The total allocation must sum to 100%. The "name" in "assetAllocation" and "category" in "fundRecommendations" must use official SEBI categories. Examples of categories to use are:
+        *   **Equity Schemes**: Large Cap Fund, Mid Cap Fund, Small Cap Fund, Multi Cap Fund, Flexi Cap Fund, ELSS, Sectoral/Thematic Fund.
+        *   **Debt Schemes**: Corporate Bond Fund, Gilt Fund, Liquid Fund, Short Duration Fund, Money Market Fund.
+        *   **Hybrid Schemes**: Aggressive Hybrid Fund, Balanced Hybrid Fund, Conservative Hybrid Fund, Arbitrage Fund.
+        *   **Other Schemes**: Index Fund, Fund of Funds (for international exposure).
     4.  Investment growth projections for the entire time horizon, with data points for years 0, 1, 3, 5, and the final year. Projections should cover 'Conservative (Bear Market)', 'Expected (Normal Market)', 'Aggressive (Bull Market)', 'Recovery Scenario', and 'Crash Scenario'. Also include the total 'Amount Invested' for each year.
     5.  Specific mutual fund recommendations for each allocated asset class. Use Google Search to find 2 top-performing, currently recommended funds for each category. Provide their latest 3Y and 5Y CAGR returns, expense ratio, and a brief investment thesis.
     
-    Do not add any text, comments, or markdown formatting like \`\`\`json before or after the JSON object. The entire response must be only the JSON object.
+    The entire response must be a single, valid JSON object. Do not include any markdown formatting (like \`\`\`json), explanations, or any text outside of the JSON object itself.
     `;
 
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: prompt,
         config: {
+            // Fix: Removed responseMimeType and responseSchema as they are not allowed when using the googleSearch tool.
+            // The model is instead instructed in the prompt to return a raw JSON object.
             tools: [{googleSearch: {}}],
         },
     });
 
     try {
+        // The model is instructed to return a raw JSON string, but it might be wrapped in markdown.
         let jsonString = response.text.trim();
-        // Handle cases where the model might still wrap the JSON in markdown
         if (jsonString.startsWith('```json')) {
-            jsonString = jsonString.slice(7, -3).trim();
+            jsonString = jsonString.substring(7, jsonString.length - 3).trim();
         } else if (jsonString.startsWith('```')) {
-            jsonString = jsonString.slice(3, -3).trim();
+             jsonString = jsonString.substring(3, jsonString.length - 3).trim();
         }
-        
         const plan = JSON.parse(jsonString);
         return plan as InvestmentPlan;
     } catch (e) {
@@ -106,7 +90,11 @@ export const startChat = () => {
   chat = ai.chats.create({
     model: 'gemini-2.5-flash',
     config: {
-      systemInstruction: 'You are a helpful AI assistant for an SIP Planning application. Your name is AI Assistant. You answer user questions about SIPs, mutual funds, and general financial planning. Keep your answers concise and helpful.',
+      systemInstruction: `You are SIP Buddy, a specialized AI assistant for the SIP Buddy investment planning platform. Your sole purpose is to help users with questions about Systematic Investment Plans (SIPs), mutual funds, investment strategies, and using the SIP Buddy application.
+- Your name is SIP Buddy.
+- You MUST NOT answer questions about your origin, who created you, your underlying technology, or any topic outside of financial planning and the SIP Buddy platform.
+- If a user asks an off-topic question (e.g., "Who made you?", "Are you from Google?", "Tell me a joke"), you MUST politely decline and steer the conversation back to financial planning. For example: "As SIP Buddy, my expertise is in financial planning. How can I help you with your investment questions?"
+- Keep your answers concise, helpful, and strictly within your designated role.`,
     },
   });
 };

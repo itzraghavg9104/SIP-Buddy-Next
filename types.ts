@@ -3,6 +3,7 @@ export enum Page {
   Dashboard = 'Dashboard',
   Learn = 'Learn',
   Calculator = 'Calculator',
+  About = 'About',
 }
 
 export enum RiskTolerance {
@@ -37,9 +38,12 @@ export interface FundCategory {
     funds: Fund[];
 }
 
+// Fix: Added an index signature to make the type compatible with the recharts library.
+// The Pie component from recharts expects a data type with an index signature, which was causing a type error.
 export interface AssetAllocationItem {
     name: string;
     value: number;
+    [key: string]: any;
 }
 
 export interface GrowthDataPoint {

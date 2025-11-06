@@ -4,6 +4,7 @@ import Planner from './pages/Planner';
 import Dashboard from './pages/Dashboard';
 import Learn from './pages/Learn';
 import Calculator from './pages/Calculator';
+import About from './pages/About';
 import Chatbot from './components/Chatbot';
 import { Page, InvestmentPlan, UserProfile } from './types';
 import NotificationModal from './components/NotificationModal';
@@ -46,6 +47,8 @@ const App: React.FC = () => {
         return <Learn />;
       case Page.Calculator:
         return <Calculator />;
+      case Page.About:
+        return <About />;
       default:
         return <Planner onPlanGenerated={handlePlanGenerated} />;
     }

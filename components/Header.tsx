@@ -1,6 +1,8 @@
 import React from 'react';
 import { Page } from '../types';
-import { IconChartPie, IconLayoutDashboard, IconBook, IconSparkles, IconTarget, IconCalculator } from './Icons';
+// Fix: Removed 'IconTarget' as it is not an exported member of './Icons'.
+import { IconChartPie, IconLayoutDashboard, IconBook, IconSparkles, IconCalculator, IconInfoCircle } from './Icons';
+import { logoFull } from '../assets/logo';
 
 
 interface HeaderProps {
@@ -45,8 +47,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-             <IconTarget className="h-8 w-8 text-blue-600" />
-            <span className="ml-2 text-xl font-bold text-slate-800">SIP Buddy</span>
+             <img src={logoFull} alt="SIP Buddy Logo" className="h-10" />
           </div>
           <div className="hidden md:flex items-center space-x-2 bg-slate-100 p-1 rounded-lg">
             <NavItem
@@ -72,6 +73,12 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               icon={<IconCalculator className="h-5 w-5" />}
               isActive={currentPage === Page.Calculator}
               onClick={() => navigateTo(Page.Calculator)}
+            />
+            <NavItem
+              label="About"
+              icon={<IconInfoCircle className="h-5 w-5" />}
+              isActive={currentPage === Page.About}
+              onClick={() => navigateTo(Page.About)}
             />
           </div>
           <div className="flex items-center md:hidden">
@@ -106,6 +113,13 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               icon={<IconCalculator className="h-5 w-5" />}
               isActive={currentPage === Page.Calculator}
               onClick={() => navigateTo(Page.Calculator)}
+              showLabelOnlyWhenActive
+            />
+            <NavItem
+              label="About"
+              icon={<IconInfoCircle className="h-5 w-5" />}
+              isActive={currentPage === Page.About}
+              onClick={() => navigateTo(Page.About)}
               showLabelOnlyWhenActive
             />
         </div>

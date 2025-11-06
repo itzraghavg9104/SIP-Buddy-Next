@@ -30,16 +30,6 @@ export const IconCalculator: React.FC<IconProps> = (props) => (
     </svg>
 );
 
-
-export const IconTarget: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-target" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <circle cx="12" cy="12" r="1" />
-        <circle cx="12" cy="12" r="5" />
-        <circle cx="12" cy="12" r="9" />
-    </svg>
-);
-
 export const IconChartPie: React.FC<IconProps> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-chart-pie" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -117,6 +107,26 @@ export const IconUser: React.FC<IconProps> = (props) => (
   </svg>
 );
 
+export const IconListDetails: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-list-details" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M13 5h8" />
+        <path d="M13 9h5" />
+        <path d="M13 15h8" />
+        <path d="M13 19h5" />
+        <rect x="3" y="4" width="6" height="6" rx="1" />
+        <rect x="3" y="14" width="6" height="6" rx="1" />
+    </svg>
+);
+
+export const IconMail: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-mail" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <polyline points="3 7 12 13 21 7" />
+    </svg>
+);
+
 export const learnIcons: { [key: string]: React.FC<IconProps> } = {
   'What is SIP?': (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-calendar-plus" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -145,6 +155,7 @@ export const learnIcons: { [key: string]: React.FC<IconProps> } = {
       <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
     </svg>
   ),
+  'SEBI Mutual Fund Categories': (props) => <IconListDetails {...props} />,
   'Tax Implications': (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-receipt-tax" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>

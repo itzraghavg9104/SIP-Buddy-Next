@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { IconBrandMessenger, IconSend, IconX, IconSparkles, IconUser } from './Icons';
 import { sendMessageToChat, startChat } from '../services/geminiService';
 import { ChatMessage } from '../types';
+import { logoIcon } from '../assets/logo';
 
 // A simple markdown to HTML converter to handle bold text and lists.
 const parseMarkdownToHTML = (markdown: string): string => {
@@ -44,7 +45,7 @@ const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'model',
-      text: "Hi there! I'm your AI Assistant. Ask me anything about SIPs, mutual funds, or risk, or financial planning!",
+      text: "Hi there! I'm SIP Buddy. Ask me anything about SIPs, mutual funds, risk, or financial planning!",
     },
   ]);
   const [input, setInput] = useState('');
@@ -106,8 +107,8 @@ const Chatbot: React.FC = () => {
         <div className="fixed bottom-20 right-6 w-full max-w-sm h-[70vh] max-h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 transition-all duration-300 ease-in-out origin-bottom-right transform scale-100 opacity-100">
           <header className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50 rounded-t-2xl">
             <div className="flex items-center">
-              <IconSparkles className="h-6 w-6 text-blue-600" />
-              <h2 className="text-lg font-semibold ml-2 text-slate-800">AI Assistant</h2>
+              <img src={logoIcon} alt="SIP Buddy Icon" className="h-7 w-7" />
+              <h2 className="text-lg font-semibold ml-2 text-slate-800">SIP Buddy</h2>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600">
               <IconX />
@@ -118,7 +119,7 @@ const Chatbot: React.FC = () => {
               <div key={index} className={`flex items-start gap-3 my-4 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                 {msg.role === 'model' && (
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <IconSparkles className="h-5 w-5 text-blue-600" />
+                    <img src={logoIcon} alt="SIP Buddy Icon" className="h-6 w-6" />
                   </div>
                 )}
                 <div className={`max-w-xs md:max-w-md px-4 py-2.5 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none shadow-sm'}`}>
@@ -141,7 +142,7 @@ const Chatbot: React.FC = () => {
              {isLoading && (
               <div className="flex items-start gap-3 my-4">
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <IconSparkles className="h-5 w-5 text-blue-600" />
+                  <img src={logoIcon} alt="SIP Buddy Icon" className="h-6 w-6" />
                 </div>
                 <div className="max-w-xs md:max-w-md px-4 py-2.5 rounded-2xl bg-white text-slate-700 rounded-bl-none shadow-sm flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
@@ -159,7 +160,7 @@ const Chatbot: React.FC = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask about investments, create your plan..."
+                placeholder="Ask SIP Buddy about investments..."
                 className="w-full px-4 py-3 pr-12 bg-slate-100 rounded-full border-transparent focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 disabled={isLoading}
               />

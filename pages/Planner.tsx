@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+
+
+import React, { useState, useEffect, useRef } from 'react';
 import { InvestmentPlan, RiskTolerance, UserProfile } from '../types';
 import { generateInvestmentPlan } from '../services/geminiService';
 import { IconSparkles, IconInfoCircle } from '../components/Icons';
@@ -6,6 +8,15 @@ import { IconSparkles, IconInfoCircle } from '../components/Icons';
 interface PlannerProps {
   onPlanGenerated: (plan: InvestmentPlan, profile: UserProfile) => void;
 }
+
+const loadingSteps = [
+  'Analyzing your financial profile...',
+  'Calibrating risk tolerance...',
+  'Generating personalized asset allocation...',
+  'Projecting future growth scenarios...',
+  'Searching for top-performing funds...',
+  'Finalizing your investment plan...',
+];
 
 const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
   const [formData, setFormData] = useState({
@@ -20,6 +31,52 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [loadingText, setLoadingText] = useState(loadingSteps[0]);
+  // Fix: Initialized useRef with null to fix "Expected 1 arguments, but got 0" error. The useRef hook requires an initial value.
+  const animationFrameRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (isLoading) {
+        setProgress(0);
+        setLoadingText(loadingSteps[0]);
+        const startTime = Date.now();
+        // This duration is for the visual animation; the actual process depends on the API response time.
+        // The animation will pause at 95% until the API responds.
+        const animationDuration = 15000; 
+
+        const animate = () => {
+            const elapsedTime = Date.now() - startTime;
+            const currentProgress = Math.min((elapsedTime / animationDuration) * 100, 95);
+            
+            setProgress(currentProgress);
+
+            const stepIndex = Math.min(
+              Math.floor((currentProgress / 100) * loadingSteps.length),
+              loadingSteps.length - 1
+            );
+            setLoadingText(loadingSteps[stepIndex]);
+
+            if (currentProgress < 95) {
+                animationFrameRef.current = requestAnimationFrame(animate);
+            }
+        };
+
+        animationFrameRef.current = requestAnimationFrame(animate);
+    } else {
+      // Clean up animation frame if loading is stopped (e.g., on error)
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    }
+    
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isLoading]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -52,11 +109,15 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
 
     try {
       const plan = await generateInvestmentPlan(profile);
-      onPlanGenerated(plan, profile);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      setProgress(100);
+      setLoadingText('Plan generated successfully!');
+      setTimeout(() => onPlanGenerated(plan, profile), 500); // Short delay to show completion
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
       console.error(err);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -145,12 +206,17 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
               <p className="mt-1 text-xs text-slate-500">What are you investing for?</p>
           </div>
 
-          <button type="submit" disabled={isLoading} className="w-full flex justify-center items-center gap-2 py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:bg-blue-300">
+          <button type="submit" disabled={isLoading} className="w-full flex justify-center items-center gap-2 py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed">
             {isLoading ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Generating...
-              </>
+               <div className="w-full flex flex-col items-center">
+                 <div className="w-full bg-slate-200 rounded-full h-2.5 mb-2">
+                    <div 
+                        className="bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600 h-2.5 rounded-full transition-all duration-500 ease-out animated-gradient" 
+                        style={{ width: `${progress}%` }}
+                    ></div>
+                </div>
+                <span className="text-sm font-normal">{loadingText}</span>
+            </div>
             ) : (
                 <>
                 <IconSparkles className="w-5 h-5" />
