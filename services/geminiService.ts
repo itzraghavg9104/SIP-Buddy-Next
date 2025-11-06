@@ -92,30 +92,48 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
     The entire response must be a single, valid JSON object. Do not include any markdown formatting (like \`\`\`json), explanations, or any text outside of the JSON object itself.
     `;
 
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-            // Fix: Removed responseMimeType and responseSchema as they are not allowed when using the googleSearch tool.
-            // The model is instead instructed in the prompt to return a raw JSON object.
-            tools: [{googleSearch: {}}],
-        },
-    });
+    const primaryModel = 'gemini-2.5-pro';
+    const fallbackModel = 'gemini-2.5-flash';
+
+    const tryGenerate = async (model: string) => {
+        const response = await ai.models.generateContent({
+            model: model,
+            contents: prompt,
+            config: {
+                tools: [{ googleSearch: {} }],
+            },
+        });
+        
+        try {
+            // The model is instructed to return a raw JSON string, but it might be wrapped in markdown.
+            let jsonString = response.text.trim();
+            if (jsonString.startsWith('```json')) {
+                jsonString = jsonString.substring(7, jsonString.length - 3).trim();
+            } else if (jsonString.startsWith('```')) {
+                 jsonString = jsonString.substring(3, jsonString.length - 3).trim();
+            }
+            const plan = JSON.parse(jsonString);
+            return sanitizeInvestmentPlan(plan);
+        } catch (e) {
+            console.error(`Failed to parse response from model ${model}:`, e);
+            console.error("Raw response text:", response.text);
+            // Re-throw the error to be caught by the outer catch block, triggering a fallback.
+            throw new Error(`Response from ${model} was not in the expected format.`);
+        }
+    };
 
     try {
-        // The model is instructed to return a raw JSON string, but it might be wrapped in markdown.
-        let jsonString = response.text.trim();
-        if (jsonString.startsWith('```json')) {
-            jsonString = jsonString.substring(7, jsonString.length - 3).trim();
-        } else if (jsonString.startsWith('```')) {
-             jsonString = jsonString.substring(3, jsonString.length - 3).trim();
-        }
-        const plan = JSON.parse(jsonString);
-        return sanitizeInvestmentPlan(plan);
+        console.log(`Attempting to generate plan with primary model: ${primaryModel}`);
+        return await tryGenerate(primaryModel);
     } catch (e) {
-        console.error("Failed to parse or sanitize Gemini response:", e);
-        console.error("Raw response text:", response.text);
-        throw new Error("An error occurred while generating the investment plan. The response from the AI was not in the expected format.");
+        console.warn(`Primary model (${primaryModel}) failed. Error:`, e instanceof Error ? e.message : String(e));
+        console.log(`Falling back to model: ${fallbackModel}`);
+        try {
+            return await tryGenerate(fallbackModel);
+        } catch (finalError) {
+            console.error(`Fallback model (${fallbackModel}) also failed. Error:`, finalError instanceof Error ? finalError.message : String(finalError));
+            throw new Error("We're sorry, but we were unable to generate your investment plan at this time, even after a retry. Please try again later.");
+        }
     }
 };
 

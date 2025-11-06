@@ -96,54 +96,62 @@ const handleExportPDF = async () => {
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const pageMargin = 15;
     const contentWidth = pdfWidth - pageMargin * 2;
-    let yPos; // Will be set after header is drawn
+    // Fix: Initialize yPos to a safe starting point to avoid undefined offsets.
+    let yPos = pageMargin;
 
     try {
         const logoDataUrl = await imageToDataUrl(logoFull);
         const iconDataUrl = await imageToDataUrl(logoIcon);
         
-        // Dynamically calculate aspect ratio to prevent distortion
         const logoDimensions = await getImageDimensions(logoDataUrl);
+        // Fix: Add check for valid logo dimensions to prevent NaN errors from division by zero.
+        if (!logoDimensions || logoDimensions.width === 0) {
+            throw new Error("Could not load logo for PDF export.");
+        }
         const logoWidth = 45;
         const logoHeight = (logoDimensions.height / logoDimensions.width) * logoWidth;
 
-        // Add Header on the first page, with more vertical spacing
-        const headerTopMargin = 15;
-        pdf.addImage(logoDataUrl, 'PNG', (pdfWidth - logoWidth) / 2, headerTopMargin, logoWidth, logoHeight);
+        // Header section with incremental yPos updates for robustness
+        pdf.addImage(logoDataUrl, 'PNG', (pdfWidth - logoWidth) / 2, yPos, logoWidth, logoHeight);
+        yPos += logoHeight + 7;
         
         pdf.setFontSize(11);
         pdf.setFont('helvetica', 'normal');
         pdf.setTextColor('#475569');
-        const textY = headerTopMargin + logoHeight + 7;
-        pdf.text('Your Personalized Investment Plan', pdfWidth / 2, textY, { align: 'center' });
+        pdf.text('Your Personalized Investment Plan', pdfWidth / 2, yPos, { align: 'center' });
+        yPos += 5;
         
-        const lineY = textY + 5;
         pdf.setDrawColor('#e2e8f0');
         pdf.setLineWidth(0.5);
-        pdf.line(pageMargin, lineY, pdfWidth - pageMargin, lineY);
-
-        yPos = lineY + 5; // Start content below the new, taller header
+        pdf.line(pageMargin, yPos, pdfWidth - pageMargin, yPos);
+        yPos += 10; // Increased gap after header
 
         const sections = document.querySelectorAll('.pdf-export-section');
         
         for (let i = 0; i < sections.length; i++) {
             const section = sections[i] as HTMLElement;
             const canvas = await html2canvas(section, { scale: 2, useCORS: true, windowWidth: 1280, logging: false });
-            const imgData = canvas.toDataURL('image/png');
             
+            // Fix: Validate canvas dimensions to prevent errors from trying to add a zero-size image
+            // or calculating an Infinite pdfImgHeight.
+            if (canvas.width === 0 || canvas.height === 0) {
+                console.warn("Skipping empty section in PDF export:", section.className);
+                continue; // Skip this section and move to the next
+            }
+            
+            const imgData = canvas.toDataURL('image/png');
             const imgWidth = canvas.width;
             const imgHeight = canvas.height;
             const ratio = imgWidth / contentWidth;
             const pdfImgHeight = imgHeight / ratio;
 
-            // Check if it fits on the current page
             if (yPos + pdfImgHeight > pdfHeight - pageMargin) {
                 pdf.addPage();
-                yPos = pageMargin; // Reset yPos for new page
+                yPos = pageMargin;
             }
 
             pdf.addImage(imgData, 'PNG', pageMargin, yPos, contentWidth, pdfImgHeight);
-            yPos += pdfImgHeight + 5; // Add a 5mm gap between sections
+            yPos += pdfImgHeight + 5;
         }
 
         // Add Watermark to all pages
