@@ -3,7 +3,7 @@ import { Page } from '../types';
 // Fix: Removed 'IconTarget' as it is not an exported member of './Icons'.
 import { IconChartPie, IconLayoutDashboard, IconBook, IconSparkles, IconCalculator, IconInfoCircle } from './Icons';
 import { logoFull } from '../assets/logo';
-
+import SafeImage from './SafeImage';
 
 interface HeaderProps {
   currentPage: Page;
@@ -42,12 +42,25 @@ const NavItem: React.FC<NavItemProps> = ({ label, icon, isActive, onClick, showL
 
 
 const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
+
+  const fallbackLogo = (
+    <div className="flex items-center h-10">
+        <IconSparkles className="h-7 w-7 text-blue-600" />
+        <span className="text-xl font-bold ml-2 text-slate-800">SIP Buddy</span>
+    </div>
+  );
+
   return (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-             <img src={logoFull} alt="SIP Buddy Logo" className="h-10" />
+             <SafeImage
+                src={logoFull}
+                fallback={fallbackLogo}
+                alt="SIP Buddy Logo"
+                className="h-11"
+             />
           </div>
           <div className="hidden md:flex items-center space-x-2 bg-slate-100 p-1 rounded-lg">
             <NavItem

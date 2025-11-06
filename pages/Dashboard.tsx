@@ -56,6 +56,15 @@ const SummaryCard: React.FC<{ title: string; value: string; subtext: string }> =
     </div>
   );
 
+// Helper function to get the natural dimensions of an image from its URL
+const getImageDimensions = (url: string): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = (err) => reject(err);
+        img.src = url;
+    });
+};
 
 const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCreateNewPlan }) => {
   const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({});
@@ -64,6 +73,17 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [projectionView, setProjectionView] = useState<'chart' | 'table'>('chart');
   const [isExporting, setIsExporting] = useState(false);
+
+const imageToDataUrl = async (url: string): Promise<string> => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+};
 
 const handleExportPDF = async () => {
     setIsExporting(true);
@@ -76,23 +96,36 @@ const handleExportPDF = async () => {
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const pageMargin = 15;
     const contentWidth = pdfWidth - pageMargin * 2;
-    let yPos = 35; // Start position after header
-
-    // Add Header on the first page
-    const logoWidth = 50;
-    const logoHeight = (137 / 512) * logoWidth; // maintain aspect ratio
-    pdf.addImage(logoFull, 'PNG', (pdfWidth - logoWidth) / 2, 12, logoWidth, logoHeight);
-    pdf.setFontSize(11);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor('#475569');
-    pdf.text('Your Personalized Investment Plan', pdfWidth / 2, 25, { align: 'center' });
-    pdf.setDrawColor('#e2e8f0');
-    pdf.setLineWidth(0.5);
-    pdf.line(pageMargin, 30, pdfWidth - pageMargin, 30);
-
-    const sections = document.querySelectorAll('.pdf-export-section');
+    let yPos; // Will be set after header is drawn
 
     try {
+        const logoDataUrl = await imageToDataUrl(logoFull);
+        const iconDataUrl = await imageToDataUrl(logoIcon);
+        
+        // Dynamically calculate aspect ratio to prevent distortion
+        const logoDimensions = await getImageDimensions(logoDataUrl);
+        const logoWidth = 45;
+        const logoHeight = (logoDimensions.height / logoDimensions.width) * logoWidth;
+
+        // Add Header on the first page, with more vertical spacing
+        const headerTopMargin = 15;
+        pdf.addImage(logoDataUrl, 'PNG', (pdfWidth - logoWidth) / 2, headerTopMargin, logoWidth, logoHeight);
+        
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor('#475569');
+        const textY = headerTopMargin + logoHeight + 7;
+        pdf.text('Your Personalized Investment Plan', pdfWidth / 2, textY, { align: 'center' });
+        
+        const lineY = textY + 5;
+        pdf.setDrawColor('#e2e8f0');
+        pdf.setLineWidth(0.5);
+        pdf.line(pageMargin, lineY, pdfWidth - pageMargin, lineY);
+
+        yPos = lineY + 5; // Start content below the new, taller header
+
+        const sections = document.querySelectorAll('.pdf-export-section');
+        
         for (let i = 0; i < sections.length; i++) {
             const section = sections[i] as HTMLElement;
             const canvas = await html2canvas(section, { scale: 2, useCORS: true, windowWidth: 1280, logging: false });
@@ -120,7 +153,7 @@ const handleExportPDF = async () => {
             pdf.setPage(i);
             pdf.saveGraphicsState();
             pdf.setGState(new pdf.GState({ opacity: 0.08 }));
-            pdf.addImage(logoIcon, 'PNG', (pdfWidth - watermarkSize) / 2, (pdfHeight - watermarkSize) / 2, watermarkSize, watermarkSize);
+            pdf.addImage(iconDataUrl, 'PNG', (pdfWidth - watermarkSize) / 2, (pdfHeight - watermarkSize) / 2, watermarkSize, watermarkSize);
             pdf.restoreGraphicsState();
         }
 
@@ -155,7 +188,7 @@ const handleExportPDF = async () => {
   const projectionsChart = (
     <div className="h-96 mt-6">
         <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={investmentPlan.growthProjections} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
+            <LineChart data={investmentPlan.growthProjections || []} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                 <XAxis dataKey="year" tick={{ fontSize: 12 }} label={{ value: 'Years', position: 'insideBottom', offset: -10 }} />
                 <YAxis tickFormatter={formatLargeCurrency} tick={{ fontSize: 12 }} />
@@ -187,7 +220,7 @@ const handleExportPDF = async () => {
                 </tr>
             </thead>
             <tbody>
-                {investmentPlan.growthProjections.map(item => (
+                {(investmentPlan.growthProjections || []).map(item => (
                     <tr key={item.year} className="bg-white border-b hover:bg-slate-100">
                         <th scope="row" className="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">{item.year}</th>
                         <td className="px-6 py-4">{formatCurrency(item.amountInvested)}</td>
@@ -256,8 +289,8 @@ const handleExportPDF = async () => {
               <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                      <Pie data={investmentPlan.assetAllocation} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={110} fill="#8884d8" labelLine={false}>
-                          {investmentPlan.assetAllocation.map((entry, index) => (
+                      <Pie data={investmentPlan.assetAllocation || []} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={110} fill="#8884d8" labelLine={false}>
+                          {(investmentPlan.assetAllocation || []).map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                       </Pie>
@@ -267,7 +300,7 @@ const handleExportPDF = async () => {
               </div>
             <div>
               <ul className="space-y-3">
-                {investmentPlan.assetAllocation.map((item, index) => (
+                {(investmentPlan.assetAllocation || []).map((item, index) => (
                   <li key={item.name} className="flex justify-between items-center text-sm">
                     <div className="flex items-center">
                       <span className="w-3 h-3 rounded-full mr-3" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
@@ -317,7 +350,7 @@ const handleExportPDF = async () => {
           </div>
           <p className="text-slate-500 mb-6">AI-suggested mutual funds. Select two or more to compare.</p>
           <div className="space-y-4">
-            {investmentPlan.fundRecommendations.map((category) => (
+            {(investmentPlan.fundRecommendations || []).map((category) => (
               <div key={category.category} className="border border-slate-200 rounded-lg bg-white">
                 <button onClick={() => toggleSection(category.category)} className="w-full flex justify-between items-center p-4 text-left">
                   <h3 className="font-semibold">{category.category}</h3>
@@ -330,7 +363,7 @@ const handleExportPDF = async () => {
                 </button>
                 {openSections[category.category] && (
                   <div className="px-4 pb-4">
-                    {category.funds.map((fund, index) => (
+                    {(category.funds || []).map((fund, index) => (
                       <div key={fund.name} className={`p-4 ${index > 0 ? 'border-t border-slate-200' : ''}`}>
                           <div className="flex justify-between items-start mb-3">
                               <div className="flex items-center gap-4">

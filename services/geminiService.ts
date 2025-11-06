@@ -1,7 +1,7 @@
 
 
 import { GoogleGenAI, Chat, Type } from "@google/genai";
-import { UserProfile, InvestmentPlan } from '../types';
+import { UserProfile, InvestmentPlan, Fund, FundCategory, AssetAllocationItem, GrowthDataPoint } from '../types';
 
 const API_KEY = process.env.API_KEY;
 
@@ -10,6 +10,59 @@ if (!API_KEY) {
 }
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
+
+/**
+ * Sanitizes the raw, parsed JSON object from the Gemini API to ensure it conforms to the InvestmentPlan interface.
+ * This prevents runtime errors from undefined values, NaN, or incorrect data types.
+ * @param plan The raw, parsed object from the API.
+ * @returns A clean, type-safe InvestmentPlan object.
+ */
+const sanitizeInvestmentPlan = (plan: any): InvestmentPlan => {
+    const sanitizedPlan: InvestmentPlan = {
+        monthlySip: Number(plan.monthlySip) || 0,
+        riskProfile: String(plan.riskProfile || 'Not specified'),
+        timeHorizon: Number(plan.timeHorizon) || 0,
+        assetClasses: Number(plan.assetClasses) || 0,
+        investmentRationale: String(plan.investmentRationale || 'No rationale provided.'),
+        assetAllocation: (Array.isArray(plan.assetAllocation) ? plan.assetAllocation : []).map((item: any): AssetAllocationItem => ({
+            name: String(item.name || 'Unnamed Asset'),
+            value: Number(item.value) || 0,
+        })),
+        growthProjections: (Array.isArray(plan.growthProjections) ? plan.growthProjections : []).map((item: any): GrowthDataPoint => ({
+            year: Number(item.year) || 0,
+            amountInvested: Number(item.amountInvested) || 0,
+            conservative: Number(item.conservative) || 0,
+            expected: Number(item.expected) || 0,
+            aggressive: Number(item.aggressive) || 0,
+            recovery: Number(item.recovery) || 0,
+            crash: Number(item.crash) || 0,
+        })),
+        fundRecommendations: (Array.isArray(plan.fundRecommendations) ? plan.fundRecommendations : []).map((cat: any): FundCategory => ({
+            category: String(cat.category || 'Uncategorized'),
+            allocationPercentage: Number(cat.allocationPercentage) || 0,
+            funds: (Array.isArray(cat.funds) ? cat.funds : []).map((fund: any): Fund => ({
+                name: String(fund.name || 'Unnamed Fund'),
+                fundHouse: String(fund.fundHouse || 'Unknown'),
+                threeYearReturns: String(fund.threeYearReturns || 'N/A'),
+                fiveYearReturns: String(fund.fiveYearReturns || 'N/A'),
+                expenseRatio: String(fund.expenseRatio || 'N/A'),
+                description: String(fund.description || 'No description provided.'),
+            })),
+        })),
+    };
+
+    // Normalize asset allocation percentages to sum up to 100, preventing UI bugs.
+    const totalAllocation = sanitizedPlan.assetAllocation.reduce((sum, item) => sum + item.value, 0);
+    if (totalAllocation > 0 && Math.abs(totalAllocation - 100) > 1) { // Allow for small rounding errors
+        sanitizedPlan.assetAllocation = sanitizedPlan.assetAllocation.map(item => ({
+            ...item,
+            value: Number(((item.value / totalAllocation) * 100).toFixed(2)),
+        }));
+    }
+    
+    return sanitizedPlan;
+};
+
 
 export const generateInvestmentPlan = async (profile: UserProfile): Promise<InvestmentPlan> => {
     const prompt = `
@@ -58,9 +111,9 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
              jsonString = jsonString.substring(3, jsonString.length - 3).trim();
         }
         const plan = JSON.parse(jsonString);
-        return plan as InvestmentPlan;
+        return sanitizeInvestmentPlan(plan);
     } catch (e) {
-        console.error("Failed to parse Gemini response:", e);
+        console.error("Failed to parse or sanitize Gemini response:", e);
         console.error("Raw response text:", response.text);
         throw new Error("An error occurred while generating the investment plan. The response from the AI was not in the expected format.");
     }
@@ -96,6 +149,7 @@ export const startChat = () => {
 - If a user asks an off-topic question (e.g., "Who made you?", "Are you from Google?", "Tell me a joke"), you MUST politely decline and steer the conversation back to financial planning. For example: "As SIP Buddy, my expertise is in financial planning. How can I help you with your investment questions?"
 - Keep your answers concise, helpful, and strictly within your designated role.`,
     },
+
   });
 };
 
