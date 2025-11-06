@@ -62,7 +62,6 @@ const getImageDimensions = (url: string): Promise<{ width: number; height: numbe
         const img = new Image();
         img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
         img.onerror = (err) => reject(err);
-        img.crossOrigin = 'anonymous'; // Important for fetching from a different origin
         img.src = url;
     });
 };
@@ -74,6 +73,17 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [projectionView, setProjectionView] = useState<'chart' | 'table'>('chart');
   const [isExporting, setIsExporting] = useState(false);
+
+const imageToDataUrl = async (url: string): Promise<string> => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+};
 
 const handleExportPDF = async () => {
     setIsExporting(true);
@@ -89,18 +99,17 @@ const handleExportPDF = async () => {
     let yPos; // Will be set after header is drawn
 
     try {
-        // Since paths are now root-relative (e.g., /logoFull.png), we need the full URL for the PDF generator to fetch it.
-        const logoUrl = new URL(logoFull, window.location.origin).href;
-        const iconUrl = new URL(logoIcon, window.location.origin).href;
+        const logoDataUrl = await imageToDataUrl(logoFull);
+        const iconDataUrl = await imageToDataUrl(logoIcon);
         
         // Dynamically calculate aspect ratio to prevent distortion
-        const logoDimensions = await getImageDimensions(logoUrl);
+        const logoDimensions = await getImageDimensions(logoDataUrl);
         const logoWidth = 45;
         const logoHeight = (logoDimensions.height / logoDimensions.width) * logoWidth;
 
         // Add Header on the first page, with more vertical spacing
         const headerTopMargin = 15;
-        pdf.addImage(logoUrl, 'PNG', (pdfWidth - logoWidth) / 2, headerTopMargin, logoWidth, logoHeight);
+        pdf.addImage(logoDataUrl, 'PNG', (pdfWidth - logoWidth) / 2, headerTopMargin, logoWidth, logoHeight);
         
         pdf.setFontSize(11);
         pdf.setFont('helvetica', 'normal');
@@ -144,7 +153,7 @@ const handleExportPDF = async () => {
             pdf.setPage(i);
             pdf.saveGraphicsState();
             pdf.setGState(new pdf.GState({ opacity: 0.08 }));
-            pdf.addImage(iconUrl, 'PNG', (pdfWidth - watermarkSize) / 2, (pdfHeight - watermarkSize) / 2, watermarkSize, watermarkSize);
+            pdf.addImage(iconDataUrl, 'PNG', (pdfWidth - watermarkSize) / 2, (pdfHeight - watermarkSize) / 2, watermarkSize, watermarkSize);
             pdf.restoreGraphicsState();
         }
 

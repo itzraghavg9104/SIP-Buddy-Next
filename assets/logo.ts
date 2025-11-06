@@ -1,9 +1,7 @@
 // Contains paths to the logo assets.
 
-// Using absolute URLs to a hosted location ensures images load reliably
-// across all environments, bypassing deployment pathing issues.
-
-const baseUrl = 'https://sip-buddy.vercel.app/assets';
-
-export const logoFull = `${baseUrl}/logoFull.png`;
-export const logoIcon = `${baseUrl}/logoIcon.png`;
+// The application is using native ES modules without a bundler,
+// so we cannot import image assets directly. Instead, we export
+// the public URL paths as strings.
+export const logoFull = '/assets/logoFull.png';
+export const logoIcon = '/assets/logoIcon.png';
