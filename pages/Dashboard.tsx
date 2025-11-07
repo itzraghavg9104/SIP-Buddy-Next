@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { InvestmentPlan, UserProfile, Fund } from '../types';
 import {
@@ -15,11 +16,7 @@ import {
 } from 'recharts';
 import { IconChevronDown, IconInfoCircle } from '../components/Icons';
 import ComparisonModal from '../components/ComparisonModal';
-import { logoFull, logoIcon } from '../assets/logo';
-
-// Declare global variables for CDN libraries
-declare const jspdf: any;
-declare const html2canvas: any;
+import { exportDashboardToPDF } from '../services/pdfExportService';
 
 interface DashboardProps {
   investmentPlan: InvestmentPlan;
@@ -56,16 +53,6 @@ const SummaryCard: React.FC<{ title: string; value: string; subtext: string }> =
     </div>
   );
 
-// Helper function to get the natural dimensions of an image from its URL
-const getImageDimensions = (url: string): Promise<{ width: number; height: number }> => {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-        img.onerror = (err) => reject(err);
-        img.src = url;
-    });
-};
-
 const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCreateNewPlan }) => {
   const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({});
   
@@ -73,104 +60,23 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [projectionView, setProjectionView] = useState<'chart' | 'table'>('chart');
   const [isExporting, setIsExporting] = useState(false);
+  const [exportProgressText, setExportProgressText] = useState('');
 
-const imageToDataUrl = async (url: string): Promise<string> => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-};
-
-const handleExportPDF = async () => {
+  const handleExportPDF = async () => {
     setIsExporting(true);
-    // Allow state to update and UI to re-render with both projection views
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    const { jsPDF } = jspdf;
-    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const pageMargin = 15;
-    const contentWidth = pdfWidth - pageMargin * 2;
-    // Fix: Initialize yPos to a safe starting point to avoid undefined offsets.
-    let yPos = pageMargin;
+    setExportProgressText('Starting export...');
+    
+    // Add a short delay to allow the UI to update with disabled animations.
+    await new Promise(resolve => setTimeout(resolve, 500)); 
 
     try {
-        const logoDataUrl = await imageToDataUrl(logoFull);
-        const iconDataUrl = await imageToDataUrl(logoIcon);
-        
-        const logoDimensions = await getImageDimensions(logoDataUrl);
-        // Fix: Add check for valid logo dimensions to prevent NaN errors from division by zero.
-        if (!logoDimensions || logoDimensions.width === 0) {
-            throw new Error("Could not load logo for PDF export.");
-        }
-        const logoWidth = 45;
-        const logoHeight = (logoDimensions.height / logoDimensions.width) * logoWidth;
-
-        // Header section with incremental yPos updates for robustness
-        pdf.addImage(logoDataUrl, 'PNG', (pdfWidth - logoWidth) / 2, yPos, logoWidth, logoHeight);
-        yPos += logoHeight + 7;
-        
-        pdf.setFontSize(11);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setTextColor('#475569');
-        pdf.text('Your Personalized Investment Plan', pdfWidth / 2, yPos, { align: 'center' });
-        yPos += 5;
-        
-        pdf.setDrawColor('#e2e8f0');
-        pdf.setLineWidth(0.5);
-        pdf.line(pageMargin, yPos, pdfWidth - pageMargin, yPos);
-        yPos += 10; // Increased gap after header
-
-        const sections = document.querySelectorAll('.pdf-export-section');
-        
-        for (let i = 0; i < sections.length; i++) {
-            const section = sections[i] as HTMLElement;
-            const canvas = await html2canvas(section, { scale: 2, useCORS: true, windowWidth: 1280, logging: false });
-            
-            // Fix: Validate canvas dimensions to prevent errors from trying to add a zero-size image
-            // or calculating an Infinite pdfImgHeight.
-            if (canvas.width === 0 || canvas.height === 0) {
-                console.warn("Skipping empty section in PDF export:", section.className);
-                continue; // Skip this section and move to the next
-            }
-            
-            const imgData = canvas.toDataURL('image/png');
-            const imgWidth = canvas.width;
-            const imgHeight = canvas.height;
-            const ratio = imgWidth / contentWidth;
-            const pdfImgHeight = imgHeight / ratio;
-
-            if (yPos + pdfImgHeight > pdfHeight - pageMargin) {
-                pdf.addPage();
-                yPos = pageMargin;
-            }
-
-            pdf.addImage(imgData, 'PNG', pageMargin, yPos, contentWidth, pdfImgHeight);
-            yPos += pdfImgHeight + 5;
-        }
-
-        // Add Watermark to all pages
-        const totalPages = pdf.internal.getNumberOfPages();
-        const watermarkSize = 100;
-        for (let i = 1; i <= totalPages; i++) {
-            pdf.setPage(i);
-            pdf.saveGraphicsState();
-            pdf.setGState(new pdf.GState({ opacity: 0.08 }));
-            pdf.addImage(iconDataUrl, 'PNG', (pdfWidth - watermarkSize) / 2, (pdfHeight - watermarkSize) / 2, watermarkSize, watermarkSize);
-            pdf.restoreGraphicsState();
-        }
-
-        pdf.save('SIP-Buddy-Investment-Plan.pdf');
+        await exportDashboardToPDF(setExportProgressText);
     } catch (error) {
-        console.error("Error generating PDF:", error);
-        alert("Sorry, an error occurred while generating the PDF.");
+        console.error("PDF Export failed in component:", error);
+        alert(error instanceof Error ? error.message : "An unknown error occurred during PDF export.");
     } finally {
         setIsExporting(false);
+        setExportProgressText('');
     }
 };
 
@@ -196,18 +102,19 @@ const handleExportPDF = async () => {
   const projectionsChart = (
     <div className="h-96 mt-6">
         <ResponsiveContainer width="100%" height="100%">
+            {/* Fix: Moved `isAnimationActive` from LineChart to each Line component, as it's not a valid prop for the chart container. */}
             <LineChart data={investmentPlan.growthProjections || []} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                 <XAxis dataKey="year" tick={{ fontSize: 12 }} label={{ value: 'Years', position: 'insideBottom', offset: -10 }} />
                 <YAxis tickFormatter={formatLargeCurrency} tick={{ fontSize: 12 }} />
                 <RechartsTooltip formatter={(value: number) => formatCurrency(value)} />
                 <Legend wrapperStyle={{fontSize: "12px", paddingTop: "20px"}}/>
-                <Line type="monotone" dataKey="amountInvested" name="Amount Invested" stroke="#8884d8" strokeDasharray="5 5" dot={false} />
-                <Line type="monotone" dataKey="conservative" name="Conservative" stroke="#ef4444" dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="expected" name="Expected" stroke="#3b82f6" dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="aggressive" name="Aggressive" stroke="#10b981" dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="recovery" name="Recovery" stroke="#f97316" dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="crash" name="Crash" stroke="#6b7280" dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="amountInvested" name="Amount Invested" stroke="#8884d8" strokeDasharray="5 5" dot={false} isAnimationActive={!isExporting}/>
+                <Line type="monotone" dataKey="conservative" name="Conservative" stroke="#ef4444" dot={{ r: 4 }} activeDot={{ r: 6 }} isAnimationActive={!isExporting}/>
+                <Line type="monotone" dataKey="expected" name="Expected" stroke="#3b82f6" dot={{ r: 4 }} activeDot={{ r: 6 }} isAnimationActive={!isExporting}/>
+                <Line type="monotone" dataKey="aggressive" name="Aggressive" stroke="#10b981" dot={{ r: 4 }} activeDot={{ r: 6 }} isAnimationActive={!isExporting}/>
+                <Line type="monotone" dataKey="recovery" name="Recovery" stroke="#f97316" dot={{ r: 4 }} activeDot={{ r: 6 }} isAnimationActive={!isExporting}/>
+                <Line type="monotone" dataKey="crash" name="Crash" stroke="#6b7280" dot={{ r: 4 }} activeDot={{ r: 6 }} isAnimationActive={!isExporting}/>
             </LineChart>
         </ResponsiveContainer>
     </div>
@@ -247,6 +154,15 @@ const handleExportPDF = async () => {
   return (
     <>
       <div id="dashboard-content" className="max-w-6xl mx-auto space-y-8 bg-white p-4 sm:p-6 md:p-8">
+        <div className="mt-8 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-4 rounded-r-lg pdf-export-section">
+            <div className="flex">
+                <div className="py-1"><IconInfoCircle className="h-5 w-5 text-yellow-400 mr-3 flex-shrink-0" /></div>
+                <div>
+                    <p className="font-bold">Important Disclaimer:</p>
+                    <p className="text-sm">These are AI-generated suggestions for educational purposes only. Past performance does not guarantee future results. Please read all scheme-related documents carefully and consult with a certified financial advisor before investing.</p>
+                </div>
+            </div>
+        </div>
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -255,15 +171,15 @@ const handleExportPDF = async () => {
           </div>
           {!isExporting && (
              <div className="flex items-center gap-2">
-                <button onClick={handleExportPDF} disabled={isExporting} className="px-4 py-2 bg-slate-600 text-white font-semibold rounded-lg shadow-sm hover:bg-slate-700 transition-colors flex items-center gap-2 disabled:bg-slate-400">
+                <button onClick={handleExportPDF} disabled={isExporting} className="px-4 py-2 bg-slate-600 text-white font-semibold rounded-lg shadow-sm hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 disabled:bg-slate-400 w-44">
                      {isExporting ? (
-                        <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Exporting...
-                        </>
+                        <div className="flex flex-col items-center">
+                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mb-1"></div>
+                             <span className="text-xs">{exportProgressText}</span>
+                        </div>
                     ) : (
                        <>
-                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>
+                         <svg xmlns="http://www.w.w3.org/2000/svg" className="h-5 w-5" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>
                         Export Plan
                        </>
                     )}
@@ -297,7 +213,7 @@ const handleExportPDF = async () => {
               <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                      <Pie data={investmentPlan.assetAllocation || []} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={110} fill="#8884d8" labelLine={false}>
+                      <Pie data={investmentPlan.assetAllocation || []} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={110} fill="#8884d8" labelLine={false} isAnimationActive={!isExporting}>
                           {(investmentPlan.assetAllocation || []).map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
@@ -415,16 +331,6 @@ const handleExportPDF = async () => {
               </div>
             ))}
           </div>
-        </div>
-        
-        <div className="mt-8 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-4 rounded-r-lg pdf-export-section">
-            <div className="flex">
-                <div className="py-1"><IconInfoCircle className="h-5 w-5 text-yellow-400 mr-3 flex-shrink-0" /></div>
-                <div>
-                    <p className="font-bold">Important Disclaimer:</p>
-                    <p className="text-sm">These are AI-generated suggestions for educational purposes only. Past performance does not guarantee future results. Please read all scheme-related documents carefully and consult with a certified financial advisor before investing.</p>
-                </div>
-            </div>
         </div>
       </div>
       

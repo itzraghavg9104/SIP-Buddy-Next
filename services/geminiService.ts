@@ -1,5 +1,3 @@
-
-
 import { GoogleGenAI, Chat, Type } from "@google/genai";
 import { UserProfile, InvestmentPlan, Fund, FundCategory, AssetAllocationItem, GrowthDataPoint } from '../types';
 
@@ -10,6 +8,75 @@ if (!API_KEY) {
 }
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
+
+const investmentPlanSchema = {
+  type: Type.OBJECT,
+  properties: {
+    monthlySip: { type: Type.NUMBER, description: "The recommended monthly SIP amount." },
+    riskProfile: { type: Type.STRING, description: "The user's calculated risk profile (e.g., 'Aggressive')." },
+    timeHorizon: { type: Type.NUMBER, description: "The investment time horizon in years." },
+    assetClasses: { type: Type.NUMBER, description: "The number of different asset classes recommended." },
+    investmentRationale: { type: Type.STRING, description: "A detailed explanation of the investment strategy." },
+    assetAllocation: {
+      type: Type.ARRAY,
+      description: "Breakdown of investment across different asset classes.",
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          name: { type: Type.STRING, description: "Name of the asset class (e.g., 'Large Cap Equity')." },
+          value: { type: Type.NUMBER, description: "Percentage allocation for this asset class." },
+        },
+        required: ['name', 'value'],
+      },
+    },
+    growthProjections: {
+      type: Type.ARRAY,
+      description: "Year-by-year growth projections under different market scenarios.",
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          year: { type: Type.NUMBER },
+          amountInvested: { type: Type.NUMBER },
+          conservative: { type: Type.NUMBER },
+          expected: { type: Type.NUMBER },
+          aggressive: { type: Type.NUMBER },
+          recovery: { type: Type.NUMBER },
+          crash: { type: Type.NUMBER },
+        },
+        required: ['year', 'amountInvested', 'conservative', 'expected', 'aggressive', 'recovery', 'crash'],
+      },
+    },
+    fundRecommendations: {
+      type: Type.ARRAY,
+      description: "Specific mutual fund recommendations for each asset category.",
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          category: { type: Type.STRING, description: "The asset category (e.g., 'Large Cap Fund')." },
+          allocationPercentage: { type: Type.NUMBER, description: "Percentage of the SIP allocated to this category." },
+          funds: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                fundHouse: { type: Type.STRING },
+                threeYearReturns: { type: Type.STRING, description: "3-year Compound Annual Growth Rate (CAGR)." },
+                fiveYearReturns: { type: Type.STRING, description: "5-year Compound Annual Growth Rate (CAGR)." },
+                expenseRatio: { type: Type.STRING },
+                description: { type: Type.STRING, description: "A brief investment thesis for the fund." },
+              },
+              required: ['name', 'fundHouse', 'threeYearReturns', 'fiveYearReturns', 'expenseRatio', 'description'],
+            },
+          },
+        },
+        required: ['category', 'allocationPercentage', 'funds'],
+      },
+    },
+  },
+  required: ['monthlySip', 'riskProfile', 'timeHorizon', 'assetClasses', 'investmentRationale', 'assetAllocation', 'growthProjections', 'fundRecommendations'],
+};
+
 
 /**
  * Sanitizes the raw, parsed JSON object from the Gemini API to ensure it conforms to the InvestmentPlan interface.
@@ -87,9 +154,9 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
         *   **Hybrid Schemes**: Aggressive Hybrid Fund, Balanced Hybrid Fund, Conservative Hybrid Fund, Arbitrage Fund.
         *   **Other Schemes**: Index Fund, Fund of Funds (for international exposure).
     4.  Investment growth projections for the entire time horizon, with data points for years 0, 1, 3, 5, and the final year. Projections should cover 'Conservative (Bear Market)', 'Expected (Normal Market)', 'Aggressive (Bull Market)', 'Recovery Scenario', and 'Crash Scenario'. Also include the total 'Amount Invested' for each year.
-    5.  Specific mutual fund recommendations for each allocated asset class. Use Google Search to find 2 top-performing, currently recommended funds for each category. Provide their latest 3Y and 5Y CAGR returns, expense ratio, and a brief investment thesis.
+    5.  Specific mutual fund recommendations for each allocated asset class. Provide 2 top-performing funds for each category based on your knowledge. Provide their latest 3Y and 5Y CAGR returns, expense ratio, and a brief investment thesis.
     
-    The entire response must be a single, valid JSON object. Do not include any markdown formatting (like \`\`\`json), explanations, or any text outside of the JSON object itself.
+    The entire response must be a single, valid JSON object that conforms to the provided schema. Do not include any markdown formatting, explanations, or any text outside of the JSON object itself.
     `;
 
     const primaryModel = 'gemini-2.5-pro';
@@ -100,19 +167,14 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
             model: model,
             contents: prompt,
             config: {
-                tools: [{ googleSearch: {} }],
+                responseMimeType: "application/json",
+                responseSchema: investmentPlanSchema,
             },
         });
         
         try {
-            // The model is instructed to return a raw JSON string, but it might be wrapped in markdown.
-            let jsonString = response.text.trim();
-            if (jsonString.startsWith('```json')) {
-                jsonString = jsonString.substring(7, jsonString.length - 3).trim();
-            } else if (jsonString.startsWith('```')) {
-                 jsonString = jsonString.substring(3, jsonString.length - 3).trim();
-            }
-            const plan = JSON.parse(jsonString);
+            // With JSON mode, the response text is a guaranteed JSON string.
+            const plan = JSON.parse(response.text);
             return sanitizeInvestmentPlan(plan);
         } catch (e) {
             console.error(`Failed to parse response from model ${model}:`, e);
