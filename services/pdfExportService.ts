@@ -365,12 +365,18 @@
 
 import { logoFull, logoIcon } from '../assets/logo';
 // --- ADDED IMPORT ---
-import { IconSparkles } from '../components/Icons';
+// Fix: Removed the import of the IconSparkles component because it cannot be passed as a URL.
+// The icon will be defined as an SVG string and converted to a data URL instead.
+// import { IconSparkles } from '../components/Icons';
 // import { InvestmentPlan, UserProfile } from '../types'; // This was in the original, uncomment if needed
 
 // Declare global variables for CDN libraries to inform TypeScript
 declare const jspdf: any;
 declare const html2canvas: any;
+
+// Fix: Defined the IconSparkles SVG as a string to be programmatically converted to a data URL.
+const iconSparklesSVGString = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="#2563eb" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="9" /></svg>`;
+
 
 /**
  * Renders the Fund Recommendations section with intelligent page breaking
@@ -599,12 +605,15 @@ export const exportDashboardToPDF = async (
 
         // 2. Pre-load all images concurrently for performance
         onProgressUpdate('Loading images...');
-        // --- MODIFIED: Added iconSparklesDataUrl ---
-        const [logoFullDataUrl, logoIconDataUrl, iconSparklesDataUrl] = await Promise.all([
+        // Fix: Removed the IconSparkles component from Promise.all, as it is not a URL.
+        const [logoFullDataUrl, logoIconDataUrl] = await Promise.all([
             imageToDataUrl(logoFull),
             imageToDataUrl(logoIcon),
-            imageToDataUrl(IconSparkles) // Load the sparkles icon
         ]);
+
+        // Fix: Created a data URL for the SVG icon programmatically.
+        const iconSparklesDataUrl = `data:image/svg+xml;base64,${btoa(iconSparklesSVGString)}`;
+
 
         // 3. Render the header programmatically with fallback
         if (logoFullDataUrl) {
@@ -642,7 +651,9 @@ export const exportDashboardToPDF = async (
                 pdf.text(sipText, textX, textY, { baseline: 'middle' });
 
                 // Add the sparkles icon (assuming it's blue-600)
-                pdf.addImage(iconSparklesDataUrl, 'PNG', iconX, textY - (iconSize / 2), iconSize, iconSize);
+                // Fix: Changed the image format from 'PNG' to 'SVG' to correctly render the data URL.
+                pdf.addImage(iconSparklesDataUrl, 'SVG', iconX, textY - (iconSize / 2), iconSize, iconSize);
+
 
             } else {
                 // Text-based fallback (previous logic if iconSparkles fails)
@@ -661,7 +672,7 @@ export const exportDashboardToPDF = async (
 
             // Add subtitle below
             pdf.setFontSize(11);
-            pdf.setFont('helvetica', 'normal'); // Corrected: removed extra underscore
+            pdf.setFont('helvetica', 'normal');
             pdf.setTextColor(71, 85, 105);
             pdf.text('Your Personalized Investment Plan', pdfWidth / 2, 30, { align: 'center' });
         }
@@ -736,10 +747,8 @@ export const exportDashboardToPDF = async (
                 }
 
                 pdf.addImage(imgData, 'PNG', pageMargin, yPos, contentWidth, pdfImgHeight);
-                // Corrected: removed 'is'
                 yPos += pdfImgHeight + 5;
             }
-            // Corrected: removed stray underscore
         }
 
         // 7. Add watermark to all pages (with text fallback)
@@ -770,7 +779,6 @@ export const exportDashboardToPDF = async (
                 pdf.setTextColor(150, 150, 150); // Light gray
 
                 // Set transparency using a graphics state
-                // Corrected: removed 's'
                 const gState = new (jspdf as any).GState({ opacity: 0.08 });
                 pdf.setGState(gState);
 
@@ -785,7 +793,6 @@ export const exportDashboardToPDF = async (
                         angle: -45 // Rotate the text
                     }
                 );
-                // Corrected: removed stray underscore
 
                 // Reset graphics state to avoid affecting other elements
                 pdf.setGState(new (jspdf as any).GState({ opacity: 1 }));
@@ -801,7 +808,6 @@ export const exportDashboardToPDF = async (
     } finally {
         // 8. Always collapse the sections back to their original state
         if (expandedButtons.length > 0) {
-            // Corrected: removed stray underscore
             collapseFundSections(expandedButtons);
         }
     }
