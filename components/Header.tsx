@@ -1,7 +1,7 @@
 import React from 'react';
 import { Page } from '../types';
 // Fix: Removed 'IconTarget' as it is not an exported member of './Icons'.
-import { IconChartPie, IconLayoutDashboard, IconBook, IconSparkles, IconCalculator, IconInfoCircle } from './Icons';
+import { IconChartPie, IconLayoutDashboard, IconBook, IconSparkles, IconCalculator, IconInfoCircle, IconApps } from './Icons';
 import { logoFull } from '../assets/logo';
 import SafeImage from './SafeImage';
 
@@ -87,6 +87,12 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               isActive={currentPage === Page.Calculator}
               onClick={() => navigateTo(Page.Calculator)}
             />
+             <NavItem
+              label="More"
+              icon={<IconApps className="h-5 w-5" />}
+              isActive={currentPage === Page.More}
+              onClick={() => navigateTo(Page.More)}
+            />
             <NavItem
               label="About"
               icon={<IconInfoCircle className="h-5 w-5" />}
@@ -126,6 +132,13 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               icon={<IconCalculator className="h-5 w-5" />}
               isActive={currentPage === Page.Calculator}
               onClick={() => navigateTo(Page.Calculator)}
+              showLabelOnlyWhenActive
+            />
+            <NavItem
+              label="More"
+              icon={<IconApps className="h-5 w-5" />}
+              isActive={currentPage === Page.More}
+              onClick={() => navigateTo(Page.More)}
               showLabelOnlyWhenActive
             />
             <NavItem

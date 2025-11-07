@@ -1,5 +1,5 @@
 import { GoogleGenAI, Chat, Type } from "@google/genai";
-import { UserProfile, InvestmentPlan, Fund, FundCategory, AssetAllocationItem, GrowthDataPoint } from '../types';
+import { UserProfile, InvestmentPlan, Fund, FundCategory, AssetAllocationItem, GrowthDataPoint, FinancialAdvisor } from '../types';
 
 const API_KEY = process.env.API_KEY;
 
@@ -243,3 +243,77 @@ export const sendMessageToChat = async (message: string): Promise<string> => {
     }
     return "Chat not initialized. Please try again.";
 };
+
+export const findFinancialAdvisors = async (location: { latitude: number; longitude: number } | { query: string }): Promise<{ advisors: FinancialAdvisor[], groundingChunks: any[] }> => {
+    const locationPrompt = 'latitude' in location
+        ? `near latitude ${location.latitude} and longitude ${location.longitude}`
+        : `near "${location.query}"`;
+
+    const prompt = `
+        Find registered financial advisors ${locationPrompt}.
+        Return a list of up to 10 advisors.
+        For each advisor, you MUST provide their Name, Firm, full Address, Phone number, and Website.
+        You MUST also provide their precise geographic coordinates (Latitude and Longitude) IF they are available from the mapping service.
+        The entire response must be a single, valid JSON array of objects.
+        Each object in the array should have the following keys: "name", "firm", "address", "phone", "website", "latitude", "longitude".
+        The values for latitude and longitude must be numbers if available; otherwise, they MUST be null. All other values must be strings.
+        If a piece of information is not available for a non-essential field like phone or website, use an empty string "" as the value. The name and address fields are mandatory.
+        Do not include any introductory text, explanations, markdown formatting (like \`\`\`json), or any text outside of the single JSON array itself.
+    `;
+
+    const model = 'gemini-2.5-flash';
+    
+    const toolConfig = 'latitude' in location ? {
+        retrievalConfig: {
+            latLng: {
+                latitude: location.latitude,
+                longitude: location.longitude,
+            }
+        }
+    } : undefined;
+
+    const response = await ai.models.generateContent({
+        model: model,
+        contents: prompt,
+        config: {
+            tools: [{ googleMaps: {} }],
+            toolConfig: toolConfig,
+        },
+    });
+
+    const text = response.text;
+    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    
+    let advisors: FinancialAdvisor[] = [];
+    try {
+        // Find the JSON array within the response text. This handles cases where the API might add extra text.
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        if (jsonMatch && jsonMatch[0]) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (Array.isArray(parsed)) {
+                // Sanitize and type-check the data from the API
+                advisors = parsed
+                    .map(item => ({
+                        name: String(item.name || 'Unnamed Advisor'),
+                        firm: String(item.firm || ''),
+                        address: String(item.address || 'No address provided'),
+                        phone: String(item.phone || ''),
+                        website: String(item.website || ''),
+                        latitude: typeof item.latitude === 'number' ? item.latitude : null,
+                        longitude: typeof item.longitude === 'number' ? item.longitude : null,
+                    }))
+                    // Filter out any entries that are missing essential information
+                    .filter(advisor => advisor.name !== 'Unnamed Advisor' && advisor.address !== 'No address provided');
+            } else {
+                 console.warn("Parsed data is not an array:", parsed);
+            }
+        } else {
+             console.warn("No valid JSON array found in the response.", text);
+        }
+    } catch (e) {
+        console.error("Failed to parse JSON response for financial advisors:", e);
+        console.error("Raw text from API:", text);
+    }
+
+    return { advisors, groundingChunks };
+}

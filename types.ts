@@ -4,6 +4,7 @@ export enum Page {
   Learn = 'Learn',
   Calculator = 'Calculator',
   About = 'About',
+  More = 'More',
 }
 
 export enum RiskTolerance {
@@ -70,4 +71,21 @@ export interface InvestmentPlan {
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
+}
+
+export interface FinancialAdvisor {
+    name: string;
+    firm: string;
+    address: string;
+    phone: string;
+    website: string;
+    latitude: number | null;
+    longitude: number | null;
+}
+
+export interface GroundingChunk {
+    maps: {
+        uri: string;
+        title: string;
+    };
 }
