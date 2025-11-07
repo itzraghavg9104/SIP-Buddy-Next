@@ -1,5 +1,4 @@
 // services/pdfExportService.ts
-import { logoFull, logoIcon } from '../assets/logo';
 
 // Declare global variables for CDN libraries to inform TypeScript
 declare const jspdf: any;
@@ -91,26 +90,40 @@ const renderFundRecommendationsSection = async (
 };
 
 /**
- * Fetches an image from a URL and converts it to a Base64 data URL.
+ * Loads an image from a URL and converts it to a Base64 data URL using an Image element.
+ * This is more reliable than fetch for canvas operations.
  */
-const imageToDataUrl = async (url: string): Promise<string | null> => {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch image: ${response.statusText}`);
-        }
-        const blob = await response.blob();
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
-    } catch (error) {
-        console.error(`Error converting image to data URL for path: ${url}`, error);
-        return null;
-    }
+const imageToDataUrl = (url: string): Promise<string | null> => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous'; // This is crucial for preventing canvas tainting
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    console.error('Could not get 2D context for image conversion.');
+                    resolve(null); // Resolve with null on failure
+                    return;
+                }
+                ctx.drawImage(img, 0, 0);
+                const dataURL = canvas.toDataURL('image/png');
+                resolve(dataURL);
+            } catch (error) {
+                 console.error(`Error converting image to data URL on canvas for path: ${url}`, error);
+                 resolve(null);
+            }
+        };
+        img.onerror = () => {
+            console.error(`Error loading image from path: ${url}`);
+            resolve(null); // Resolve with null if the image fails to load
+        };
+        img.src = url;
+    });
 };
+
 
 /**
  * Creates a semi-transparent version of an image using canvas
@@ -195,6 +208,14 @@ export const exportDashboardToPDF = async (
 ): Promise<void> => {
     const expandedButtons: HTMLButtonElement[] = [];
 
+    // Define SVG fallbacks
+    const iconSparklesSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="#2563eb" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="9" /></svg>';
+    const iconSparklesDataUrl = `data:image/svg+xml;base64,${btoa(iconSparklesSvg)}`;
+    
+    const watermarkIconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="9" /></svg>';
+    const watermarkIconDataUrl = `data:image/svg+xml;base64,${btoa(watermarkIconSvg)}`;
+
+
     try {
         onProgressUpdate('Initializing PDF export...');
         const { jsPDF } = jspdf;
@@ -215,8 +236,8 @@ export const exportDashboardToPDF = async (
         // 2. Pre-load logo images
         onProgressUpdate('Loading images...');
         const [logoFullDataUrl, logoIconDataUrl] = await Promise.all([
-            imageToDataUrl(logoFull),
-            imageToDataUrl(logoIcon)
+            imageToDataUrl('/assets/logoFull.png'),
+            imageToDataUrl('/assets/logoIcon.png')
         ]);
 
         // 3. Render the header with fallback
@@ -233,25 +254,17 @@ export const exportDashboardToPDF = async (
             pdf.setTextColor(71, 85, 105);
             pdf.text('Your Personalized Investment Plan', pdfWidth / 2, logoY + logoHeight + 5, { align: 'center' });
         } else {
-            // Text-based fallback
-            pdf.setFontSize(20);
-            pdf.setFont('helvetica', 'bold');
-            pdf.setTextColor(37, 99, 235);
+            // Icon-based fallback
+            const iconSize = 20; // in mm
+            const iconX = (pdfWidth - iconSize) / 2;
+            const iconY = 12;
 
-            const sipText = 'SIP Buddy';
-            const textWidth = pdf.getTextWidth(sipText);
-            const textX = (pdfWidth - textWidth) / 2;
-
-            pdf.text(sipText, textX, 22);
-
-            // Add sparkle symbol
-            pdf.setFontSize(16);
-            pdf.text('✦', textX - 8, 22);
+            pdf.addImage(iconSparklesDataUrl, 'SVG', iconX, iconY, iconSize, iconSize);
 
             pdf.setFontSize(11);
             pdf.setFont('helvetica', 'normal');
-            pdf.setTextColor(71, 85, 105);
-            pdf.text('Your Personalized Investment Plan', pdfWidth / 2, 30, { align: 'center' });
+            pdf.setTextColor(71, 85, 105); // #475569 slate-600
+            pdf.text('Your Personalized Investment Plan', pdfWidth / 2, iconY + iconSize + 3, { align: 'center' });
         }
 
         pdf.setDrawColor(226, 232, 240);
@@ -338,24 +351,17 @@ export const exportDashboardToPDF = async (
                     watermarkSize
                 );
             } else {
-                // Text watermark fallback
-                const fallbackText = 'SIP Buddy';
-                pdf.setFontSize(50);
-                pdf.setFont('helvetica', 'bold');
-                pdf.setTextColor(150, 150, 150);
-
+                // Icon watermark fallback
                 const gState = new (jspdf as any).GState({ opacity: 0.08 });
                 pdf.setGState(gState);
 
-                pdf.text(
-                    fallbackText,
-                    pdfWidth / 2,
-                    pdfHeight / 2,
-                    {
-                        align: 'center',
-                        baseline: 'middle',
-                        angle: -45
-                    }
+                pdf.addImage(
+                    watermarkIconDataUrl,
+                    'SVG',
+                    (pdfWidth - watermarkSize) / 2,
+                    (pdfHeight - watermarkSize) / 2,
+                    watermarkSize,
+                    watermarkSize
                 );
 
                 pdf.setGState(new (jspdf as any).GState({ opacity: 1 }));

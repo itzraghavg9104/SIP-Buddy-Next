@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 type IconProps = {
     className?: string;
@@ -184,4 +184,28 @@ export const learnIcons: { [key: string]: React.FC<IconProps> } = {
     </svg>
   ),
   'Important Disclaimer': (props) => <IconInfoCircle {...props} />,
+};
+
+interface LogoImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+    fallbackClassName?: string;
+}
+
+export const LogoImage: React.FC<LogoImageProps> = ({ src, alt, className, fallbackClassName, ...props }) => {
+    const [hasError, setHasError] = useState(false);
+
+    if (hasError) {
+        // Give the fallback a default color and allow override via className
+        const finalClassName = `text-blue-600 ${fallbackClassName || className}`;
+        return <IconSparkles className={finalClassName} />;
+    }
+
+    return (
+        <img
+            src={src}
+            alt={alt}
+            className={className}
+            onError={() => setHasError(true)}
+            {...props}
+        />
+    );
 };
