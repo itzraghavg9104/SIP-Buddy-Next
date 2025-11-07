@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { IconBrandMessenger, IconSend, IconX, IconUser, LogoImage } from './Icons';
+import { IconBrandMessenger, IconSend, IconX, IconSparkles, IconUser } from './Icons';
 import { sendMessageToChat, startChat } from '../services/geminiService';
 import { ChatMessage } from '../types';
+import { logoIcon } from '../assets/logo';
+import SafeImage from './SafeImage';
 
 // A simple markdown to HTML converter to handle bold text and lists.
 const parseMarkdownToHTML = (markdown: string): string => {
@@ -106,11 +108,11 @@ const Chatbot: React.FC = () => {
         <div className="fixed bottom-20 right-6 w-full max-w-sm h-[70vh] max-h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 transition-all duration-300 ease-in-out origin-bottom-right transform scale-100 opacity-100">
           <header className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50 rounded-t-2xl">
             <div className="flex items-center">
-              <LogoImage
-                  src="/assets/logoIcon.png"
+              <SafeImage
+                  src={logoIcon}
+                  fallback={<IconSparkles className="h-8 w-8 text-blue-600" />}
                   alt="SIP Buddy Icon"
                   className="h-8 w-8 rounded-full"
-                  crossOrigin="anonymous"
               />
               <h2 className="text-lg font-semibold ml-3 text-slate-800">SIP Buddy</h2>
             </div>
@@ -123,11 +125,11 @@ const Chatbot: React.FC = () => {
               <div key={index} className={`flex items-start gap-3 my-4 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                 {msg.role === 'model' && (
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <LogoImage
-                        src="/assets/logoIcon.png"
+                    <SafeImage
+                        src={logoIcon}
+                        fallback={<IconSparkles className="h-7 w-7 text-blue-600" />}
                         alt="SIP Buddy Icon"
                         className="h-7 w-7 rounded-full"
-                        crossOrigin="anonymous"
                     />
                   </div>
                 )}
@@ -151,11 +153,11 @@ const Chatbot: React.FC = () => {
              {isLoading && (
               <div className="flex items-start gap-3 my-4">
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <LogoImage
-                      src="/assets/logoIcon.png"
+                  <SafeImage
+                      src={logoIcon}
+                      fallback={<IconSparkles className="h-7 w-7 text-blue-600" />}
                       alt="SIP Buddy Icon"
                       className="h-7 w-7 rounded-full"
-                      crossOrigin="anonymous"
                   />
                 </div>
                 <div className="max-w-xs md:max-w-md px-4 py-2.5 rounded-2xl bg-white text-slate-700 rounded-bl-none shadow-sm flex items-center">

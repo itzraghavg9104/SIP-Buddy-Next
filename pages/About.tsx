@@ -1,6 +1,8 @@
 import React from 'react';
 // Fix: Removed 'IconTarget' as it is not an exported member of '../components/Icons'.
-import { IconSparkles, IconLayoutDashboard, IconBook, IconCalculator, IconMail, LogoImage } from '../components/Icons';
+import { IconSparkles, IconLayoutDashboard, IconBook, IconCalculator, IconMail } from '../components/Icons';
+import { logoFull } from '../assets/logo';
+import SafeImage from '../components/SafeImage';
 
 const About: React.FC = () => {
     const features = [
@@ -26,14 +28,22 @@ const About: React.FC = () => {
         }
     ];
     
+    const fallbackLogo = (
+        <div className="flex items-center justify-center h-20 mx-auto mb-4">
+            <IconSparkles className="h-12 w-12 text-blue-600" />
+            <span className="text-4xl font-bold ml-3 text-slate-800">SIP Buddy</span>
+        </div>
+    );
+
+
     return (
         <div className="max-w-4xl mx-auto py-8 px-4">
             <div className="text-center mb-12">
-                <LogoImage
-                    src="/assets/logoFull.png"
+                <SafeImage
+                    src={logoFull}
+                    fallback={fallbackLogo}
                     alt="SIP Buddy Logo"
                     className="h-16 mx-auto mb-6"
-                    crossOrigin="anonymous"
                 />
                 <p className="text-lg text-slate-600">
                     Your intelligent partner in simplifying Systematic Investment Plans.
