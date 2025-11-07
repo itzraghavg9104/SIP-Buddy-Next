@@ -165,6 +165,68 @@ export const IconWorld: React.FC<IconProps> = (props) => (
     </svg>
 );
 
+const IconChecklist: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+        <path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4" />
+        <path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6" />
+        <path d="M10 15h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6" />
+        <path d="M17 15l2 2l4 -4" />
+    </svg>
+);
+
+const IconPercentage: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M17 17l-11 -11" />
+        <path d="M14 20a2 2 0 1 0 0 -4a2 2 0 0 0 0 4z" />
+        <path d="M6 9a2 2 0 1 0 0 -4a2 2 0 0 0 0 4z" />
+    </svg>
+);
+
+const IconScale: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M7 20l10 0" />
+        <path d="M6 6l6 -1l6 1" />
+        <path d="M12 3v17" />
+        <path d="M3 7h18" />
+        <path d="M12 7a3 3 0 0 0 -3 -3" />
+        <path d="M15 4a3 3 0 0 0 -3 3" />
+    </svg>
+);
+
+const IconStocks: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M3 17l6 -6l4 4l8 -8" />
+        <path d="M14 7l7 0l0 7" />
+    </svg>
+);
+
+const IconChartDots: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M3 3v18h18" />
+        <circle cx="9" cy="9" r="2" />
+        <circle cx="19" cy="7" r="2" />
+        <circle cx="14" cy="15" r="2" />
+        <path d="M10.16 10.65l2.34 2.85" />
+        <path d="M15.088 13.328l2.837 -4.586" />
+    </svg>
+);
+
+const IconLayersIntersect: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M8 4m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z" />
+        <path d="M4 8m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z" />
+    </svg>
+);
+
+
+
 export const learnIcons: { [key: string]: React.FC<IconProps> } = {
   'What is SIP?': (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-calendar-plus" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -225,4 +287,10 @@ export const learnIcons: { [key: string]: React.FC<IconProps> } = {
     </svg>
   ),
   'Important Disclaimer': (props) => <IconInfoCircle {...props} />,
+  'Choosing the Right Mutual Fund': (props) => <IconChecklist {...props} />,
+  'What is Expense Ratio?': (props) => <IconPercentage {...props} />,
+  'Understanding Sharpe Ratio': (props) => <IconScale {...props} />,
+  'Mutual Funds vs. Stocks': (props) => <IconStocks {...props} />,
+  'Key Ratios & Metrics': (props) => <IconChartDots {...props} />,
+  'The Danger of Portfolio Overlap': (props) => <IconLayersIntersect {...props} />,
 };
