@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { InvestmentPlan, UserProfile, Fund } from '../types';
+import React, { useState, useEffect } from 'react';
+import { InvestmentPlan, UserProfile, Fund, Page } from '../types';
 import {
   ResponsiveContainer,
   PieChart,
@@ -14,14 +13,19 @@ import {
   CartesianGrid,
   Legend,
 } from 'recharts';
-import { IconChevronDown, IconInfoCircle } from '../components/Icons';
+import { IconChevronDown, IconInfoCircle, IconLayoutDashboard, IconListDetails, IconChartPie } from '../components/Icons';
 import ComparisonModal from '../components/ComparisonModal';
 import { exportDashboardToPDF } from '../services/pdfExportService';
+import NotificationModal from '../components/NotificationModal';
+import { getUserPlans } from '../services/firestoreService';
+import { CurrentPlanState } from '../App';
+
 
 interface DashboardProps {
-  investmentPlan: InvestmentPlan;
-  userProfile: UserProfile;
+  currentPlan: CurrentPlanState | null;
+  onSavePlan: (planName: string) => Promise<void>;
   onCreateNewPlan: () => void;
+  navigateTo: (page: Page) => void;
 }
 
 const COLORS = ['#3b82f6', '#10b981', '#ef4444', '#f97316', '#a855f7', '#84cc16', '#f59e0b'];
@@ -53,22 +57,44 @@ const SummaryCard: React.FC<{ title: string; value: string; subtext: string }> =
     </div>
   );
 
-const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCreateNewPlan }) => {
+const Dashboard: React.FC<DashboardProps> = ({ currentPlan, onSavePlan, onCreateNewPlan, navigateTo }) => {
   const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({});
   
   const [selectedFundsForComparison, setSelectedFundsForComparison] = useState<Fund[]>([]);
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [planName, setPlanName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   const [projectionView, setProjectionView] = useState<'chart' | 'table'>('chart');
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgressText, setExportProgressText] = useState('');
 
+  const [hasSavedPlans, setHasSavedPlans] = useState<boolean | null>(null);
+  const [isLoadingCheck, setIsLoadingCheck] = useState(true);
+
+  useEffect(() => {
+    if (!currentPlan) {
+        setIsLoadingCheck(true);
+        getUserPlans()
+            .then(plans => {
+                setHasSavedPlans(plans.length > 0);
+            })
+            .catch(() => {
+                setHasSavedPlans(false);
+            })
+            .finally(() => {
+                setIsLoadingCheck(false);
+            });
+    }
+  }, [currentPlan]);
+
+
   const handleExportPDF = async () => {
     setIsExporting(true);
     setExportProgressText('Starting export...');
-    
-    // Add a short delay to allow the UI to update with disabled animations.
     await new Promise(resolve => setTimeout(resolve, 500)); 
-
     try {
         await exportDashboardToPDF(setExportProgressText);
     } catch (error) {
@@ -78,8 +104,29 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
         setIsExporting(false);
         setExportProgressText('');
     }
-};
+  };
 
+  const openSaveModal = () => {
+    setSaveError(null);
+    setIsSaveModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!planName.trim() || isSaving) return;
+
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await onSavePlan(planName.trim());
+      setIsSaveModalOpen(false);
+      setPlanName('');
+    } catch (error) {
+      console.error("Error caught in Dashboard handleSave:", error);
+      setSaveError(error instanceof Error ? error.message : "An unknown error occurred. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const toggleSection = (category: string) => {
     setOpenSections(prev => ({ ...prev, [category]: !prev[category] }));
@@ -91,7 +138,7 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
       if (isSelected) {
         return prevSelected.filter(f => f.name !== fund.name);
       } else {
-        if (prevSelected.length < 5) { // Limit comparison to 5 funds
+        if (prevSelected.length < 5) {
             return [...prevSelected, fund];
         }
         return prevSelected;
@@ -99,10 +146,53 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
     });
   };
 
+  if (!currentPlan) {
+    if (isLoadingCheck) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[50vh]">
+                <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                <p className="mt-4 text-slate-500">Checking for saved plans...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="text-center p-12 bg-white rounded-xl shadow-md border border-slate-200 max-w-2xl mx-auto">
+            <IconLayoutDashboard className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                {hasSavedPlans ? 'No Plan Selected' : 'Welcome to Your Dashboard'}
+            </h2>
+            <p className="text-slate-600 mb-6">
+                {hasSavedPlans 
+                    ? 'Please select a plan from your saved plans to view it here.' 
+                    : "You haven't created or saved any investment plans yet."}
+            </p>
+            {hasSavedPlans ? (
+                <button 
+                    onClick={() => navigateTo(Page.MyPlans)}
+                    className="inline-flex items-center gap-2 py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors"
+                >
+                    <IconListDetails className="w-5 h-5" />
+                    View My Saved Plans
+                </button>
+            ) : (
+                <button 
+                    onClick={() => navigateTo(Page.Planner)}
+                    className="inline-flex items-center gap-2 py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors"
+                >
+                    <IconChartPie className="w-5 h-5" />
+                    Create Your First Plan
+                </button>
+            )}
+        </div>
+    );
+  }
+
+  const { planData: investmentPlan, userProfile, isSaved: isPlanSaved } = currentPlan;
+
   const projectionsChart = (
     <div className="h-96 mt-6">
         <ResponsiveContainer width="100%" height="100%">
-            {/* Fix: Moved `isAnimationActive` from LineChart to each Line component, as it's not a valid prop for the chart container. */}
             <LineChart data={investmentPlan.growthProjections || []} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                 <XAxis dataKey="year" tick={{ fontSize: 12 }} label={{ value: 'Years', position: 'insideBottom', offset: -10 }} />
@@ -163,7 +253,6 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
                 </div>
             </div>
         </div>
-        {/* Header */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Your Investment Dashboard</h1>
@@ -171,6 +260,12 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
           </div>
           {!isExporting && (
              <div className="flex items-center gap-2">
+                {!isPlanSaved && (
+                  <button onClick={openSaveModal} className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-sm hover:bg-green-700 transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>
+                    Save Plan
+                  </button>
+                )}
                 <button onClick={handleExportPDF} disabled={isExporting} className="px-4 py-2 bg-slate-600 text-white font-semibold rounded-lg shadow-sm hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 disabled:bg-slate-400 w-44">
                      {isExporting ? (
                         <div className="flex flex-col items-center">
@@ -179,7 +274,7 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
                         </div>
                     ) : (
                        <>
-                         <svg xmlns="http://www.w.w3.org/2000/svg" className="h-5 w-5" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>
+                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>
                         Export Plan
                        </>
                     )}
@@ -190,22 +285,16 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
             </div>
           )}
         </div>
-
-        {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pdf-export-section">
           <SummaryCard title="Monthly SIP" value={formatCurrency(investmentPlan.monthlySip)} subtext="Recommended investment" />
           <SummaryCard title="Risk Profile" value={investmentPlan.riskProfile} subtext="Investment strategy" />
           <SummaryCard title="Time Horizon" value={`${investmentPlan.timeHorizon} Years`} subtext="Investment period" />
           <SummaryCard title="Asset Classes" value={String(investmentPlan.assetClasses)} subtext="Diversified portfolio" />
         </div>
-
-        {/* Investment Rationale */}
         <div className="bg-slate-50 p-6 rounded-xl shadow-lg border border-slate-200 pdf-export-section">
           <h2 className="text-xl font-semibold mb-2">Investment Rationale</h2>
           <p className="text-slate-600 leading-relaxed">{investmentPlan.investmentRationale}</p>
         </div>
-
-        {/* Asset Allocation */}
         <div className="bg-slate-50 p-6 rounded-xl shadow-lg border border-slate-200 pdf-export-section">
           <h2 className="text-xl font-semibold mb-4">Asset Allocation</h2>
           <p className="text-slate-500 mb-6">Your monthly SIP of {formatCurrency(investmentPlan.monthlySip)} distributed across asset classes</p>
@@ -240,8 +329,6 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
             </div>
           </div>
         </div>
-        
-        {/* Investment Growth Projections */}
         <div className="bg-slate-50 p-6 rounded-xl shadow-lg border border-slate-200 pdf-export-section">
               <div className="flex justify-between items-center mb-2">
                   <div>
@@ -266,8 +353,6 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
                 projectionView === 'chart' ? projectionsChart : projectionsTable
               )}
           </div>
-
-        {/* Fund Recommendations */}
         <div className="bg-slate-50 p-6 rounded-xl shadow-lg border border-slate-200 pdf-export-section">
           <div className="flex justify-between items-center mb-2">
               <h2 className="text-xl font-semibold">Fund Recommendations</h2>
@@ -333,6 +418,39 @@ const Dashboard: React.FC<DashboardProps> = ({ investmentPlan, userProfile, onCr
           </div>
         </div>
       </div>
+      
+      <NotificationModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        title="Save Your Plan"
+        message="Give your investment plan a name to easily identify it later."
+      >
+        <div className="mt-4">
+            <input
+                type="text"
+                value={planName}
+                onChange={(e) => setPlanName(e.target.value)}
+                placeholder="e.g., My Retirement Plan"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md"
+                disabled={isSaving}
+            />
+            {saveError && <p className="text-red-600 text-sm text-left mt-2">{saveError}</p>}
+            <button
+                onClick={handleSave}
+                disabled={!planName.trim() || isSaving}
+                className="w-full mt-4 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-sm hover:bg-green-700 disabled:bg-green-300 flex items-center justify-center"
+            >
+                {isSaving ? (
+                    <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Saving...
+                    </>
+                ) : (
+                    'Save Plan'
+                )}
+            </button>
+        </div>
+      </NotificationModal>
       
       {!isExporting && selectedFundsForComparison.length >= 2 && (
             <button

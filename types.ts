@@ -1,10 +1,14 @@
 export enum Page {
+  Home = 'Home',
   Planner = 'Planner',
   Dashboard = 'Dashboard',
   Learn = 'Learn',
   Calculator = 'Calculator',
   About = 'About',
   More = 'More',
+  Auth = 'Auth',
+  Profile = 'Profile',
+  MyPlans = 'MyPlans',
 }
 
 export enum RiskTolerance {
@@ -39,8 +43,6 @@ export interface FundCategory {
     funds: Fund[];
 }
 
-// Fix: Added an index signature to make the type compatible with the recharts library.
-// The Pie component from recharts expects a data type with an index signature, which was causing a type error.
 export interface AssetAllocationItem {
     name: string;
     value: number;
@@ -68,11 +70,24 @@ export interface InvestmentPlan {
     fundRecommendations: FundCategory[];
 }
 
+export interface SavedPlan {
+    id: string;
+    userId: string;
+    planName: string;
+    createdAt: {
+        seconds: number;
+        nanoseconds: number;
+    };
+    investmentPlan: InvestmentPlan;
+    userProfile: UserProfile;
+}
+
+
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
-  audioData?: string; // Base64 audio string for TTS
-  isPlaying?: boolean; // UI state for audio playback
+  audioData?: string; 
+  isPlaying?: boolean; 
 }
 
 export interface FinancialAdvisor {

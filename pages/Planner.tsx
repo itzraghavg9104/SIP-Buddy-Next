@@ -1,9 +1,7 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import { InvestmentPlan, RiskTolerance, UserProfile } from '../types';
 import { generateInvestmentPlan } from '../services/geminiService';
-import { IconSparkles, IconInfoCircle } from '../components/Icons';
+import { IconSparkles } from '../components/Icons';
 
 interface PlannerProps {
   onPlanGenerated: (plan: InvestmentPlan, profile: UserProfile) => void;
@@ -33,7 +31,6 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState(loadingSteps[0]);
-  // Fix: Initialized useRef with null to fix "Expected 1 arguments, but got 0" error. The useRef hook requires an initial value.
   const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -122,6 +119,29 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="max-w-xl mx-auto text-center py-12">
+        <IconSparkles className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
+        <h2 className="mt-4 text-2xl font-bold text-slate-800">{loadingText}</h2>
+        <div className="w-full bg-slate-200 rounded-full h-2.5 mt-6">
+            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%`, transition: 'width 0.5s ease-in-out' }}></div>
+        </div>
+        <p className="mt-2 text-sm text-slate-500">{Math.round(progress)}% complete</p>
+        
+        {error && (
+            <div className="mt-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
+                <strong className="font-bold">Error: </strong>
+                <span className="block sm:inline">{error}</span>
+                <button onClick={() => { setIsLoading(false); setError(null); }} className="mt-2 block mx-auto text-sm font-semibold text-blue-600 hover:underline">
+                    Go back to form
+                </button>
+            </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
@@ -167,78 +187,51 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
               <input type="number" name="existingLoans" value={formData.existingLoans} onChange={handleChange} placeholder="0" className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
               <p className="mt-1 text-xs text-slate-500">Total outstanding loan amount</p>
             </div>
-             <div>
+            <div>
               <label htmlFor="loanTenureRemaining" className="block text-sm font-medium text-slate-700">Loan Tenure Remaining (years)</label>
-              <input type="number" name="loanTenureRemaining" value={formData.loanTenureRemaining} onChange={handleChange} placeholder="0" className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
-              <p className="mt-1 text-xs text-slate-500">Years until loan is paid off</p>
+              <input type="number" name="loanTenureRemaining" value={formData.loanTenureRemaining} onChange={handleChange} placeholder="5" className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+              <p className="mt-1 text-xs text-slate-500">Years left to pay off loans</p>
             </div>
             <div>
-              <label htmlFor="investmentTimeHorizon" className="block text-sm font-medium text-slate-700">Investment Time Horizon (years)</label>
+              <label htmlFor="investmentTimeHorizon" className="block text-sm font-medium text-slate-700">Investment Horizon (years)</label>
               <input type="number" name="investmentTimeHorizon" value={formData.investmentTimeHorizon} onChange={handleChange} placeholder="10" className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
-              <p className="mt-1 text-xs text-slate-500">How long you plan to invest</p>
+              <p className="mt-1 text-xs text-slate-500">How long you plan to stay invested</p>
             </div>
-          </div>
-          {/* Risk Tolerance */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Risk Tolerance</label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {(Object.values(RiskTolerance)).map((risk) => (
-                <div key={risk} onClick={() => handleRiskChange(risk)} className={`p-4 border rounded-lg cursor-pointer transition-all ${formData.riskTolerance === risk ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500' : 'border-slate-300 hover:border-slate-400'}`}>
-                  <div className="flex items-center">
-                    <input type="radio" name="riskTolerance" value={risk} checked={formData.riskTolerance === risk} onChange={() => handleRiskChange(risk)} className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"/>
-                    <div className="ml-3">
-                        <p className="font-semibold text-slate-800">{risk}</p>
-                        <p className="text-xs text-slate-500">
-                          {risk === RiskTolerance.Conservative && 'Lower risk, stable returns'}
-                          {risk === RiskTolerance.Moderate && 'Balanced risk & returns'}
-                          {risk === RiskTolerance.Aggressive && 'Higher risk, higher returns'}
-                        </p>
-                    </div>
-                  </div>
+            <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700">Risk Tolerance</label>
+                <div className="mt-2 grid grid-cols-3 gap-3">
+                    {Object.values(RiskTolerance).map((risk) => (
+                    <button
+                        key={risk}
+                        type="button"
+                        onClick={() => handleRiskChange(risk)}
+                        className={`px-4 py-3 text-sm font-semibold rounded-md transition-colors text-center ${
+                        formData.riskTolerance === risk
+                            ? 'bg-blue-600 text-white shadow-md'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        }`}
+                    >
+                        {risk}
+                    </button>
+                    ))}
                 </div>
-              ))}
+            </div>
+            <div className="md:col-span-2">
+                <label htmlFor="investmentGoal" className="block text-sm font-medium text-slate-700">Investment Goal</label>
+                <textarea name="investmentGoal" value={formData.investmentGoal} onChange={handleChange} rows={3} placeholder="e.g., Retirement planning, child's education, wealth creation..." className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+                <p className="mt-1 text-xs text-slate-500">What are you saving for?</p>
             </div>
           </div>
-           {/* Investment Goal */}
-          <div>
-              <label htmlFor="investmentGoal" className="block text-sm font-medium text-slate-700">Investment Goal</label>
-              <textarea name="investmentGoal" value={formData.investmentGoal} onChange={handleChange} rows={2} placeholder="E.g., Retirement planning, child education, wealth creation..." className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
-              <p className="mt-1 text-xs text-slate-500">What are you investing for?</p>
+          <div className="pt-6 text-center">
+            <button type="submit" disabled={isLoading} className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed">
+                <IconSparkles className={`w-6 h-6 mr-3 ${isLoading ? 'animate-spin' : ''}`} />
+                {isLoading ? 'Generating Your Plan...' : 'Generate My AI Plan'}
+            </button>
           </div>
-
-          <button type="submit" disabled={isLoading} className="w-full flex justify-center items-center gap-2 py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed">
-            {isLoading ? (
-               <div className="w-full flex flex-col items-center">
-                 <div className="w-full bg-slate-200 rounded-full h-2.5 mb-2">
-                    <div 
-                        className="bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600 h-2.5 rounded-full transition-all duration-500 ease-out animated-gradient" 
-                        style={{ width: `${progress}%` }}
-                    ></div>
-                </div>
-                <span className="text-sm font-normal">{loadingText}</span>
-            </div>
-            ) : (
-                <>
-                <IconSparkles className="w-5 h-5" />
-                Generate Investment Plan
-                </>
-            )}
-          </button>
-          {error && <p className="text-red-500 text-sm text-center mt-4">{error}</p>}
         </form>
-      </div>
-
-      <div className="mt-8 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-4 rounded-r-lg">
-          <div className="flex">
-              <div className="py-1"><IconInfoCircle className="h-5 w-5 text-yellow-400 mr-3" /></div>
-              <div>
-                  <p className="font-bold">Important:</p>
-                  <p className="text-sm">This tool provides AI-generated educational recommendations only. All mutual fund investments are subject to market risks. Please consult with a certified financial advisor before making any investment decisions.</p>
-              </div>
-          </div>
       </div>
     </div>
   );
 };
-
+// FIX: Add missing default export
 export default Planner;

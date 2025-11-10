@@ -6,9 +6,10 @@ interface NotificationModalProps {
   onClose: () => void;
   title: string;
   message: string;
+  children?: React.ReactNode;
 }
 
-const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, onClose, title, message }) => {
+const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, onClose, title, message, children }) => {
   if (!isOpen) return null;
 
   return (
@@ -28,12 +29,17 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, onClose, 
         </div>
         <h2 id="notification-title" className="text-xl font-semibold text-slate-800 mb-2">{title}</h2>
         <p className="text-slate-600 mb-6">{message}</p>
-        <button
-          onClick={onClose}
-          className="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-        >
-          Got it
-        </button>
+        
+        {children ? (
+          <div>{children}</div>
+        ) : (
+          <button
+            onClick={onClose}
+            className="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          >
+            Got it
+          </button>
+        )}
       </div>
       <style>{`
         @keyframes fade-in {

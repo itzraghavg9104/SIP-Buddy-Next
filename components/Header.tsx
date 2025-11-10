@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Page } from '../types';
-// Fix: Removed 'IconTarget' as it is not an exported member of './Icons'.
-import { IconChartPie, IconLayoutDashboard, IconBook, IconSparkles, IconCalculator, IconInfoCircle, IconApps } from './Icons';
+import { IconChartPie, IconLayoutDashboard, IconBook, IconSparkles, IconCalculator, IconInfoCircle, IconApps, IconUser, IconLogout, IconSettings, IconListDetails } from './Icons';
 import { logoFull } from '../assets/logo';
 import SafeImage from './SafeImage';
+import { User } from 'firebase/auth';
+
 
 interface HeaderProps {
   currentPage: Page;
   navigateTo: (page: Page) => void;
+  user: User | null;
+  onLogout: () => void;
 }
 
 interface NavItemProps {
@@ -16,7 +19,7 @@ interface NavItemProps {
   isActive: boolean;
   onClick: () => void;
   showLabelOnlyWhenActive?: boolean;
-  dataTourId?: string; // For the onboarding tour
+  dataTourId?: string;
 }
 
 const NavItem: React.FC<NavItemProps> = ({ label, icon, isActive, onClick, showLabelOnlyWhenActive = false, dataTourId }) => {
@@ -42,8 +45,60 @@ const NavItem: React.FC<NavItemProps> = ({ label, icon, isActive, onClick, showL
   );
 };
 
+const ProfileDropdown: React.FC<{ user: User; onLogout: () => void; navigateTo: (page: Page) => void; }> = ({ user, onLogout, navigateTo }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
-const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleNavigation = (page: Page) => {
+      navigateTo(page);
+      setIsOpen(false);
+    }
+    
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button onClick={() => setIsOpen(!isOpen)} className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center ring-2 ring-offset-2 ring-transparent hover:ring-blue-500 transition-shadow">
+                {user.photoURL ? (
+                    <img src={user.photoURL} alt="User" className="w-full h-full rounded-full object-cover" />
+                ) : (
+                    <IconUser className="h-6 w-6 text-slate-600" />
+                )}
+            </button>
+            {isOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 py-1 z-50">
+                    <div className="px-4 py-2 border-b">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{user.displayName || 'User'}</p>
+                        <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                    </div>
+                    <button onClick={() => handleNavigation(Page.MyPlans)} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                        <IconListDetails className="h-4 w-4" />
+                        <span>My Plans</span>
+                    </button>
+                    <button onClick={() => handleNavigation(Page.Profile)} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                        <IconSettings className="h-4 w-4" />
+                        <span>Profile Settings</span>
+                    </button>
+                    <button onClick={onLogout} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                        <IconLogout className="h-4 w-4" />
+                        <span>Logout</span>
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout }) => {
 
   const fallbackLogo = (
     <div className="flex items-center h-10">
@@ -57,12 +112,14 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-             <SafeImage
-                src={logoFull}
-                fallback={fallbackLogo}
-                alt="SIP Buddy Logo"
-                className="h-11"
-             />
+            <button onClick={() => navigateTo(Page.Home)} aria-label="Go to Homepage">
+              <SafeImage
+                  src={logoFull}
+                  fallback={fallbackLogo}
+                  alt="SIP Buddy Logo"
+                  className="h-11"
+              />
+            </button>
           </div>
           <div className="hidden md:flex items-center space-x-2 bg-slate-100 p-1 rounded-lg">
             <NavItem
@@ -72,6 +129,14 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               onClick={() => navigateTo(Page.Planner)}
               dataTourId="planner-step"
             />
+            {user && (
+              <NavItem
+                label="My Plans"
+                icon={<IconListDetails className="h-5 w-5" />}
+                isActive={currentPage === Page.MyPlans}
+                onClick={() => navigateTo(Page.MyPlans)}
+              />
+            )}
             <NavItem
               label="Dashboard"
               icon={<IconLayoutDashboard className="h-5 w-5" />}
@@ -107,59 +172,81 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               onClick={() => navigateTo(Page.About)}
             />
           </div>
-          <div className="flex items-center md:hidden">
-            {/* Mobile menu could be implemented here */}
+          <div className="flex items-center">
+             {user ? (
+                 <ProfileDropdown user={user} onLogout={onLogout} navigateTo={navigateTo} />
+             ) : (
+                <button onClick={() => navigateTo(Page.Auth)} className="hidden md:block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-sm hover:bg-blue-700 transition-colors text-sm">
+                    Login / Sign Up
+                </button>
+             )}
           </div>
         </div>
       </div>
-       <div className="md:hidden flex items-center justify-center space-x-1 bg-slate-100 p-1 m-2 rounded-lg text-xs">
-            <NavItem
-              label="Planner"
-              icon={<IconChartPie className="h-5 w-5" />}
-              isActive={currentPage === Page.Planner}
-              onClick={() => navigateTo(Page.Planner)}
-              showLabelOnlyWhenActive
-              dataTourId="planner-step-mobile"
-            />
-            <NavItem
-              label="Dashboard"
-              icon={<IconLayoutDashboard className="h-5 w-5" />}
-              isActive={currentPage === Page.Dashboard}
-              onClick={() => navigateTo(Page.Dashboard)}
-              showLabelOnlyWhenActive
-               dataTourId="dashboard-step-mobile"
-            />
-            <NavItem
-              label="Learn"
-              icon={<IconBook className="h-5 w-5" />}
-              isActive={currentPage === Page.Learn}
-              onClick={() => navigateTo(Page.Learn)}
-              showLabelOnlyWhenActive
-              dataTourId="learn-step-mobile"
-            />
-            <NavItem
-              label="Calculator"
-              icon={<IconCalculator className="h-5 w-5" />}
-              isActive={currentPage === Page.Calculator}
-              onClick={() => navigateTo(Page.Calculator)}
-              showLabelOnlyWhenActive
-              dataTourId="calculator-step-mobile"
-            />
-            <NavItem
-              label="More"
-              icon={<IconApps className="h-5 w-5" />}
-              isActive={currentPage === Page.More}
-              onClick={() => navigateTo(Page.More)}
-              showLabelOnlyWhenActive
-              dataTourId="more-step-mobile"
-            />
-            <NavItem
-              label="About"
-              icon={<IconInfoCircle className="h-5 w-5" />}
-              isActive={currentPage === Page.About}
-              onClick={() => navigateTo(Page.About)}
-              showLabelOnlyWhenActive
-            />
+       <div className="md:hidden flex items-center justify-between space-x-1 bg-slate-100 p-1 m-2 rounded-lg text-xs">
+            <div className="flex items-center space-x-1">
+                <NavItem
+                label="Planner"
+                icon={<IconChartPie className="h-5 w-5" />}
+                isActive={currentPage === Page.Planner}
+                onClick={() => navigateTo(Page.Planner)}
+                showLabelOnlyWhenActive
+                dataTourId="planner-step-mobile"
+                />
+                {user && (
+                  <NavItem
+                    label="My Plans"
+                    icon={<IconListDetails className="h-5 w-5" />}
+                    isActive={currentPage === Page.MyPlans}
+                    onClick={() => navigateTo(Page.MyPlans)}
+                    showLabelOnlyWhenActive
+                  />
+                )}
+                <NavItem
+                label="Dashboard"
+                icon={<IconLayoutDashboard className="h-5 w-5" />}
+                isActive={currentPage === Page.Dashboard}
+                onClick={() => navigateTo(Page.Dashboard)}
+                showLabelOnlyWhenActive
+                dataTourId="dashboard-step-mobile"
+                />
+                <NavItem
+                label="Learn"
+                icon={<IconBook className="h-5 w-5" />}
+                isActive={currentPage === Page.Learn}
+                onClick={() => navigateTo(Page.Learn)}
+                showLabelOnlyWhenActive
+                dataTourId="learn-step-mobile"
+                />
+                <NavItem
+                label="Calculator"
+                icon={<IconCalculator className="h-5 w-5" />}
+                isActive={currentPage === Page.Calculator}
+                onClick={() => navigateTo(Page.Calculator)}
+                showLabelOnlyWhenActive
+                dataTourId="calculator-step-mobile"
+                />
+                <NavItem
+                label="More"
+                icon={<IconApps className="h-5 w-5" />}
+                isActive={currentPage === Page.More}
+                onClick={() => navigateTo(Page.More)}
+                showLabelOnlyWhenActive
+                dataTourId="more-step-mobile"
+                />
+                <NavItem
+                label="About"
+                icon={<IconInfoCircle className="h-5 w-5" />}
+                isActive={currentPage === Page.About}
+                onClick={() => navigateTo(Page.About)}
+                showLabelOnlyWhenActive
+                />
+            </div>
+            {!user && (
+                 <button onClick={() => navigateTo(Page.Auth)} className="px-3 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 transition-colors text-xs">
+                    Login
+                </button>
+            )}
         </div>
     </header>
   );
