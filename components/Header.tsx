@@ -16,14 +16,16 @@ interface NavItemProps {
   isActive: boolean;
   onClick: () => void;
   showLabelOnlyWhenActive?: boolean;
+  dataTourId?: string; // For the onboarding tour
 }
 
-const NavItem: React.FC<NavItemProps> = ({ label, icon, isActive, onClick, showLabelOnlyWhenActive = false }) => {
+const NavItem: React.FC<NavItemProps> = ({ label, icon, isActive, onClick, showLabelOnlyWhenActive = false, dataTourId }) => {
   const showLabel = !showLabelOnlyWhenActive || isActive;
 
   return (
     <button
       onClick={onClick}
+      data-tour-id={dataTourId}
       className={`flex items-center rounded-md font-medium transition-colors ${
         showLabel ? 'px-4 py-2' : 'p-2'
       } ${
@@ -68,30 +70,35 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               icon={<IconChartPie className="h-5 w-5" />}
               isActive={currentPage === Page.Planner}
               onClick={() => navigateTo(Page.Planner)}
+              dataTourId="planner-step"
             />
             <NavItem
               label="Dashboard"
               icon={<IconLayoutDashboard className="h-5 w-5" />}
               isActive={currentPage === Page.Dashboard}
               onClick={() => navigateTo(Page.Dashboard)}
+              dataTourId="dashboard-step"
             />
             <NavItem
               label="Learn"
               icon={<IconBook className="h-5 w-5" />}
               isActive={currentPage === Page.Learn}
               onClick={() => navigateTo(Page.Learn)}
+              dataTourId="learn-step"
             />
             <NavItem
               label="Calculator"
               icon={<IconCalculator className="h-5 w-5" />}
               isActive={currentPage === Page.Calculator}
               onClick={() => navigateTo(Page.Calculator)}
+              dataTourId="calculator-step"
             />
              <NavItem
               label="More"
               icon={<IconApps className="h-5 w-5" />}
               isActive={currentPage === Page.More}
               onClick={() => navigateTo(Page.More)}
+              dataTourId="more-step"
             />
             <NavItem
               label="About"
@@ -112,6 +119,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               isActive={currentPage === Page.Planner}
               onClick={() => navigateTo(Page.Planner)}
               showLabelOnlyWhenActive
+              dataTourId="planner-step-mobile"
             />
             <NavItem
               label="Dashboard"
@@ -119,6 +127,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               isActive={currentPage === Page.Dashboard}
               onClick={() => navigateTo(Page.Dashboard)}
               showLabelOnlyWhenActive
+               dataTourId="dashboard-step-mobile"
             />
             <NavItem
               label="Learn"
@@ -126,6 +135,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               isActive={currentPage === Page.Learn}
               onClick={() => navigateTo(Page.Learn)}
               showLabelOnlyWhenActive
+              dataTourId="learn-step-mobile"
             />
             <NavItem
               label="Calculator"
@@ -133,6 +143,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               isActive={currentPage === Page.Calculator}
               onClick={() => navigateTo(Page.Calculator)}
               showLabelOnlyWhenActive
+              dataTourId="calculator-step-mobile"
             />
             <NavItem
               label="More"
@@ -140,6 +151,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo }) => {
               isActive={currentPage === Page.More}
               onClick={() => navigateTo(Page.More)}
               showLabelOnlyWhenActive
+              dataTourId="more-step-mobile"
             />
             <NavItem
               label="About"

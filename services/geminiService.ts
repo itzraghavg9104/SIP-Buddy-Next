@@ -199,24 +199,6 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
     }
 };
 
-export const getEducationalContent = async (topic: string): Promise<string> => {
-    const prompt = `
-    Provide a detailed yet easy-to-understand explanation on the topic of "${topic}" for someone new to investing.
-    Your response MUST be formatted using simple Markdown.
-    - Use **bold text** for important keywords.
-    - Use bullet points with a '*' for lists of key benefits or points.
-    - Provide a clear main explanation.
-    - Include a simple, relatable example where applicable.
-    - Keep the language accessible and encouraging for a beginner.
-    Do not use headers (like #, ##) or any other complex markdown.
-    `;
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-    });
-    return response.text;
-};
-
 let chat: Chat | null = null;
 
 export const startChat = () => {

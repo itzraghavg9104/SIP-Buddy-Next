@@ -10,7 +10,6 @@ const tools = [
     icon: <IconMapPin className="h-8 w-8 text-cyan-600" />,
     component: <FindAdvisor />,
   },
-  // Future tools can be added here
 ];
 
 const More: React.FC = () => {
@@ -18,18 +17,24 @@ const More: React.FC = () => {
 
   const activeTool = tools.find(t => t.id === activeToolId);
 
+  const handleBack = () => {
+    setActiveToolId(null);
+  };
+
   if (activeTool) {
+    // Clone the component and pass the onBack prop
+    const componentWithBack = React.cloneElement(activeTool.component, { onBack: handleBack });
     return (
       <div className="max-w-6xl mx-auto">
         <button 
-            onClick={() => setActiveToolId(null)} 
+            onClick={handleBack} 
             className="flex items-center text-sm font-semibold text-blue-600 hover:underline mb-6 p-2 -ml-2 rounded-md hover:bg-slate-100 transition-colors"
             aria-label="Back to More Tools"
         >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
             Back to More Tools
         </button>
-        {activeTool.component}
+        {componentWithBack}
       </div>
     );
   }

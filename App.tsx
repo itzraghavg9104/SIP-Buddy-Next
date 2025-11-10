@@ -9,6 +9,7 @@ import More from './pages/More';
 import Chatbot from './components/Chatbot';
 import { Page, InvestmentPlan, UserProfile } from './types';
 import NotificationModal from './components/NotificationModal';
+import OnboardingTour from './components/OnboardingTour';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(Page.Planner);
@@ -70,6 +71,7 @@ const App: React.FC = () => {
         title="No Plan Generated"
         message="Please create an investment plan from the 'Planner' page first to access your dashboard."
       />
+      <OnboardingTour />
     </div>
   );
 };

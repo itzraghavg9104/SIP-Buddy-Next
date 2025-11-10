@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import SIPCalculator from '../components/SIPCalculator';
 import SWPCalculator from '../components/SWPCalculator';
-import { IconCalculator } from '../components/Icons';
+import LumpsumCalculator from '../components/LumpsumCalculator';
+import IncomeTaxCalculator from './tools/IncomeTaxCalculator';
+import { IconCalculator, IconBriefcase, IconReceiptTax } from '../components/Icons';
 
-type CalculatorType = 'sip' | 'swp';
+type CalculatorType = 'sip' | 'swp' | 'lumpsum' | 'tax';
 
 const Calculator: React.FC = () => {
   const [activeCalculator, setActiveCalculator] = useState<CalculatorType | null>(null);
@@ -14,6 +16,10 @@ const Calculator: React.FC = () => {
         return <SIPCalculator onBack={() => setActiveCalculator(null)} />;
       case 'swp':
         return <SWPCalculator onBack={() => setActiveCalculator(null)} />;
+      case 'lumpsum':
+        return <LumpsumCalculator onBack={() => setActiveCalculator(null)} />;
+      case 'tax':
+        return <IncomeTaxCalculator onBack={() => setActiveCalculator(null)} />;
       default:
         return renderSelection();
     }
@@ -24,7 +30,7 @@ const Calculator: React.FC = () => {
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold text-slate-900 mb-2">Financial Calculators</h1>
         <p className="text-lg text-slate-600">
-          Plan your investments and withdrawals with precision.
+          Plan your investments, withdrawals, and taxes with precision.
         </p>
       </div>
       <div className="grid md:grid-cols-2 gap-8">
@@ -35,8 +41,18 @@ const Calculator: React.FC = () => {
           <div className="bg-blue-100 p-3 rounded-full w-fit mb-4">
             <IconCalculator className="h-8 w-8 text-blue-600" />
           </div>
-          <h2 className="text-2xl font-semibold text-slate-800 mb-2">Advanced SIP Calculator</h2>
+          <h2 className="text-2xl font-semibold text-slate-800 mb-2">SIP Calculator</h2>
           <p className="text-slate-500">Calculate the future value of your SIPs with annual step-up and inflation adjustments.</p>
+        </button>
+        <button
+          onClick={() => setActiveCalculator('lumpsum')}
+          className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 text-left hover:shadow-xl hover:border-purple-500 transition-all transform hover:-translate-y-1"
+        >
+          <div className="bg-purple-100 p-3 rounded-full w-fit mb-4">
+            <IconBriefcase className="h-8 w-8 text-purple-600" />
+          </div>
+          <h2 className="text-2xl font-semibold text-slate-800 mb-2">Lumpsum Calculator</h2>
+          <p className="text-slate-500">Project the growth of a one-time investment over a specific period.</p>
         </button>
         <button
           onClick={() => setActiveCalculator('swp')}
@@ -47,6 +63,16 @@ const Calculator: React.FC = () => {
           </div>
           <h2 className="text-2xl font-semibold text-slate-800 mb-2">SWP Calculator</h2>
           <p className="text-slate-500">Estimate how long your invested corpus will last with systematic monthly withdrawals.</p>
+        </button>
+        <button
+          onClick={() => setActiveCalculator('tax')}
+          className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 text-left hover:shadow-xl hover:border-red-500 transition-all transform hover:-translate-y-1"
+        >
+          <div className="bg-red-100 p-3 rounded-full w-fit mb-4">
+            <IconReceiptTax className="h-8 w-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-semibold text-slate-800 mb-2">Income Tax Calculator</h2>
+          <p className="text-slate-500">Estimate tax liability under the old & new regimes for FY 2024-25.</p>
         </button>
       </div>
     </div>

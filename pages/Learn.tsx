@@ -1,12 +1,12 @@
 
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { getEducationalContent } from '../services/geminiService';
+import React, { useState, useCallback } from 'react';
 import { IconChevronDown, IconBook, learnIcons } from '../components/Icons';
 
 const topics = [
     // Foundational Concepts
     'What is SIP?',
+    'Lumpsum vs. SIP',
     'Time Value of Money',
     'Mutual Funds 101',
     'Mutual Funds vs. Stocks',
@@ -29,6 +29,75 @@ const topics = [
 
 
 const staticContent: { [key: string]: string } = {
+    'What is SIP?': `
+    **Systematic Investment Plan (SIP)** is a method of investing a fixed amount of money in mutual funds at regular intervals (usually monthly). Think of it like a recurring deposit for mutual funds, but with the potential for much higher returns.
+    *   **Power of Discipline:** SIPs automate your investing, instilling a habit of saving and investing without you having to actively think about it.
+    *   **Rupee Cost Averaging:** This is the secret sauce of SIPs. When the market is down, your fixed amount buys more units of the mutual fund. When the market is up, it buys fewer units. Over time, this averages out your purchase cost, reducing the risk of investing a large amount at the wrong time.
+    *   **Start Small:** You don't need a large amount to start. You can begin investing with as little as ₹500 per month, making it accessible to everyone.
+    **Example:** Imagine you commit to investing ₹5,000 every month. Whether the market is booming or in a slump, your investment goes in. This discipline protects you from making emotional decisions like panic selling during a downturn.
+    `,
+    'Lumpsum vs. SIP': `
+    This is a classic investment dilemma: Should you invest a large sum of money all at once (**Lumpsum**) or invest smaller amounts regularly (**SIP**)? The answer depends on your financial situation and the market conditions.
+    **The Analogy: Watering a Plant**
+    *   **SIP (Systematic Investment Plan):** This is like watering your plant a little bit every day. It's a disciplined, consistent approach. You ensure the plant gets a steady supply of water, regardless of the weather. This is less risky and builds a strong foundation over time.
+    *   **Lumpsum Investment:** This is like pouring a whole bucket of water on the plant at once. If you time it perfectly on a hot, dry day, it can be very effective. But if you do it when the soil is already soaked, you might drown the plant. Lumpsum investing is all about timing.
+    **Key Differences:**
+    *   **Market Timing:** Lumpsum works best when you invest at the bottom of a market cycle (when prices are low), but timing the market is extremely difficult. SIPs work in all market conditions by averaging out your purchase cost (Rupee Cost Averaging).
+    *   **Risk:** SIPs are generally considered lower risk because you spread your investment over time. Lumpsum is riskier because your entire investment is exposed to the market's price at a single point in time.
+    *   **Who is it for?**
+        *   **SIP:** Ideal for salaried individuals who can invest a fixed amount from their monthly income. Perfect for beginners and long-term goal planning.
+        *   **Lumpsum:** Suitable if you have received a large, one-time amount like a bonus, inheritance, or sale of property, and you are confident the market is undervalued.
+    **Conclusion:** For most retail investors, **SIP is the more prudent and effective strategy** for long-term wealth creation. It removes the stress of timing the market and builds a disciplined investment habit.
+    `,
+    'Time Value of Money': `
+    The **Time Value of Money** is the idea that money available today is worth more than the same amount in the future. This is because of its potential to grow through investing, a process called **compounding**.
+    **Compounding is like a snowball effect:** Your initial investment earns returns. The next period, you earn returns not just on your initial investment, but also on the returns you've already accumulated. Your money starts working for you!
+    *   **The Key Ingredient:** Time is the most powerful factor in compounding. The longer your money is invested, the more time it has to grow exponentially.
+    **Example:** Let's say you invest ₹1 lakh. If it grows at 12% per year, after 1 year it's ₹1.12 lakh. The next year, you earn 12% on ₹1.12 lakh, not just the original ₹1 lakh. After 30 years, that single ₹1 lakh could grow to nearly ₹30 lakhs! Someone who starts 10 years later would need to invest much more to catch up. The lesson is clear: **start investing as early as possible**, no matter how small the amount.
+    `,
+    'Understanding Risk': `
+    In investing, **risk** means the possibility of your investment's actual return being different from what you expected. This includes the potential to lose some or all of your original investment. However, **risk is not always a bad thing**—it's directly linked to potential reward. Higher risk often comes with the potential for higher returns.
+    *   **Market Risk:** The risk that the entire market will decline, affecting all investments. This can be caused by economic changes, political events, etc.
+    *   **Inflation Risk:** The risk that your investment returns will not keep up with the rate of inflation, meaning your money loses purchasing power over time.
+    *   **Risk Tolerance:** This is your personal ability and willingness to handle market ups and downs. It's generally categorized as:
+        *   **Conservative:** You prefer safety over high returns. You're uncomfortable with large fluctuations. (Suited for debt funds).
+        *   **Moderate:** You're willing to take on some risk for better returns, seeking a balance. (Suited for hybrid funds).
+        *   **Aggressive:** You're comfortable with high risk for the potential of high returns and can handle significant market swings. (Suited for equity funds, especially mid/small cap).
+    Understanding your own risk tolerance is the first step to building a portfolio that lets you sleep at night.
+    `,
+    'Asset Allocation': `
+    **Asset Allocation** is the strategy of dividing your investment portfolio among different asset categories, such as **stocks (equity), bonds (debt), and gold**. It's the most important decision you'll make as an investor.
+    Think of it like building a meal. You don't just eat one type of food. You have a mix of proteins, carbs, and vegetables for a balanced diet. Similarly, a balanced portfolio has a mix of different assets.
+    *   **Why is it important?** Different asset classes perform differently in various market conditions. When stocks are down, bonds might be stable or up. This diversification helps to reduce the overall risk and volatility of your portfolio.
+    *   **How is it determined?** Your ideal asset allocation depends mainly on your **risk tolerance** and **investment time horizon** (how long you plan to invest).
+    **Example:** A young, aggressive investor with a 30-year time horizon might have 80% in equity and 20% in debt. An older, conservative investor nearing retirement might have 30% in equity and 70% in debt. The goal is not to eliminate risk, but to manage it according to your personal profile.
+    `,
+    'Tax Implications': `
+    Understanding taxes is crucial to maximizing your investment returns. In India, the tax on mutual funds depends on the type of fund and how long you stay invested (your holding period).
+    *   **Equity Funds (funds with >65% in stocks):**
+        *   **Short-Term Capital Gains (STCG):** If you sell within 1 year, your profits are taxed at a flat rate of **15%**.
+        *   **Long-Term Capital Gains (LTCG):** If you sell after 1 year, your profits up to ₹1 lakh in a financial year are **tax-free**. Gains above ₹1 lakh are taxed at **10%**.
+    *   **Debt Funds (funds with <65% in stocks):**
+        *   As per the latest rules, gains from debt funds are added to your income and taxed at your **income tax slab rate**, regardless of the holding period.
+    *   **ELSS (Equity Linked Savings Scheme):** These are special equity funds that allow you to claim a tax deduction of up to ₹1.5 lakh under **Section 80C** of the Income Tax Act. They have a mandatory lock-in period of 3 years.
+    **Disclaimer:** Tax laws are subject to change. It's always a good idea to consult a tax advisor for personalized advice.
+    `,
+    'Investment Strategies': `
+    An investment strategy is a set of rules and principles that guides your investment decisions. Having a clear strategy helps you stay focused on your goals and avoid emotional reactions to market noise.
+    *   **Goal-Based Investing:** This is the most recommended strategy. You link each investment to a specific financial goal (e.g., retirement, child's education, buying a house). This helps you determine the right amount to invest, the ideal asset allocation, and the required time horizon.
+    *   **Value Investing:** This strategy involves looking for stocks or funds that appear to be trading for less than their intrinsic or book value. Value investors are like bargain hunters, looking for high-quality assets at a discount.
+    *   **Growth Investing:** This strategy focuses on companies that are expected to grow at an above-average rate compared to other companies in the market. These are often younger companies in rapidly expanding industries. They are typically riskier than value stocks.
+    *   **Buy and Hold:** This is a passive, long-term strategy where you buy a diversified portfolio and hold it for a very long time, ignoring short-term market fluctuations. This strategy works well with SIPs and relies on the power of compounding.
+    The best strategy is the one that aligns with your financial goals, risk tolerance, and that you can stick with through thick and thin.
+    `,
+    'Red Flags to Watch': `
+    The world of investing can be noisy. It's important to be cautious and look out for warning signs to protect your hard-earned money.
+    *   **"Guaranteed" High Returns:** Be extremely skeptical of any investment promising high, guaranteed returns. In financial markets, high returns always come with high risk. Guarantees are usually only offered by low-return products like Fixed Deposits.
+    *   **Chasing Past Performance:** A fund that was a top performer last year might not be this year. Don't invest in a fund just because it did well recently. Look for long-term consistency and a solid investment process.
+    *   **Very High Expense Ratios:** While every fund charges a fee, be wary of funds with unusually high expense ratios compared to their peers, especially if their performance doesn't justify the cost.
+    *   **Frequent Fund Manager Changes:** A revolving door of fund managers can be a sign of instability at the fund house. You want a steady hand managing your money.
+    *   **Over-Diversification:** While diversification is good, owning too many funds (e.g., 20-30) can lead to portfolio overlap and make it difficult to track. You might end up owning the same stocks through different funds, defeating the purpose.
+    `,
     'Important Disclaimer': `
     **Educational Purpose Only:** All content provided here is for educational purposes and general information only. It is not personalized financial advice.
     *   **Consult Professionals:** Always consult with SEBI-registered financial advisors before making investment decisions. Consider your financial situation, goals, and risk tolerance.
@@ -99,11 +168,22 @@ const staticContent: { [key: string]: string } = {
         - **Cluttered Portfolio:** Managing and tracking many funds that do the same thing is inefficient.
     **The Analogy's Lesson:** Hiring multiple chefs is a great idea for diversification, but only if they cook different dishes! Before adding a new fund to your portfolio, check its top holdings. If they are very similar to a fund you already own, you might not be adding any real diversification. The goal is to build a team of funds that work together, not a crowd of funds that all do the same job.
     `,
+    'Mutual Funds 101': `
+    A **Mutual Fund** is a professionaly managed investment vehicle that pools money from many investors to purchase a diversified portfolio of stocks, bonds, or other securities.
+    *   **How it works:** When you invest in a mutual fund, you are buying units, which represent a share of the fund's total holdings. The value of each unit is called the Net Asset Value (NAV), which goes up or down based on the performance of the underlying investments.
+    *   **Key Benefits:**
+        *   **Professional Management:** Your money is managed by experienced fund managers and research teams.
+        *   **Diversification:** You get instant access to a basket of securities, which is much less risky than buying just one or two stocks.
+        *   **Affordability:** You can start investing with a small amount of money (as low as ₹500 via SIP).
+        *   **Liquidity:** You can easily buy or sell your mutual fund units on any business day.
+    **Example:** Imagine you want to invest in the top 10 tech companies in India. Buying shares of all 10 companies individually would require a lot of money. Instead, you can invest in a "Technology Sector Mutual Fund". The fund pools money from thousands of investors like you and buys shares in all those companies. You get the benefit of owning a piece of all of them, without needing a large capital.
+    `
 };
 
 
 // A simple markdown to HTML converter to handle bold text and lists.
 const parseMarkdownToHTML = (markdown: string): string => {
+    if (!markdown) return '';
     const lines = markdown.split('\n');
     let html = '';
     let inList = false;
@@ -144,28 +224,11 @@ const AccordionItem: React.FC<{
 }> = ({ title, Icon }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchContent = useCallback(async () => {
-    if (content || isLoading) return;
-
-    if (staticContent[title]) {
-        setContent(staticContent[title]);
-        return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await getEducationalContent(title);
-      setContent(result);
-    } catch (err) {
-      setError('Failed to load content. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [title, content, isLoading]);
+  const fetchContent = useCallback(() => {
+    if (content) return;
+    setContent(staticContent[title] || 'Content coming soon.');
+  }, [title, content]);
 
   const toggleOpen = () => {
     setIsOpen(!isOpen);
@@ -193,13 +256,6 @@ const AccordionItem: React.FC<{
       </button>
       {isOpen && (
         <div className="px-5 pb-5 ml-14 border-t border-slate-200 pt-4">
-          {isLoading && (
-            <div className="flex items-center justify-start py-4">
-              <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-              <p className="ml-3 text-slate-500">Fetching wisdom...</p>
-            </div>
-          )}
-          {error && <p className="text-red-500">{error}</p>}
           {content && (
             <div className="prose prose-sm prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(content) }} />
           )}
@@ -212,6 +268,7 @@ const AccordionItem: React.FC<{
 
 const learnDescriptions: { [key: string]: string } = {
     'What is SIP?': 'The power of regular, disciplined investing.',
+    'Lumpsum vs. SIP': 'One big splash vs. a steady stream. Which is for you?',
     'Time Value of Money': 'Why starting early gives you a massive advantage.',
     'Mutual Funds 101': 'Understand what a mutual fund is and how it works.',
     'Mutual Funds vs. Stocks': 'A full meal vs. a single dish. Know the difference.',

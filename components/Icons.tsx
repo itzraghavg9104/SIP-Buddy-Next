@@ -165,6 +165,27 @@ export const IconWorld: React.FC<IconProps> = (props) => (
     </svg>
 );
 
+export const IconBriefcase: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M3 7m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" />
+      <path d="M8 7v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2" />
+      <path d="M12 12l0 .01" />
+      <path d="M3 13a20 20 0 0 0 18 0" />
+    </svg>
+);
+
+export const IconReceiptTax: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-receipt-tax" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <line x1="9" y1="14" x2="15" y2="8" />
+      <path d="M9.5 8h.01" />
+      <path d="M14.5 14h.01" />
+      <path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16l-3 -2l-2 2l-2 -2l-2 2l-2 -2l-3 2" />
+    </svg>
+);
+
+
 const IconChecklist: React.FC<IconProps> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -256,15 +277,7 @@ export const learnIcons: { [key: string]: React.FC<IconProps> } = {
     </svg>
   ),
   'SEBI Mutual Fund Categories': (props) => <IconListDetails {...props} />,
-  'Tax Implications': (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-receipt-tax" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <line x1="9" y1="14" x2="15" y2="8" />
-      <path d="M9.5 8h.01" />
-      <path d="M14.5 14h.01" />
-      <path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16l-3 -2l-2 2l-2 -2l-2 2l-2 -2l-3 2" />
-    </svg>
-  ),
+  'Tax Implications': (props) => <IconReceiptTax {...props} />,
   'Time Value of Money': (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-clock-hour-4" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -291,6 +304,7 @@ export const learnIcons: { [key: string]: React.FC<IconProps> } = {
   'What is Expense Ratio?': (props) => <IconPercentage {...props} />,
   'Understanding Sharpe Ratio': (props) => <IconScale {...props} />,
   'Mutual Funds vs. Stocks': (props) => <IconStocks {...props} />,
+  'Lumpsum vs. SIP': (props) => <IconScale {...props} />,
   'Key Ratios & Metrics': (props) => <IconChartDots {...props} />,
   'The Danger of Portfolio Overlap': (props) => <IconLayersIntersect {...props} />,
 };
