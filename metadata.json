@@ -2,6 +2,7 @@
   "name": "SIP Buddy - AI SIP Planner",
   "description": "Your AI-powered SIP and mutual fund investment planner. Get personalized strategies, fund recommendations, and growth projections to achieve your financial goals.",
   "requestFramePermissions": [
-    "geolocation"
+    "geolocation",
+    "microphone"
   ]
 }

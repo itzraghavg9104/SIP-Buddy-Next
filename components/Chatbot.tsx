@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { IconBrandMessenger, IconSend, IconX, IconSparkles, IconUser } from './Icons';
-import { sendMessageToChat, startChat } from '../services/geminiService';
+import { IconBrandMessenger, IconSend, IconX, IconSparkles, IconUser, IconMicrophone, IconPlayerStop, IconVolume, IconPlayerPlay } from './Icons';
+import { sendMessageToChat, startChat, textToSpeech, transcribeAudio } from '../services/geminiService';
 import { ChatMessage } from '../types';
 import { logoIcon } from '../assets/logo';
 import SafeImage from './SafeImage';
+import { decode, decodeAudioData } from '../services/audioUtils';
 
 // A simple markdown to HTML converter to handle bold text and lists.
 const parseMarkdownToHTML = (markdown: string): string => {
@@ -51,18 +52,59 @@ const Chatbot: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       startChat();
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      // Initialize AudioContext on user interaction
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+      }
     }
   }, [isOpen]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const stopCurrentAudio = () => {
+    if (audioSourceRef.current) {
+      audioSourceRef.current.stop();
+      audioSourceRef.current.disconnect();
+      audioSourceRef.current = null;
+    }
+    setMessages(prev => prev.map(m => ({ ...m, isPlaying: false })));
+  };
+
+  const playAudio = async (base64Audio: string, messageIndex: number) => {
+    if (!audioContextRef.current) return;
+    stopCurrentAudio();
+
+    try {
+      setMessages(prev => prev.map((m, i) => ({ ...m, isPlaying: i === messageIndex })));
+      const audioBuffer = await decodeAudioData(decode(base64Audio), audioContextRef.current, 24000, 1);
+      const source = audioContextRef.current.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContextRef.current.destination);
+      source.start();
+      source.onended = () => {
+        setMessages(prev => prev.map((m, i) => i === messageIndex ? { ...m, isPlaying: false } : m));
+        audioSourceRef.current = null;
+      };
+      audioSourceRef.current = source;
+    } catch (error) {
+      console.error("Failed to play audio:", error);
+      setMessages(prev => prev.map(m => ({ ...m, isPlaying: false })));
+    }
+  };
 
   const handleSend = async () => {
     if (input.trim() === '' || isLoading) return;
@@ -74,7 +116,8 @@ const Chatbot: React.FC = () => {
 
     try {
       const responseText = await sendMessageToChat(input);
-      const modelMessage: ChatMessage = { role: 'model', text: responseText };
+      const audioData = await textToSpeech(responseText);
+      const modelMessage: ChatMessage = { role: 'model', text: responseText, audioData, isPlaying: false };
       setMessages((prev) => [...prev, modelMessage]);
     } catch (error) {
       console.error('Chatbot error:', error);
@@ -91,6 +134,48 @@ const Chatbot: React.FC = () => {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSend();
+    }
+  };
+
+  const handleStartRecording = async () => {
+    if (isRecording) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        if (audioBlob.size === 0) return;
+
+        setIsTranscribing(true);
+        try {
+          const transcript = await transcribeAudio(audioBlob);
+          setInput(prev => prev + transcript);
+        } catch (error) {
+          console.error("Transcription error:", error);
+        } finally {
+          setIsTranscribing(false);
+        }
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      alert("Could not access the microphone. Please check your browser permissions.");
+    }
+  };
+
+  const handleStopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      setIsRecording(false);
     }
   };
 
@@ -134,14 +219,21 @@ const Chatbot: React.FC = () => {
                   </div>
                 )}
                 <div className={`max-w-xs md:max-w-md px-4 py-2.5 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none shadow-sm'}`}>
-                    {msg.role === 'model' ? (
-                        <div
-                        className="prose prose-sm prose-slate max-w-none break-words"
-                        dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(msg.text) }}
-                        />
-                    ) : (
-                        <p className="text-sm break-words">{msg.text}</p>
-                    )}
+                    <div className="flex items-start gap-2">
+                        {msg.role === 'model' ? (
+                            <div
+                            className="prose prose-sm prose-slate max-w-none break-words"
+                            dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(msg.text) }}
+                            />
+                        ) : (
+                            <p className="text-sm break-words">{msg.text}</p>
+                        )}
+                        {msg.role === 'model' && msg.audioData && (
+                            <button onClick={() => playAudio(msg.audioData!, index)} className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0">
+                                {msg.isPlaying ? <IconVolume className="h-4 w-4" /> : <IconPlayerPlay className="h-4 w-4" />}
+                            </button>
+                        )}
+                    </div>
                 </div>
                  {msg.role === 'user' && (
                   <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0">
@@ -176,17 +268,26 @@ const Chatbot: React.FC = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask SIP Buddy about investments..."
-                className="w-full px-4 py-3 pr-12 bg-slate-100 rounded-full border-transparent focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                disabled={isLoading}
+                placeholder={isRecording ? "Recording..." : isTranscribing ? "Transcribing..." : "Ask SIP Buddy..."}
+                className="w-full pl-4 pr-24 py-3 bg-slate-100 rounded-full border-transparent focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                disabled={isLoading || isRecording || isTranscribing}
               />
-              <button
-                onClick={handleSend}
-                disabled={isLoading}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
-              >
-                <IconSend className="h-5 w-5" />
-              </button>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <button
+                  onClick={isRecording ? handleStopRecording : handleStartRecording}
+                  disabled={isLoading || isTranscribing}
+                  className={`p-2 rounded-full transition-colors ${isRecording ? 'bg-red-500 text-white' : 'text-slate-500 hover:bg-slate-200'}`}
+                >
+                  {isRecording ? <IconPlayerStop className="h-5 w-5" /> : <IconMicrophone className="h-5 w-5" />}
+                </button>
+                <button
+                  onClick={handleSend}
+                  disabled={isLoading || isRecording || isTranscribing}
+                  className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
+                >
+                  <IconSend className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </footer>
         </div>

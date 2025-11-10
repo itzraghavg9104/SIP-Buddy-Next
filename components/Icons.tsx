@@ -246,6 +246,38 @@ const IconLayersIntersect: React.FC<IconProps> = (props) => (
     </svg>
 );
 
+export const IconMicrophone: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z" />
+    <path d="M5 10a7 7 0 0 0 14 0" />
+    <path d="M8 21l8 0" />
+    <path d="M12 17l0 4" />
+  </svg>
+);
+
+export const IconPlayerStop: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M5 5m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z" />
+  </svg>
+);
+
+export const IconVolume: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M15 8a5 5 0 0 1 0 8" />
+    <path d="M17.7 5a9 9 0 0 1 0 14" />
+    <path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5" />
+  </svg>
+);
+
+export const IconPlayerPlay: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M7 4v16l13 -8z" />
+  </svg>
+);
 
 
 export const learnIcons: { [key: string]: React.FC<IconProps> } = {

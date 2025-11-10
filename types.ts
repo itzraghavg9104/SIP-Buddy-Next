@@ -71,6 +71,8 @@ export interface InvestmentPlan {
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
+  audioData?: string; // Base64 audio string for TTS
+  isPlaying?: boolean; // UI state for audio playback
 }
 
 export interface FinancialAdvisor {

@@ -1,4 +1,4 @@
-import { GoogleGenAI, Chat, Type } from "@google/genai";
+import { GoogleGenAI, Chat, Type, Modality } from "@google/genai";
 import { UserProfile, InvestmentPlan, Fund, FundCategory, AssetAllocationItem, GrowthDataPoint, FinancialAdvisor } from '../types';
 
 const API_KEY = process.env.API_KEY;
@@ -299,3 +299,65 @@ export const findFinancialAdvisors = async (location: { latitude: number; longit
 
     return { advisors, groundingChunks };
 }
+
+export const textToSpeech = async (text: string): Promise<string> => {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text: `Say this in a friendly and helpful tone: ${text}` }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Kore' },
+            },
+        },
+      },
+    });
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (base64Audio) {
+      return base64Audio;
+    }
+    throw new Error("No audio data received from TTS API.");
+  } catch (error) {
+    console.error("Error in textToSpeech:", error);
+    throw new Error("Failed to generate speech.");
+  }
+};
+
+const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64String = (reader.result as string).split(',')[1];
+            resolve(base64String);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+};
+
+export const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
+    try {
+        const base64Audio = await blobToBase64(audioBlob);
+        const audioPart = {
+            inlineData: {
+                mimeType: audioBlob.type,
+                data: base64Audio,
+            },
+        };
+        const textPart = {
+            text: "Transcribe the following audio accurately:"
+        };
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: { parts: [audioPart, textPart] },
+        });
+
+        return response.text;
+    } catch (error) {
+        console.error("Error in transcribeAudio:", error);
+        throw new Error("Failed to transcribe audio.");
+    }
+};
