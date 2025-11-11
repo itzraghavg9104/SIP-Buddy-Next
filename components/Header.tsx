@@ -99,6 +99,24 @@ const ProfileDropdown: React.FC<{ user: User; onLogout: () => void; navigateTo: 
 
 
 const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout }) => {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    if (currentPage === Page.Home) {
+      window.addEventListener('scroll', handleScroll);
+      handleScroll(); // Check on initial render
+    } else {
+      setIsScrolled(true); // Always have background on non-home pages
+    }
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [currentPage]);
 
   const fallbackLogo = (
     <div className="flex items-center h-10">
@@ -106,9 +124,15 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout
         <span className="text-xl font-bold ml-2 text-slate-800">SIP Buddy</span>
     </div>
   );
+  
+  const headerClass = `sticky top-0 z-40 transition-all duration-300 ${
+    isScrolled || currentPage !== Page.Home
+      ? 'bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm'
+      : 'bg-transparent border-b border-transparent'
+  }`;
 
   return (
-    <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200">
+    <header className={headerClass}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">

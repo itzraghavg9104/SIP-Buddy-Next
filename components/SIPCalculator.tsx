@@ -27,57 +27,108 @@ const SIPCalculator: React.FC<SIPCalculatorProps> = ({ onBack }) => {
   });
 
   useEffect(() => {
-    let invested = 0;
-    let futureVal = 0;
-    const totalMonths = years * 12 + months;
-    const monthlyReturnRate = returnRate / 100 / 12;
+    const timer = setTimeout(() => {
+      let invested = 0;
+      let futureVal = 0;
+      const totalMonths = years * 12 + months;
+      const monthlyReturnRate = returnRate / 100 / 12;
+  
+      let currentMonthlyInvestment = monthlyInvestment;
+  
+      for (let i = 1; i <= totalMonths; i++) {
+          invested += currentMonthlyInvestment;
+          futureVal = (futureVal + currentMonthlyInvestment) * (1 + monthlyReturnRate);
+  
+          if (i % 12 === 0 && i < totalMonths) {
+              currentMonthlyInvestment *= (1 + stepUp / 100);
+          }
+      }
+      
+      const totalYears = totalMonths / 12;
+      const futureValueAdjustedForInflation = futureVal / Math.pow(1 + inflation / 100, totalYears);
+  
+      setResults({
+          investedAmount: invested,
+          futureValue: futureVal,
+          wealthGained: futureVal - invested,
+          futureValueAdjusted: futureValueAdjustedForInflation,
+      });
+    }, 150); // Debounce calculation for a smoother UI experience
 
-    let currentMonthlyInvestment = monthlyInvestment;
-
-    for (let i = 1; i <= totalMonths; i++) {
-        invested += currentMonthlyInvestment;
-        futureVal = (futureVal + currentMonthlyInvestment) * (1 + monthlyReturnRate);
-
-        if (i % 12 === 0 && i < totalMonths) {
-            currentMonthlyInvestment *= (1 + stepUp / 100);
-        }
-    }
-    
-    const totalYears = totalMonths / 12;
-    const futureValueAdjustedForInflation = futureVal / Math.pow(1 + inflation / 100, totalYears);
-
-    setResults({
-        investedAmount: invested,
-        futureValue: futureVal,
-        wealthGained: futureVal - invested,
-        futureValueAdjusted: futureValueAdjustedForInflation,
-    });
+    return () => clearTimeout(timer);
 
   }, [monthlyInvestment, returnRate, stepUp, years, months, inflation]);
 
-  const InputSlider: React.FC<{ label: string; value: number; onChange: (val: number) => void; min: number; max: number; step: number; unit: string }> = 
-  ({ label, value, onChange, min, max, step, unit }) => (
+  const InputSlider: React.FC<{
+    label: string;
+    value: number;
+    onChange: (val: number) => void;
+    min: number;
+    max: number;
+    step: number;
+    unit: string;
+  }> = ({ label, value, onChange, min, max, step, unit }) => {
+    const [inputValue, setInputValue] = useState(String(value));
+    const inputId = `input-${label.replace(/\s+/g, '-')}`;
+  
+    useEffect(() => {
+      // Update local state only if the parent value changes and the input is not focused.
+      // This prevents the cursor from jumping while typing.
+      if (document.activeElement?.id !== inputId) {
+        setInputValue(String(value));
+      }
+    }, [value, inputId]);
+  
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInputValue(e.target.value);
+    };
+  
+    const handleInputBlur = () => {
+      let num = parseFloat(inputValue);
+      if (isNaN(num)) {
+        num = min;
+      }
+      const clampedValue = Math.max(min, Math.min(max, num));
+      onChange(clampedValue);
+      setInputValue(String(clampedValue));
+    };
+    
+    const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const num = parseFloat(e.target.value);
+      onChange(num);
+      setInputValue(String(num));
+    };
+  
+    return (
       <div>
-          <div className="flex justify-between items-center mb-1">
-              <label className="text-sm font-medium text-slate-700">{label}</label>
-              <input 
-                  type="number" 
-                  value={value} 
-                  onChange={(e) => onChange(parseFloat(e.target.value) || 0)} 
-                  className="w-28 text-right font-semibold text-blue-600 border-0 bg-transparent focus:ring-0"
+        <div className="flex justify-between items-center mb-1">
+          <label htmlFor={inputId} className="text-sm font-medium text-slate-700">{label}</label>
+          <div className="flex items-center">
+              {unit === '₹' && <span className="font-semibold text-blue-600">{unit}</span>}
+              <input
+                  type="text"
+                  id={inputId}
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  onBlur={handleInputBlur}
+                  className="w-28 text-right font-semibold text-blue-600 border-0 bg-transparent focus:ring-0 p-0"
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
               />
+              {unit === '%' && <span className="font-semibold text-blue-600">{unit}</span>}
           </div>
-          <input 
-              type="range" 
-              min={min} 
-              max={max} 
-              step={step}
-              value={value} 
-              onChange={(e) => onChange(parseFloat(e.target.value))}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
-          />
+        </div>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={handleSliderChange}
+          className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+        />
       </div>
-  );
+    );
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
