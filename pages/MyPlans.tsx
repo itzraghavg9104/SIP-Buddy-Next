@@ -53,7 +53,7 @@ const MyPlans: React.FC<MyPlansProps> = ({ onViewPlan }) => {
             <div className="flex items-center gap-4 mb-8">
                 <IconListDetails className="h-10 w-10 text-slate-500" />
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">My Saved Plans</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">My Saved Plans</h1>
                     <p className="text-slate-600">View, compare, or delete your saved investment plans.</p>
                 </div>
             </div>

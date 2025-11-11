@@ -49,7 +49,7 @@ const About: React.FC<AboutProps> = ({ navigateTo }) => {
                         src={logoFull}
                         fallback={fallbackLogo}
                         alt="SIP Buddy Logo"
-                        className="h-16 mx-auto mb-6"
+                        className="h-14 sm:h-16 mx-auto mb-6"
                     />
                     <p className="text-lg text-slate-600">
                         Your intelligent partner in simplifying Systematic Investment Plans.
@@ -64,7 +64,7 @@ const About: React.FC<AboutProps> = ({ navigateTo }) => {
                 </div>
 
                 <div className="mb-12">
-                    <h2 className="text-3xl font-bold text-center text-slate-800 mb-8">Key Features</h2>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-center text-slate-800 mb-8">Key Features</h2>
                     <div className="grid md:grid-cols-2 gap-8">
                         {features.map(feature => (
                             <div key={feature.title} className="bg-white p-6 rounded-xl shadow-lg border border-slate-200 flex items-start space-x-4">

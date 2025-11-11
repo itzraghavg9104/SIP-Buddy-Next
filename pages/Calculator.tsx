@@ -28,7 +28,7 @@ const Calculator: React.FC = () => {
   const renderSelection = () => (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-10">
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">Financial Calculators</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">Financial Calculators</h1>
         <p className="text-lg text-slate-600">
           Plan your investments, withdrawals, and taxes with precision.
         </p>

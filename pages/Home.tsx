@@ -67,13 +67,13 @@ const Home: React.FC<HomeProps> = ({ onGetStartedClick, navigateTo }) => {
                 {/* Hero Section */}
                 <div className="grid lg:grid-cols-2 gap-16 items-center">
                     <div className="text-center lg:text-left">
-                        <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-tight">
                             Navigate Your Financial Future with <span className="text-blue-600">Confidence.</span>
                         </h1>
                         <p className="mt-6 text-lg text-slate-600 max-w-lg mx-auto lg:mx-0">
                             SIP Buddy is your AI-powered partner for smart investment planning. Get personalized strategies, discover top funds, and build a clear path to achieving your goals.
                         </p>
-                        <button onClick={onGetStartedClick} className="mt-10 px-8 py-4 bg-blue-600 text-white font-bold text-lg rounded-full shadow-lg hover:bg-blue-700 transition-all transform hover:scale-105">
+                        <button onClick={onGetStartedClick} className="mt-8 px-6 py-3 text-base sm:mt-10 sm:px-8 sm:py-4 sm:text-lg bg-blue-600 text-white font-bold rounded-full shadow-lg hover:bg-blue-700 transition-all transform hover:scale-105">
                             Get Started for Free
                         </button>
                     </div>

@@ -83,7 +83,7 @@ const SIPCalculator: React.FC<SIPCalculatorProps> = ({ onBack }) => {
     <div className="max-w-4xl mx-auto">
       <button onClick={onBack} className="text-sm font-semibold text-blue-600 hover:underline mb-4">&larr; Back to Calculators</button>
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-1">Advanced SIP Calculator</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1">Advanced SIP Calculator</h1>
         <p className="text-slate-600">Estimate your SIP returns with annual step-up and inflation.</p>
       </div>
       <div className="grid md:grid-cols-2 gap-8">
@@ -110,15 +110,15 @@ const SIPCalculator: React.FC<SIPCalculatorProps> = ({ onBack }) => {
             <div className="space-y-4">
                 <div>
                     <p className="text-blue-200 text-sm">Invested Amount</p>
-                    <p className="text-2xl font-bold">{formatCurrency(results.investedAmount)}</p>
+                    <p className="text-xl sm:text-2xl font-bold">{formatCurrency(results.investedAmount)}</p>
                 </div>
                  <div>
                     <p className="text-blue-200 text-sm">Wealth Gained</p>
-                    <p className="text-2xl font-bold">{formatCurrency(results.wealthGained)}</p>
+                    <p className="text-xl sm:text-2xl font-bold">{formatCurrency(results.wealthGained)}</p>
                 </div>
                 <div>
                     <p className="text-blue-200 text-lg">Future Value</p>
-                    <p className="text-5xl font-extrabold">{formatCurrency(results.futureValue)}</p>
+                    <p className="text-4xl sm:text-5xl font-extrabold">{formatCurrency(results.futureValue)}</p>
                 </div>
                  <div className="pt-4 border-t border-blue-500">
                     <p className="text-blue-200 text-sm">Future Value (Inflation Adjusted)</p>

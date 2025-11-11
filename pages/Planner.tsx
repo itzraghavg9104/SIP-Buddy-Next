@@ -149,7 +149,7 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
           <IconSparkles className="w-4 h-4 mr-2" />
           AI-Powered Analysis
         </div>
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">Smart Investment Planner</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">Smart Investment Planner</h1>
         <p className="text-lg text-slate-600">
           Get personalized SIP recommendations based on your financial profile with AI-powered analysis and real fund suggestions
         </p>

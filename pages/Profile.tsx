@@ -108,7 +108,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout, onProfileUpdate }) =>
   return (
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Profile Settings</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Profile Settings</h1>
         <p className="text-slate-600">Manage your account details.</p>
       </div>
 
@@ -120,10 +120,10 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout, onProfileUpdate }) =>
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
               {user.photoURL ? (
-                <img src={user.photoURL} alt="Profile" className="w-28 h-28 rounded-full object-cover ring-4 ring-slate-200" />
+                <img src={user.photoURL} alt="Profile" className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-4 ring-slate-200" />
               ) : (
-                <div className="w-28 h-28 rounded-full bg-slate-200 flex items-center justify-center ring-4 ring-slate-200">
-                  <IconUser className="h-14 w-14 text-slate-500" />
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-200 flex items-center justify-center ring-4 ring-slate-200">
+                  <IconUser className="h-12 w-12 sm:h-14 sm:w-14 text-slate-500" />
                 </div>
               )}
             </div>

@@ -183,65 +183,63 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout
           </div>
         </div>
       </div>
-       <div className="md:hidden flex items-center justify-between space-x-1 bg-slate-100 p-1 m-2 rounded-lg text-xs">
-            <div className="flex items-center space-x-1">
-                <NavItem
-                label="Planner"
-                icon={<IconChartPie className="h-5 w-5" />}
-                isActive={currentPage === Page.Planner}
-                onClick={() => navigateTo(Page.Planner)}
+       <div className="md:hidden flex items-center justify-around bg-slate-100 p-1 m-2 rounded-lg text-xs">
+            <NavItem
+            label="Planner"
+            icon={<IconChartPie className="h-5 w-5" />}
+            isActive={currentPage === Page.Planner}
+            onClick={() => navigateTo(Page.Planner)}
+            showLabelOnlyWhenActive
+            dataTourId="planner-step-mobile"
+            />
+            {user && (
+              <NavItem
+                label="My Plans"
+                icon={<IconListDetails className="h-5 w-5" />}
+                isActive={currentPage === Page.MyPlans}
+                onClick={() => navigateTo(Page.MyPlans)}
                 showLabelOnlyWhenActive
-                dataTourId="planner-step-mobile"
-                />
-                {user && (
-                  <NavItem
-                    label="My Plans"
-                    icon={<IconListDetails className="h-5 w-5" />}
-                    isActive={currentPage === Page.MyPlans}
-                    onClick={() => navigateTo(Page.MyPlans)}
-                    showLabelOnlyWhenActive
-                  />
-                )}
-                <NavItem
-                label="Dashboard"
-                icon={<IconLayoutDashboard className="h-5 w-5" />}
-                isActive={currentPage === Page.Dashboard}
-                onClick={() => navigateTo(Page.Dashboard)}
-                showLabelOnlyWhenActive
-                dataTourId="dashboard-step-mobile"
-                />
-                <NavItem
-                label="Learn"
-                icon={<IconBook className="h-5 w-5" />}
-                isActive={currentPage === Page.Learn}
-                onClick={() => navigateTo(Page.Learn)}
-                showLabelOnlyWhenActive
-                dataTourId="learn-step-mobile"
-                />
-                <NavItem
-                label="Calculator"
-                icon={<IconCalculator className="h-5 w-5" />}
-                isActive={currentPage === Page.Calculator}
-                onClick={() => navigateTo(Page.Calculator)}
-                showLabelOnlyWhenActive
-                dataTourId="calculator-step-mobile"
-                />
-                <NavItem
-                label="More"
-                icon={<IconApps className="h-5 w-5" />}
-                isActive={currentPage === Page.More}
-                onClick={() => navigateTo(Page.More)}
-                showLabelOnlyWhenActive
-                dataTourId="more-step-mobile"
-                />
-                <NavItem
-                label="About"
-                icon={<IconInfoCircle className="h-5 w-5" />}
-                isActive={currentPage === Page.About}
-                onClick={() => navigateTo(Page.About)}
-                showLabelOnlyWhenActive
-                />
-            </div>
+              />
+            )}
+            <NavItem
+            label="Dashboard"
+            icon={<IconLayoutDashboard className="h-5 w-5" />}
+            isActive={currentPage === Page.Dashboard}
+            onClick={() => navigateTo(Page.Dashboard)}
+            showLabelOnlyWhenActive
+            dataTourId="dashboard-step-mobile"
+            />
+            <NavItem
+            label="Learn"
+            icon={<IconBook className="h-5 w-5" />}
+            isActive={currentPage === Page.Learn}
+            onClick={() => navigateTo(Page.Learn)}
+            showLabelOnlyWhenActive
+            dataTourId="learn-step-mobile"
+            />
+            <NavItem
+            label="Calculator"
+            icon={<IconCalculator className="h-5 w-5" />}
+            isActive={currentPage === Page.Calculator}
+            onClick={() => navigateTo(Page.Calculator)}
+            showLabelOnlyWhenActive
+            dataTourId="calculator-step-mobile"
+            />
+            <NavItem
+            label="More"
+            icon={<IconApps className="h-5 w-5" />}
+            isActive={currentPage === Page.More}
+            onClick={() => navigateTo(Page.More)}
+            showLabelOnlyWhenActive
+            dataTourId="more-step-mobile"
+            />
+            <NavItem
+            label="About"
+            icon={<IconInfoCircle className="h-5 w-5" />}
+            isActive={currentPage === Page.About}
+            onClick={() => navigateTo(Page.About)}
+            showLabelOnlyWhenActive
+            />
             {!user && (
                  <button onClick={() => navigateTo(Page.Auth)} className="px-3 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 transition-colors text-xs">
                     Login

@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback } from 'react';
 import { IconChevronDown, IconBook, learnIcons } from '../components/Icons';
 
@@ -293,7 +291,7 @@ const Learn: React.FC = () => {
         <div className="inline-flex items-center justify-center bg-blue-100 text-blue-700 rounded-full p-4 mb-4">
           <IconBook className="h-8 w-8" />
         </div>
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">Knowledge Hub</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">Knowledge Hub</h1>
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
           Your guide to mastering the fundamentals of smart investing. Each section is designed to build your confidence, one concept at a time.
         </p>

@@ -174,7 +174,7 @@ const IncomeTaxCalculator: React.FC<IncomeTaxCalculatorProps> = ({ onBack }) => 
     <div className="max-w-6xl mx-auto">
         {onBack && <button onClick={onBack} className="text-sm font-semibold text-blue-600 hover:underline mb-4">&larr; Back to Calculators</button>}
         <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-slate-900 mb-1">Income Tax Calculator</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1">Income Tax Calculator</h1>
             <p className="text-slate-600">For FY 2024-25 (AY 2025-26). Compare Old vs. New Regime.</p>
         </div>
 
@@ -235,7 +235,7 @@ const IncomeTaxCalculator: React.FC<IncomeTaxCalculatorProps> = ({ onBack }) => 
                     <hr className="border-blue-500 my-2" />
                     <div className="flex justify-between items-center text-lg">
                         <span className="font-bold text-blue-100">Total Tax Payable:</span>
-                        <span className="font-extrabold text-2xl">{formatCurrency(activeResults.total)}</span>
+                        <span className="font-extrabold text-xl sm:text-2xl">{formatCurrency(activeResults.total)}</span>
                     </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-blue-500 space-y-3">

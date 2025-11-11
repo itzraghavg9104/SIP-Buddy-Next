@@ -75,7 +75,7 @@ const Footer: React.FC<FooterProps> = ({ navigateTo }) => {
                 <div className="mt-12 pt-12 border-t border-slate-200">
                     <div className="bg-blue-50 rounded-2xl p-8 grid md:grid-cols-2 items-center gap-8">
                         <div className="text-center md:text-left">
-                            <h3 className="font-bold text-2xl text-slate-900">Have Feedback or Suggestions?</h3>
+                            <h3 className="font-bold text-xl md:text-2xl text-slate-900">Have Feedback or Suggestions?</h3>
                             <p className="mt-2 text-slate-600">We are constantly working to improve SIP Buddy and would love to hear from you!</p>
                         </div>
                         <div className="text-center md:text-right">

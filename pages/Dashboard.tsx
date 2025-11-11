@@ -52,7 +52,7 @@ const formatLargeCurrency = (value: number) => {
 const SummaryCard: React.FC<{ title: string; value: string; subtext: string }> = ({ title, value, subtext }) => (
     <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
       <p className="text-sm text-slate-500">{title}</p>
-      <p className="text-2xl font-bold text-slate-800 my-1">{value}</p>
+      <p className="text-xl sm:text-2xl font-bold text-slate-800 my-1">{value}</p>
       <p className="text-xs text-slate-400">{subtext}</p>
     </div>
   );
@@ -253,20 +253,20 @@ const Dashboard: React.FC<DashboardProps> = ({ currentPlan, onSavePlan, onCreate
                 </div>
             </div>
         </div>
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Your Investment Dashboard</h1>
-            <p className="text-slate-600">Personalized plan for {userProfile.investmentGoal}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Your Investment Dashboard</h1>
+            <p className="text-slate-600 mt-1">Personalized plan for {userProfile.investmentGoal}</p>
           </div>
           {!isExporting && (
-             <div className="flex items-center gap-2">
+             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                 {!isPlanSaved && (
-                  <button onClick={openSaveModal} className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-sm hover:bg-green-700 transition-colors flex items-center gap-2">
+                  <button onClick={openSaveModal} className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-sm hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" /><path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M14 4l0 4l-6 0l0 -4" /></svg>
                     Save Plan
                   </button>
                 )}
-                <button onClick={handleExportPDF} disabled={isExporting} className="px-4 py-2 bg-slate-600 text-white font-semibold rounded-lg shadow-sm hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 disabled:bg-slate-400 w-44">
+                <button onClick={handleExportPDF} disabled={isExporting} className="px-4 py-2 bg-slate-600 text-white font-semibold rounded-lg shadow-sm hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 disabled:bg-slate-400 min-h-[40px]">
                      {isExporting ? (
                         <div className="flex flex-col items-center">
                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mb-1"></div>
@@ -279,7 +279,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentPlan, onSavePlan, onCreate
                        </>
                     )}
                 </button>
-                <button onClick={onCreateNewPlan} className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-sm hover:bg-blue-700 transition-colors">
+                <button onClick={onCreateNewPlan} className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-sm hover:bg-blue-700 transition-colors justify-center">
                 Create New Plan
                 </button>
             </div>

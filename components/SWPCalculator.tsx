@@ -149,7 +149,7 @@ const SWPCalculator: React.FC<SWPCalculatorProps> = ({ onBack }) => {
     <div className="max-w-4xl mx-auto">
       <button onClick={onBack} className="text-sm font-semibold text-blue-600 hover:underline mb-4">&larr; Back to Calculators</button>
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-1">SWP Calculator</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1">SWP Calculator</h1>
         <p className="text-slate-600">Estimate the final value of your corpus with systematic withdrawals.</p>
       </div>
       <div className="grid md:grid-cols-2 gap-8">
@@ -175,11 +175,11 @@ const SWPCalculator: React.FC<SWPCalculatorProps> = ({ onBack }) => {
              <div className="space-y-6">
                 <div>
                     <p className={resultTextColorClass}>Total Withdrawn</p>
-                    <p className="text-2xl font-bold">{formatCurrency(results.totalWithdrawn)}</p>
+                    <p className="text-xl sm:text-2xl font-bold">{formatCurrency(results.totalWithdrawn)}</p>
                 </div>
                 <div>
                     <p className={resultTextColorClass}>Final Corpus Value</p>
-                    <p className="text-5xl font-extrabold">{formatCurrency(results.finalValue)}</p>
+                    <p className="text-4xl sm:text-5xl font-extrabold">{formatCurrency(results.finalValue)}</p>
                      {isDepleted && results.corpusDepletionMonths !== null && (
                         <p className="text-sm font-semibold text-red-100 mt-2">
                             Fund Depleted in ~{Math.floor(results.corpusDepletionMonths / 12)} years, {Math.round(results.corpusDepletionMonths % 12)} months
