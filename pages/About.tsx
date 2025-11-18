@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Page } from '../types';
-import { IconSparkles, IconLayoutDashboard, IconBook, IconCalculator, IconMail } from '../components/Icons';
+import { IconSparkles, IconLayoutDashboard, IconBook, IconCalculator, IconBrainCircuit, IconMapPin } from '../components/Icons';
 import { logoFull } from '../assets/logo';
 import SafeImage from '../components/SafeImage';
 import Footer from '../components/Footer';
@@ -19,17 +20,27 @@ const About: React.FC<AboutProps> = ({ navigateTo }) => {
         {
             icon: <IconLayoutDashboard className="h-8 w-8 text-green-600" />,
             title: 'Interactive Dashboard',
-            description: 'Visualize your asset allocation, growth projections, and recommended funds in an easy-to-understand dashboard.'
+            description: 'Visualize projections, compare mutual funds, save your plans, and export detailed reports as PDFs.'
+        },
+        {
+            icon: <IconBrainCircuit className="h-8 w-8 text-purple-600" />,
+            title: 'Smart AI Assistant',
+            description: 'Chat with SIP Buddy using voice or text. Get instant answers to your financial queries powered by advanced AI.'
+        },
+        {
+            icon: <IconCalculator className="h-8 w-8 text-orange-600" />,
+            title: 'Comprehensive Calculators',
+            description: 'Plan for every scenario with our advanced SIP, SWP, Lumpsum, and new Income Tax calculators.'
+        },
+        {
+            icon: <IconMapPin className="h-8 w-8 text-cyan-600" />,
+            title: 'Advisor Locator',
+            description: 'Need professional help? Find registered financial advisors near your location with our integrated map tool.'
         },
         {
             icon: <IconBook className="h-8 w-8 text-indigo-600" />,
             title: 'Learning Center',
             description: 'Empower yourself with knowledge. Our learn section breaks down complex investment topics into simple concepts.'
-        },
-        {
-            icon: <IconCalculator className="h-8 w-8 text-orange-600" />,
-            title: 'Financial Calculators',
-            description: 'Plan for your future with precision using our advanced SIP and SWP calculators.'
         }
     ];
     
@@ -85,18 +96,6 @@ const About: React.FC<AboutProps> = ({ navigateTo }) => {
                     <p className="leading-relaxed">
                         Our primary mission is to empower you with the tools and knowledge needed to make informed investment decisions. We believe that by providing clear, unbiased, and personalized guidance, we can help you navigate the complexities of the financial markets and confidently work towards achieving your financial dreams.
                     </p>
-                </div>
-                
-                <div className="text-center">
-                    <h2 className="text-2xl font-semibold text-slate-800 mb-3">Have Feedback or Suggestions?</h2>
-                    <p className="text-slate-600 mb-4">We are constantly working to improve SIP Buddy and would love to hear from you!</p>
-                    <a 
-                        href="mailto:contact.sipbuddy@gmail.com"
-                        className="inline-flex items-center gap-2 py-3 px-6 bg-slate-800 text-white font-semibold rounded-lg shadow-md hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors"
-                    >
-                        <IconMail className="w-5 h-5" />
-                        Contact Us
-                    </a>
                 </div>
             </div>
             <Footer navigateTo={navigateTo} />

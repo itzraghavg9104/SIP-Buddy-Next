@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FindAdvisor from './tools/FindAdvisor';
 import { IconMapPin } from '../components/Icons';
 
@@ -12,8 +12,16 @@ const tools = [
   },
 ];
 
-const More: React.FC = () => {
-  const [activeToolId, setActiveToolId] = useState<string | null>(null);
+interface MoreProps {
+  initialActiveId?: string | null;
+}
+
+const More: React.FC<MoreProps> = ({ initialActiveId }) => {
+  const [activeToolId, setActiveToolId] = useState<string | null>(initialActiveId || null);
+
+  useEffect(() => {
+      setActiveToolId(initialActiveId || null);
+  }, [initialActiveId]);
 
   const activeTool = tools.find(t => t.id === activeToolId);
 

@@ -29,6 +29,7 @@ export interface CurrentPlanState {
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(Page.Home); // Set Home as the default page
   const [currentPlan, setCurrentPlan] = useState<CurrentPlanState | null>(null);
+  const [pageParams, setPageParams] = useState<any>(null);
   
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -102,13 +103,14 @@ const App: React.FC = () => {
     setCurrentPage(Page.Dashboard);
   };
   
-  const navigateTo = (page: Page) => {
+  const navigateTo = (page: Page, params?: any) => {
     const protectedPages = [Page.Dashboard, Page.Profile, Page.MyPlans, Page.Planner]; // Planner is now semi-protected by Get Started logic
     if (protectedPages.includes(page) && !user) {
         setCurrentPage(Page.Auth);
         return;
     }
     setCurrentPage(page);
+    setPageParams(params || null);
   };
   
   const handleLogout = () => {
@@ -162,11 +164,11 @@ const App: React.FC = () => {
       case Page.Learn:
         return <Learn />;
       case Page.Calculator:
-        return <Calculator />;
+        return <Calculator initialActive={pageParams} />;
       case Page.About:
         return <About navigateTo={navigateTo} />;
       case Page.More:
-        return <More />;
+        return <More initialActiveId={pageParams} />;
       default:
         return <Home onGetStartedClick={handleGetStarted} navigateTo={navigateTo} />;
     }

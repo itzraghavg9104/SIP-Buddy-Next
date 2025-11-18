@@ -11,55 +11,7 @@ const formatCurrency = (value: number) => new Intl.NumberFormat('en-IN', {
     maximumFractionDigits: 0,
 }).format(value);
 
-const SIPCalculator: React.FC<SIPCalculatorProps> = ({ onBack }) => {
-  const [monthlyInvestment, setMonthlyInvestment] = useState(10000);
-  const [returnRate, setReturnRate] = useState(12);
-  const [stepUp, setStepUp] = useState(10);
-  const [years, setYears] = useState(15);
-  const [months, setMonths] = useState(0);
-  const [inflation, setInflation] = useState(6);
-
-  const [results, setResults] = useState({
-    investedAmount: 0,
-    futureValue: 0,
-    wealthGained: 0,
-    futureValueAdjusted: 0,
-  });
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      let invested = 0;
-      let futureVal = 0;
-      const totalMonths = years * 12 + months;
-      const monthlyReturnRate = returnRate / 100 / 12;
-  
-      let currentMonthlyInvestment = monthlyInvestment;
-  
-      for (let i = 1; i <= totalMonths; i++) {
-          invested += currentMonthlyInvestment;
-          futureVal = (futureVal + currentMonthlyInvestment) * (1 + monthlyReturnRate);
-  
-          if (i % 12 === 0 && i < totalMonths) {
-              currentMonthlyInvestment *= (1 + stepUp / 100);
-          }
-      }
-      
-      const totalYears = totalMonths / 12;
-      const futureValueAdjustedForInflation = futureVal / Math.pow(1 + inflation / 100, totalYears);
-  
-      setResults({
-          investedAmount: invested,
-          futureValue: futureVal,
-          wealthGained: futureVal - invested,
-          futureValueAdjusted: futureValueAdjustedForInflation,
-      });
-    }, 150); // Debounce calculation for a smoother UI experience
-
-    return () => clearTimeout(timer);
-
-  }, [monthlyInvestment, returnRate, stepUp, years, months, inflation]);
-
-  const InputSlider: React.FC<{
+const InputSlider: React.FC<{
     label: string;
     value: number;
     onChange: (val: number) => void;
@@ -129,6 +81,54 @@ const SIPCalculator: React.FC<SIPCalculatorProps> = ({ onBack }) => {
       </div>
     );
   };
+
+const SIPCalculator: React.FC<SIPCalculatorProps> = ({ onBack }) => {
+  const [monthlyInvestment, setMonthlyInvestment] = useState(10000);
+  const [returnRate, setReturnRate] = useState(12);
+  const [stepUp, setStepUp] = useState(10);
+  const [years, setYears] = useState(15);
+  const [months, setMonths] = useState(0);
+  const [inflation, setInflation] = useState(6);
+
+  const [results, setResults] = useState({
+    investedAmount: 0,
+    futureValue: 0,
+    wealthGained: 0,
+    futureValueAdjusted: 0,
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      let invested = 0;
+      let futureVal = 0;
+      const totalMonths = years * 12 + months;
+      const monthlyReturnRate = returnRate / 100 / 12;
+  
+      let currentMonthlyInvestment = monthlyInvestment;
+  
+      for (let i = 1; i <= totalMonths; i++) {
+          invested += currentMonthlyInvestment;
+          futureVal = (futureVal + currentMonthlyInvestment) * (1 + monthlyReturnRate);
+  
+          if (i % 12 === 0 && i < totalMonths) {
+              currentMonthlyInvestment *= (1 + stepUp / 100);
+          }
+      }
+      
+      const totalYears = totalMonths / 12;
+      const futureValueAdjustedForInflation = futureVal / Math.pow(1 + inflation / 100, totalYears);
+  
+      setResults({
+          investedAmount: invested,
+          futureValue: futureVal,
+          wealthGained: futureVal - invested,
+          futureValueAdjusted: futureValueAdjustedForInflation,
+      });
+    }, 150); // Debounce calculation for a smoother UI experience
+
+    return () => clearTimeout(timer);
+
+  }, [monthlyInvestment, returnRate, stepUp, years, months, inflation]);
 
   return (
     <div className="max-w-4xl mx-auto">

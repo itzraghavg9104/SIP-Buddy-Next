@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { User, updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { User, updateProfile } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { updateUserProfileDocument } from '../services/firestoreService';
-import { IconUser, IconMail, IconLogout, IconSparkles, IconLock } from '../components/Icons';
+import { IconUser, IconMail, IconLogout } from '../components/Icons';
 
 interface ProfileProps {
   user: User;
@@ -15,13 +15,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout, onProfileUpdate }) =>
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
-
-  const hasPasswordProvider = user.providerData.some(p => p.providerId === 'password');
 
   useEffect(() => {
     setDisplayName(user.displayName || '');
@@ -49,59 +42,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout, onProfileUpdate }) =>
     } finally {
       setIsLoading(false);
       setTimeout(() => setSuccessMessage(null), 3000);
-    }
-  };
-
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-        setError("User not found. Please log in again.");
-        return;
-    }
-    if (newPassword !== confirmPassword) {
-        setError("New passwords do not match.");
-        return;
-    }
-    if (newPassword.length < 6) {
-        setError("Password should be at least 6 characters long.");
-        return;
-    }
-
-    setIsPasswordLoading(true);
-    setError(null);
-    setSuccessMessage(null);
-
-    try {
-        if (hasPasswordProvider) {
-            if (!currentPassword) {
-                setError("Please enter your current password.");
-                setIsPasswordLoading(false);
-                return;
-            }
-            if (!currentUser.email) {
-                setError("User email not found.");
-                setIsPasswordLoading(false);
-                return;
-            }
-            const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
-            await reauthenticateWithCredential(currentUser, credential);
-        }
-        
-        await updatePassword(currentUser, newPassword);
-        setSuccessMessage("Password updated successfully!");
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-    } catch (err: any) {
-        if (err.code === 'auth/wrong-password') {
-            setError("Incorrect current password.");
-        } else {
-            setError(err.message);
-        }
-    } finally {
-        setIsPasswordLoading(false);
-        setTimeout(() => setSuccessMessage(null), 3000);
     }
   };
   
@@ -177,52 +117,6 @@ const Profile: React.FC<ProfileProps> = ({ user, onLogout, onProfileUpdate }) =>
               )}
             </button>
           </div>
-        </form>
-
-        <form onSubmit={handlePasswordChange} className="space-y-6 mt-8 pt-6 border-t border-slate-200">
-            <h3 className="text-xl font-semibold text-slate-800 -mt-2 mb-2">Security Settings</h3>
-             {!hasPasswordProvider && <p className="text-sm text-slate-600 bg-blue-50 p-3 rounded-md border border-blue-200">You signed in with Google. Add a password to enable signing in with your email address.</p>}
-            
-            {hasPasswordProvider && (
-              <div>
-                <label htmlFor="currentPassword"className="block text-sm font-medium text-slate-700">Current Password</label>
-                <div className="relative mt-1">
-                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><IconLock className="h-5 w-5 text-slate-400" /></div>
-                   <input type="password" id="currentPassword" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full pl-10 pr-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm" required />
-                </div>
-              </div>
-            )}
-            
-            <div>
-              <label htmlFor="newPassword"className="block text-sm font-medium text-slate-700">New Password</label>
-              <div className="relative mt-1">
-                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><IconLock className="h-5 w-5 text-slate-400" /></div>
-                 <input type="password" id="newPassword" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full pl-10 pr-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm" required minLength={6} />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword"className="block text-sm font-medium text-slate-700">Confirm New Password</label>
-              <div className="relative mt-1">
-                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><IconLock className="h-5 w-5 text-slate-400" /></div>
-                 <input type="password" id="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full pl-10 pr-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm" required minLength={6}/>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-                <button
-                    type="submit"
-                    disabled={isPasswordLoading}
-                    className="w-full sm:w-auto flex justify-center items-center gap-2 py-2.5 px-6 bg-slate-700 text-white font-semibold rounded-lg shadow-md hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors disabled:bg-slate-400"
-                >
-                    {isPasswordLoading ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Updating...
-                        </>
-                    ) : (hasPasswordProvider ? 'Change Password' : 'Set Password')}
-                </button>
-            </div>
         </form>
         
         <div className="mt-8 pt-6 border-t border-slate-200">

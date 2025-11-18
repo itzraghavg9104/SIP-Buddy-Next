@@ -57,6 +57,94 @@ const LazySection: React.FC<{ children: React.ReactNode, className?: string }> =
     );
 };
 
+const InteractiveCarousel: React.FC<{ navigateTo: (page: Page) => void }> = ({ navigateTo }) => {
+    const carouselRef = useRef<HTMLDivElement>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const startX = useRef(0);
+    const currentRotation = useRef(0);
+    const animationRef = useRef<number | null>(null);
+
+    // Animation Loop
+    useEffect(() => {
+        const animate = () => {
+            if (!isDragging) {
+                // Reverse direction (positive increment) and faster speed (0.6)
+                currentRotation.current += 0.6; 
+                if (carouselRef.current) {
+                    carouselRef.current.style.transform = `rotateY(${currentRotation.current}deg)`;
+                }
+            }
+            animationRef.current = requestAnimationFrame(animate);
+        };
+
+        animationRef.current = requestAnimationFrame(animate);
+
+        return () => {
+            if (animationRef.current) cancelAnimationFrame(animationRef.current);
+        };
+    }, [isDragging]);
+
+    const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+        setIsDragging(true);
+        startX.current = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    };
+
+    const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+        if (!isDragging) return;
+        const x = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+        const delta = x - startX.current;
+        startX.current = x;
+        
+        // Apply manual rotation sensitivity
+        currentRotation.current += delta * 0.5;
+        if (carouselRef.current) {
+            carouselRef.current.style.transform = `rotateY(${currentRotation.current}deg)`;
+        }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    useEffect(() => {
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+            window.addEventListener('touchmove', handleMouseMove);
+            window.addEventListener('touchend', handleMouseUp);
+        } else {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('touchmove', handleMouseMove);
+            window.removeEventListener('touchend', handleMouseUp);
+        }
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('touchmove', handleMouseMove);
+            window.removeEventListener('touchend', handleMouseUp);
+        }
+    }, [isDragging]);
+
+
+    return (
+        <div className="scene" 
+             onMouseDown={handleMouseDown}
+             onTouchStart={handleMouseDown}
+             style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        >
+            <div className="carousel" ref={carouselRef}>
+                {carouselFeatures.map((feature, index) => (
+                    <div key={index} className="card border border-slate-200" onClick={() => navigateTo(feature.page)} style={{ transform: `rotateY(${index * 90}deg) translateZ(170px)` }}>
+                        {feature.icon}
+                        <h3 className="text-xl font-bold text-slate-800">{feature.title}</h3>
+                        <p className="text-slate-500 mt-2 text-sm">{feature.description}</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 const Home: React.FC<HomeProps> = ({ onGetStartedClick, navigateTo }) => {
     const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -79,17 +167,7 @@ const Home: React.FC<HomeProps> = ({ onGetStartedClick, navigateTo }) => {
                     </div>
                     
                     <div className="relative h-[22rem] w-full flex items-center justify-center">
-                        <div className="scene">
-                            <div className="carousel">
-                                {carouselFeatures.map((feature, index) => (
-                                    <div key={index} className="card border border-slate-200" onClick={() => navigateTo(feature.page)} style={{ transform: `rotateY(${index * 90}deg) translateZ(170px)` }}>
-                                        {feature.icon}
-                                        <h3 className="text-xl font-bold text-slate-800">{feature.title}</h3>
-                                        <p className="text-slate-500 mt-2 text-sm">{feature.description}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                        <InteractiveCarousel navigateTo={navigateTo} />
                     </div>
                 </div>
             </div>
@@ -156,20 +234,13 @@ const Home: React.FC<HomeProps> = ({ onGetStartedClick, navigateTo }) => {
                     perspective: 1000px;
                     width: 280px;
                     height: 300px;
+                    user-select: none;
                 }
                 .carousel {
                     width: 100%;
                     height: 100%;
                     position: relative;
                     transform-style: preserve-3d;
-                    animation: rotate 30s linear infinite;
-                }
-                .carousel:hover {
-                    animation-play-state: paused;
-                }
-                @keyframes rotate {
-                    from { transform: rotateY(0deg); }
-                    to { transform: rotateY(360deg); }
                 }
                 .card {
                     position: absolute;
@@ -186,10 +257,9 @@ const Home: React.FC<HomeProps> = ({ onGetStartedClick, navigateTo }) => {
                     box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
                     cursor: pointer;
                     text-align: center;
-                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                    transition: box-shadow 0.3s ease;
                 }
                 .card:hover {
-                    transform: translateY(-8px) scale(1.05);
                     box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
                 }
             `}</style>

@@ -20,18 +20,43 @@ interface NavItemProps {
   onClick: () => void;
   showLabelOnlyWhenActive?: boolean;
   dataTourId?: string;
+  responsive?: boolean;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ label, icon, isActive, onClick, showLabelOnlyWhenActive = false, dataTourId }) => {
-  const showLabel = !showLabelOnlyWhenActive || isActive;
+const NavItem: React.FC<NavItemProps> = ({ 
+  label, 
+  icon, 
+  isActive, 
+  onClick, 
+  showLabelOnlyWhenActive = false, 
+  dataTourId,
+  responsive = false 
+}) => {
+  // Determine padding and label visibility based on responsive mode
+  let paddingClass = '';
+  let labelClass = '';
+
+  if (responsive) {
+      // Desktop Top Bar Behavior:
+      // MD screens (< 1024px): Icon Only, slightly wider touch targets (px-3)
+      // LG screens (< 1280px): Icon Only, wider touch targets (px-5) to fill space
+      // XL screens (>= 1280px): Icon + Label (expanded)
+      paddingClass = 'px-3 py-2 lg:px-5 xl:px-4 xl:py-2';
+      labelClass = 'hidden xl:inline ml-2';
+  } else {
+      // Mobile/Bottom Bar Behavior:
+      // Shows label based on `showLabelOnlyWhenActive` prop or active state
+      const showLabel = !showLabelOnlyWhenActive || isActive;
+      paddingClass = showLabel ? 'px-4 py-2' : 'p-2';
+      labelClass = showLabel ? 'ml-2' : 'hidden';
+  }
 
   return (
     <button
       onClick={onClick}
       data-tour-id={dataTourId}
-      className={`flex items-center rounded-md font-medium transition-colors ${
-        showLabel ? 'px-4 py-2' : 'p-2'
-      } ${
+      title={responsive ? label : undefined} // Show tooltip in icon-only mode
+      className={`flex items-center flex-shrink-0 rounded-md font-medium transition-colors whitespace-nowrap ${paddingClass} ${
         !showLabelOnlyWhenActive ? 'text-sm' : ''
       } ${
         isActive
@@ -40,7 +65,7 @@ const NavItem: React.FC<NavItemProps> = ({ label, icon, isActive, onClick, showL
       }`}
     >
       {icon}
-      {showLabel && <span className="ml-2">{label}</span>}
+      <span className={labelClass}>{label}</span>
     </button>
   );
 };
@@ -65,7 +90,7 @@ const ProfileDropdown: React.FC<{ user: User; onLogout: () => void; navigateTo: 
     }
     
     return (
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative flex-shrink-0" ref={dropdownRef}>
             <button onClick={() => setIsOpen(!isOpen)} className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center ring-2 ring-offset-2 ring-transparent hover:ring-blue-500 transition-shadow">
                 {user.photoURL ? (
                     <img src={user.photoURL} alt="User" className="w-full h-full rounded-full object-cover" />
@@ -135,7 +160,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout
     <header className={headerClass}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
+          <div className="flex items-center flex-shrink-0">
             <button onClick={() => navigateTo(Page.Home)} aria-label="Go to Homepage">
               <SafeImage
                   src={logoFull}
@@ -145,13 +170,16 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout
               />
             </button>
           </div>
-          <div className="hidden md:flex items-center space-x-2 bg-slate-100 p-1 rounded-lg">
+          
+          {/* Desktop Navigation: Responsive (Icon only on md/lg, Label on xl) */}
+          <div className="hidden md:flex items-center space-x-2 bg-slate-100 p-1 rounded-lg flex-shrink overflow-x-auto no-scrollbar">
             <NavItem
               label="Planner"
               icon={<IconChartPie className="h-5 w-5" />}
               isActive={currentPage === Page.Planner}
               onClick={() => navigateTo(Page.Planner)}
               dataTourId="planner-step"
+              responsive={true}
             />
             {user && (
               <NavItem
@@ -159,6 +187,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout
                 icon={<IconListDetails className="h-5 w-5" />}
                 isActive={currentPage === Page.MyPlans}
                 onClick={() => navigateTo(Page.MyPlans)}
+                responsive={true}
               />
             )}
             <NavItem
@@ -167,6 +196,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout
               isActive={currentPage === Page.Dashboard}
               onClick={() => navigateTo(Page.Dashboard)}
               dataTourId="dashboard-step"
+              responsive={true}
             />
             <NavItem
               label="Learn"
@@ -174,6 +204,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout
               isActive={currentPage === Page.Learn}
               onClick={() => navigateTo(Page.Learn)}
               dataTourId="learn-step"
+              responsive={true}
             />
             <NavItem
               label="Calculator"
@@ -181,6 +212,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout
               isActive={currentPage === Page.Calculator}
               onClick={() => navigateTo(Page.Calculator)}
               dataTourId="calculator-step"
+              responsive={true}
             />
              <NavItem
               label="More"
@@ -188,26 +220,29 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout
               isActive={currentPage === Page.More}
               onClick={() => navigateTo(Page.More)}
               dataTourId="more-step"
+              responsive={true}
             />
             <NavItem
               label="About"
               icon={<IconInfoCircle className="h-5 w-5" />}
               isActive={currentPage === Page.About}
               onClick={() => navigateTo(Page.About)}
+              responsive={true}
             />
           </div>
-          <div className="flex items-center">
+          
+          <div className="flex items-center flex-shrink-0">
              {user ? (
                  <ProfileDropdown user={user} onLogout={onLogout} navigateTo={navigateTo} />
              ) : (
-                <button onClick={() => navigateTo(Page.Auth)} className="hidden md:block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-sm hover:bg-blue-700 transition-colors text-sm">
-                    Login / Sign Up
+                <button onClick={() => navigateTo(Page.Auth)} className="hidden md:block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-sm hover:bg-blue-700 transition-colors text-sm whitespace-nowrap flex-shrink-0">
+                    <span>Login</span> <span className="hidden xl:inline">/ Sign Up</span>
                 </button>
              )}
           </div>
         </div>
       </div>
-       <div className="md:hidden flex items-center justify-around bg-slate-100 p-1 m-2 rounded-lg text-xs">
+       <div className="md:hidden flex items-center justify-around bg-slate-100 p-1 m-2 rounded-lg text-xs overflow-x-auto no-scrollbar">
             <NavItem
             label="Planner"
             icon={<IconChartPie className="h-5 w-5" />}
@@ -265,7 +300,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout
             showLabelOnlyWhenActive
             />
             {!user && (
-                 <button onClick={() => navigateTo(Page.Auth)} className="px-3 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 transition-colors text-xs">
+                 <button onClick={() => navigateTo(Page.Auth)} className="px-3 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 transition-colors text-xs whitespace-nowrap flex-shrink-0">
                     Login
                 </button>
             )}

@@ -38,33 +38,28 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
         setProgress(0);
         setLoadingText(loadingSteps[0]);
         const startTime = Date.now();
-        // This duration is for the visual animation; the actual process depends on the API response time.
-        // The animation will pause at 95% until the API responds.
-        const animationDuration = 15000; 
+        // Animation duration for reaching 90%. The last 10% is reserved for the actual completion.
+        const animationDuration = 12000; 
 
         const animate = () => {
             const elapsedTime = Date.now() - startTime;
-            const currentProgress = Math.min((elapsedTime / animationDuration) * 100, 95);
+            // Linearly progress to 90%
+            const calculatedProgress = Math.min((elapsedTime / animationDuration) * 100, 90);
             
-            setProgress(currentProgress);
+            setProgress(calculatedProgress);
 
             const stepIndex = Math.min(
-              Math.floor((currentProgress / 100) * loadingSteps.length),
+              Math.floor((calculatedProgress / 100) * loadingSteps.length),
               loadingSteps.length - 1
             );
             setLoadingText(loadingSteps[stepIndex]);
 
-            if (currentProgress < 95) {
+            if (calculatedProgress < 90 && isLoading) {
                 animationFrameRef.current = requestAnimationFrame(animate);
             }
         };
 
         animationFrameRef.current = requestAnimationFrame(animate);
-    } else {
-      // Clean up animation frame if loading is stopped (e.g., on error)
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
     }
     
     return () => {
@@ -106,12 +101,18 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
 
     try {
       const plan = await generateInvestmentPlan(profile);
+      // Success: Jump to 100% and show completion
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
       setProgress(100);
       setLoadingText('Plan generated successfully!');
-      setTimeout(() => onPlanGenerated(plan, profile), 500); // Short delay to show completion
+      
+      // Allow the UI to render the 100% state briefly before switching views
+      setTimeout(() => {
+          setIsLoading(false);
+          onPlanGenerated(plan, profile);
+      }, 800); // Slightly longer delay to let user see the 100% bar
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
       console.error(err);
@@ -124,8 +125,14 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
       <div className="max-w-xl mx-auto text-center py-12">
         <IconSparkles className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
         <h2 className="mt-4 text-2xl font-bold text-slate-800">{loadingText}</h2>
-        <div className="w-full bg-slate-200 rounded-full h-2.5 mt-6">
-            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%`, transition: 'width 0.5s ease-in-out' }}></div>
+        <div className="w-full bg-slate-200 rounded-full h-2.5 mt-6 overflow-hidden">
+            <div 
+                className="bg-blue-600 h-2.5 rounded-full animated-gradient" 
+                style={{ 
+                    width: `${progress}%`, 
+                    transition: 'width 0.2s ease-out' // Smooth transition
+                }}
+            ></div>
         </div>
         <p className="mt-2 text-sm text-slate-500">{Math.round(progress)}% complete</p>
         
@@ -233,5 +240,5 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
     </div>
   );
 };
-// FIX: Add missing default export
+
 export default Planner;

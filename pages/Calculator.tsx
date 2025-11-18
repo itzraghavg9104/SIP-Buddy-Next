@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SIPCalculator from '../components/SIPCalculator';
 import SWPCalculator from '../components/SWPCalculator';
 import LumpsumCalculator from '../components/LumpsumCalculator';
@@ -7,8 +7,16 @@ import { IconCalculator, IconBriefcase, IconReceiptTax } from '../components/Ico
 
 type CalculatorType = 'sip' | 'swp' | 'lumpsum' | 'tax';
 
-const Calculator: React.FC = () => {
-  const [activeCalculator, setActiveCalculator] = useState<CalculatorType | null>(null);
+interface CalculatorProps {
+  initialActive?: CalculatorType | null;
+}
+
+const Calculator: React.FC<CalculatorProps> = ({ initialActive }) => {
+  const [activeCalculator, setActiveCalculator] = useState<CalculatorType | null>(initialActive || null);
+
+  useEffect(() => {
+    setActiveCalculator(initialActive || null);
+  }, [initialActive]);
 
   const renderCalculator = () => {
     switch (activeCalculator) {

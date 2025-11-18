@@ -5,7 +5,7 @@ import { logoFull } from '../assets/logo';
 import SafeImage from './SafeImage';
 
 interface FooterProps {
-    navigateTo: (page: Page) => void;
+    navigateTo: (page: Page, params?: any) => void;
 }
 
 const Footer: React.FC<FooterProps> = ({ navigateTo }) => {
@@ -43,17 +43,18 @@ const Footer: React.FC<FooterProps> = ({ navigateTo }) => {
         <footer className="bg-white text-slate-600">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-1">
                          <button onClick={() => navigateTo(Page.Home)} aria-label="Go to Homepage">
                             <SafeImage
                                 src={logoFull}
                                 fallback={fallbackLogo}
                                 alt="SIP Buddy Logo"
-                                className="h-12 mb-4"
+                                className="h-10 mb-4"
                             />
                         </button>
-                        <p className="text-sm text-slate-500 max-w-sm">AI-powered investment planning for everyone. Build a smarter financial future with confidence.</p>
+                        <p className="text-sm text-slate-500">AI-powered investment planning for everyone. Build a smarter financial future with confidence.</p>
                     </div>
+                    
                     <div>
                         <h3 className="font-semibold text-slate-900 mb-4">Quick Links</h3>
                         <ul className="space-y-2 text-sm">
@@ -63,11 +64,25 @@ const Footer: React.FC<FooterProps> = ({ navigateTo }) => {
                             <li><button onClick={() => navigateTo(Page.About)} className="hover:text-blue-600 transition-colors">About</button></li>
                         </ul>
                     </div>
+                    
                     <div>
-                        <h3 className="font-semibold text-slate-900 mb-4">Tools</h3>
+                        <h3 className="font-semibold text-slate-900 mb-4">
+                            <button onClick={() => navigateTo(Page.Calculator)} className="hover:text-blue-600 transition-colors text-left">Calculators</button>
+                        </h3>
                         <ul className="space-y-2 text-sm">
-                            <li><button onClick={() => navigateTo(Page.Calculator)} className="hover:text-blue-600 transition-colors">Calculators</button></li>
-                            <li><button onClick={() => navigateTo(Page.More)} className="hover:text-blue-600 transition-colors">Find an Advisor</button></li>
+                            <li><button onClick={() => navigateTo(Page.Calculator, 'sip')} className="hover:text-blue-600 transition-colors text-left">SIP Calculator</button></li>
+                            <li><button onClick={() => navigateTo(Page.Calculator, 'swp')} className="hover:text-blue-600 transition-colors text-left">SWP Calculator</button></li>
+                            <li><button onClick={() => navigateTo(Page.Calculator, 'lumpsum')} className="hover:text-blue-600 transition-colors text-left">Lumpsum Calculator</button></li>
+                            <li><button onClick={() => navigateTo(Page.Calculator, 'tax')} className="hover:text-blue-600 transition-colors text-left">Income Tax Calculator</button></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 className="font-semibold text-slate-900 mb-4">
+                            <button onClick={() => navigateTo(Page.More)} className="hover:text-blue-600 transition-colors text-left">More Tools</button>
+                        </h3>
+                        <ul className="space-y-2 text-sm">
+                            <li><button onClick={() => navigateTo(Page.More, 'find-advisor')} className="hover:text-blue-600 transition-colors text-left">Find an Advisor</button></li>
                         </ul>
                     </div>
                 </div>
