@@ -72,10 +72,21 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // Prevent negative values for number inputs
+    if (e.target.type === 'number' && parseFloat(value) < 0) {
+       return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+  };
+  
+  // Helper to prevent mouse wheel from changing values
+  const handleWheel = (e: React.WheelEvent<HTMLInputElement>) => {
+      (e.target as HTMLInputElement).blur();
   };
 
   const handleRiskChange = (value: RiskTolerance) => {
@@ -176,32 +187,86 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
             {/* Form Fields */}
             <div>
               <label htmlFor="monthlyIncome" className="block text-sm font-medium text-slate-700">Monthly Income (₹)</label>
-              <input type="number" name="monthlyIncome" value={formData.monthlyIncome} onChange={handleChange} placeholder="50000" className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+              <input 
+                type="number" 
+                name="monthlyIncome" 
+                value={formData.monthlyIncome} 
+                onChange={handleChange} 
+                onWheel={handleWheel}
+                min="0"
+                placeholder="50000" 
+                className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+              />
               <p className="mt-1 text-xs text-slate-500">Your total monthly income</p>
             </div>
             <div>
               <label htmlFor="age" className="block text-sm font-medium text-slate-700">Age (years)</label>
-              <input type="number" name="age" value={formData.age} onChange={handleChange} placeholder="30" className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+              <input 
+                type="number" 
+                name="age" 
+                value={formData.age} 
+                onChange={handleChange} 
+                onWheel={handleWheel}
+                min="0"
+                placeholder="30" 
+                className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+              />
               <p className="mt-1 text-xs text-slate-500">Your current age</p>
             </div>
             <div>
               <label htmlFor="familyMembers" className="block text-sm font-medium text-slate-700">Family Members</label>
-              <input type="number" name="familyMembers" value={formData.familyMembers} onChange={handleChange} placeholder="1" className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+              <input 
+                type="number" 
+                name="familyMembers" 
+                value={formData.familyMembers} 
+                onChange={handleChange} 
+                onWheel={handleWheel}
+                min="0"
+                placeholder="1" 
+                className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+              />
               <p className="mt-1 text-xs text-slate-500">Number of dependents</p>
             </div>
             <div>
               <label htmlFor="existingLoans" className="block text-sm font-medium text-slate-700">Existing Loans (₹)</label>
-              <input type="number" name="existingLoans" value={formData.existingLoans} onChange={handleChange} placeholder="0" className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+              <input 
+                type="number" 
+                name="existingLoans" 
+                value={formData.existingLoans} 
+                onChange={handleChange} 
+                onWheel={handleWheel}
+                min="0"
+                placeholder="0" 
+                className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+              />
               <p className="mt-1 text-xs text-slate-500">Total outstanding loan amount</p>
             </div>
             <div>
               <label htmlFor="loanTenureRemaining" className="block text-sm font-medium text-slate-700">Loan Tenure Remaining (years)</label>
-              <input type="number" name="loanTenureRemaining" value={formData.loanTenureRemaining} onChange={handleChange} placeholder="5" className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+              <input 
+                type="number" 
+                name="loanTenureRemaining" 
+                value={formData.loanTenureRemaining} 
+                onChange={handleChange} 
+                onWheel={handleWheel}
+                min="0"
+                placeholder="5" 
+                className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+              />
               <p className="mt-1 text-xs text-slate-500">Years left to pay off loans</p>
             </div>
             <div>
               <label htmlFor="investmentTimeHorizon" className="block text-sm font-medium text-slate-700">Investment Horizon (years)</label>
-              <input type="number" name="investmentTimeHorizon" value={formData.investmentTimeHorizon} onChange={handleChange} placeholder="10" className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+              <input 
+                type="number" 
+                name="investmentTimeHorizon" 
+                value={formData.investmentTimeHorizon} 
+                onChange={handleChange} 
+                onWheel={handleWheel}
+                min="1"
+                placeholder="10" 
+                className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+              />
               <p className="mt-1 text-xs text-slate-500">How long you plan to stay invested</p>
             </div>
             <div className="md:col-span-2">
