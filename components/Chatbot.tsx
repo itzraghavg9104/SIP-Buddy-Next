@@ -61,20 +61,6 @@ const Chatbot: React.FC = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      startChat();
-      // Initialize AudioContext on user interaction
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-      }
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   const stopCurrentAudio = () => {
     if (audioSourceRef.current) {
       audioSourceRef.current.stop();
@@ -83,6 +69,22 @@ const Chatbot: React.FC = () => {
     }
     setMessages(prev => prev.map(m => ({ ...m, isPlaying: false })));
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      startChat();
+      // Initialize AudioContext on user interaction
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+      }
+    } else {
+      stopCurrentAudio();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const playAudio = async (base64Audio: string, messageIndex: number) => {
     if (!audioContextRef.current) return;
@@ -103,6 +105,14 @@ const Chatbot: React.FC = () => {
     } catch (error) {
       console.error("Failed to play audio:", error);
       setMessages(prev => prev.map(m => ({ ...m, isPlaying: false })));
+    }
+  };
+
+  const toggleAudio = (base64Audio: string, messageIndex: number) => {
+    if (messages[messageIndex].isPlaying) {
+      stopCurrentAudio();
+    } else {
+      playAudio(base64Audio, messageIndex);
     }
   };
 
@@ -229,8 +239,8 @@ const Chatbot: React.FC = () => {
                             <p className="text-sm break-words">{msg.text}</p>
                         )}
                         {msg.role === 'model' && msg.audioData && (
-                            <button onClick={() => playAudio(msg.audioData!, index)} className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0">
-                                {msg.isPlaying ? <IconVolume className="h-4 w-4" /> : <IconPlayerPlay className="h-4 w-4" />}
+                            <button onClick={() => toggleAudio(msg.audioData!, index)} className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0">
+                                {msg.isPlaying ? <IconPlayerStop className="h-4 w-4 text-red-500" /> : <IconPlayerPlay className="h-4 w-4" />}
                             </button>
                         )}
                     </div>
