@@ -1,3 +1,4 @@
+
 export enum Page {
   Home = 'Home',
   Planner = 'Planner',
@@ -59,6 +60,17 @@ export interface GrowthDataPoint {
     crash: number;
 }
 
+export interface GroundingChunk {
+    maps?: {
+        uri?: string;
+        title?: string;
+    };
+    web?: {
+        uri?: string;
+        title?: string;
+    };
+}
+
 export interface InvestmentPlan {
     monthlySip: number;
     riskProfile: string;
@@ -68,6 +80,7 @@ export interface InvestmentPlan {
     assetAllocation: AssetAllocationItem[];
     growthProjections: GrowthDataPoint[];
     fundRecommendations: FundCategory[];
+    groundingChunks?: GroundingChunk[];
 }
 
 export interface SavedPlan {
@@ -100,9 +113,25 @@ export interface FinancialAdvisor {
     longitude: number | null;
 }
 
-export interface GroundingChunk {
-    maps: {
-        uri: string;
-        title: string;
-    };
+// --- Quiz Types ---
+
+export type QuizDifficulty = 'Easy' | 'Medium' | 'Hard';
+export type QuizMode = 'Relaxed' | 'Speed Run' | 'Blitz';
+export type QuestionType = 'single_choice' | 'multiple_choice' | 'true_false' | 'fill_in_blank' | 'short_answer';
+
+export interface QuizQuestion {
+    id: number;
+    type: QuestionType;
+    question: string;
+    options?: string[]; // For MCQs
+    correctAnswer: string | string[]; // String for single/text, Array for multiple choice
+    acceptedKeywords?: string[]; // For text answers to allow fuzzy matching
+    explanation: string;
+}
+
+export interface QuizResult {
+    questionId: number;
+    userAnswer: string | string[];
+    isCorrect: boolean;
+    timeTaken: number;
 }

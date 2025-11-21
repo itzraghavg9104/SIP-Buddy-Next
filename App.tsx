@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Planner from './pages/Planner';
@@ -168,7 +169,7 @@ const App: React.FC = () => {
       case Page.About:
         return <About navigateTo={navigateTo} />;
       case Page.More:
-        return <More initialActiveId={pageParams} />;
+        return <More initialActiveId={pageParams} navigateTo={navigateTo} />;
       default:
         return <Home onGetStartedClick={handleGetStarted} navigateTo={navigateTo} />;
     }

@@ -83,6 +83,7 @@ const Footer: React.FC<FooterProps> = ({ navigateTo }) => {
                         </h3>
                         <ul className="space-y-2 text-sm">
                             <li><button onClick={() => navigateTo(Page.More, 'find-advisor')} className="hover:text-blue-600 transition-colors text-left">Find an Advisor</button></li>
+                            <li><button onClick={() => navigateTo(Page.More, 'finiq-challenge')} className="hover:text-blue-600 transition-colors text-left">FinIQ Challenge</button></li>
                         </ul>
                     </div>
                 </div>

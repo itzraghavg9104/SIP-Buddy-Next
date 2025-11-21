@@ -1,6 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import FindAdvisor from './tools/FindAdvisor';
-import { IconMapPin } from '../components/Icons';
+import FinIQChallenge from './tools/FinIQChallenge';
+import { IconMapPin, IconBrain } from '../components/Icons';
+import { Page } from '../types';
 
 const tools = [
   {
@@ -10,13 +13,21 @@ const tools = [
     icon: <IconMapPin className="h-8 w-8 text-cyan-600" />,
     component: <FindAdvisor />,
   },
+  {
+    id: 'finiq-challenge',
+    title: 'FinIQ Challenge',
+    description: 'Test your financial knowledge with our AI-powered dynamic quiz game.',
+    icon: <IconBrain className="h-8 w-8 text-indigo-600" />,
+    component: <FinIQChallenge onBack={() => {}} />, // onBack will be overridden in render
+  },
 ];
 
 interface MoreProps {
   initialActiveId?: string | null;
+  navigateTo: (page: Page, params?: any) => void;
 }
 
-const More: React.FC<MoreProps> = ({ initialActiveId }) => {
+const More: React.FC<MoreProps> = ({ initialActiveId, navigateTo }) => {
   const [activeToolId, setActiveToolId] = useState<string | null>(initialActiveId || null);
 
   useEffect(() => {
@@ -30,8 +41,12 @@ const More: React.FC<MoreProps> = ({ initialActiveId }) => {
   };
 
   if (activeTool) {
-    // Clone the component and pass the onBack prop
-    const componentWithBack = React.cloneElement(activeTool.component, { onBack: handleBack });
+    // Clone the component and pass the onBack prop and navigateTo
+    // Type casting or checking implies components in tools array accept onBack and navigateTo
+    const componentWithProps = React.cloneElement(activeTool.component as React.ReactElement<any>, { 
+        onBack: handleBack,
+        navigateTo: navigateTo
+    });
     return (
       <div className="max-w-6xl mx-auto">
         <button 
@@ -42,7 +57,7 @@ const More: React.FC<MoreProps> = ({ initialActiveId }) => {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
             Back to More Tools
         </button>
-        {componentWithBack}
+        {componentWithProps}
       </div>
     );
   }
@@ -62,7 +77,7 @@ const More: React.FC<MoreProps> = ({ initialActiveId }) => {
             onClick={() => setActiveToolId(tool.id)}
             className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 text-left hover:shadow-xl hover:border-cyan-500 transition-all transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
           >
-            <div className="bg-cyan-100 p-3 rounded-full w-fit mb-4">
+            <div className="bg-slate-100 p-3 rounded-full w-fit mb-4">
               {tool.icon}
             </div>
             <h2 className="text-2xl font-semibold text-slate-800 mb-2">{tool.title}</h2>

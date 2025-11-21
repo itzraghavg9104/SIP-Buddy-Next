@@ -1,24 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Page } from '../types';
-import { IconCalculator, IconBook, IconChartPie, IconMapPin, IconChevronDown, IconBrainCircuit, IconDeviceDesktop, IconTools } from '../components/Icons';
+import { IconCalculator, IconBook, IconChartPie, IconMapPin, IconChevronDown, IconBrainCircuit, IconDeviceDesktop, IconTools, IconTrophy } from '../components/Icons';
 import Footer from '../components/Footer';
 
 interface HomeProps {
     onGetStartedClick: () => void;
-    navigateTo: (page: Page) => void;
+    navigateTo: (page: Page, params?: any) => void;
 }
 
 const carouselFeatures = [
     { title: 'AI Planner', description: 'Personalized SIP strategy', icon: <IconChartPie className="h-10 w-10 mx-auto mb-4 text-blue-500" />, page: Page.Planner },
     { title: 'Calculators', description: 'Project your wealth', icon: <IconCalculator className="h-10 w-10 mx-auto mb-4 text-purple-500" />, page: Page.Calculator },
     { title: 'Knowledge Hub', description: 'Learn about investing', icon: <IconBook className="h-10 w-10 mx-auto mb-4 text-green-500" />, page: Page.Learn },
-    { title: 'Find an Advisor', description: 'Locate certified advisors', icon: <IconMapPin className="h-10 w-10 mx-auto mb-4 text-cyan-500" />, page: Page.More },
+    { title: 'Find an Advisor', description: 'Locate certified advisors', icon: <IconMapPin className="h-10 w-10 mx-auto mb-4 text-cyan-500" />, page: Page.More, params: 'find-advisor' },
+    { title: 'FinIQ Quiz', description: 'Test your financial IQ', icon: <IconTrophy className="h-10 w-10 mx-auto mb-4 text-indigo-500" />, page: Page.More, params: 'finiq-challenge' },
 ];
 
 const highlightFeatures = [
     { icon: <IconBrainCircuit className="h-10 w-10 text-blue-600" />, title: 'Intelligent AI Assistant', description: 'Our AI analyzes your financial profile to create a truly personalized and data-driven investment plan, removing the guesswork.' },
     { icon: <IconDeviceDesktop className="h-10 w-10 text-blue-600" />, title: 'Simple & Clean UI', description: 'Navigate your financial journey with ease. Our intuitive interface makes complex financial planning straightforward and stress-free.' },
     { icon: <IconTools className="h-10 w-10 text-blue-600" />, title: 'Comprehensive Tools', description: 'From advanced calculators to an advisor locator, we provide all the tools you need to make informed financial decisions.' },
+    { icon: <IconTrophy className="h-10 w-10 text-blue-600" />, title: 'Gamified Learning', description: 'Test your knowledge with our FinIQ Challenge. Earn rewards and learn financial concepts in a fun, interactive way.' },
 ];
 
 const faqs = [
@@ -57,12 +59,19 @@ const LazySection: React.FC<{ children: React.ReactNode, className?: string }> =
     );
 };
 
-const InteractiveCarousel: React.FC<{ navigateTo: (page: Page) => void }> = ({ navigateTo }) => {
+const InteractiveCarousel: React.FC<{ navigateTo: (page: Page, params?: any) => void }> = ({ navigateTo }) => {
     const carouselRef = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);
     const startX = useRef(0);
     const currentRotation = useRef(0);
     const animationRef = useRef<number | null>(null);
+
+    // Dynamic calculation based on number of items
+    const itemCount = carouselFeatures.length;
+    const theta = 360 / itemCount;
+    // Calculate radius to ensure cards don't overlap. 
+    // r = (w / 2) / tan(PI / n). Width is approx 280px. Added 40px buffer.
+    const radius = Math.round((280 / 2) / Math.tan(Math.PI / itemCount)) + 40;
 
     // Animation Loop
     useEffect(() => {
@@ -135,7 +144,12 @@ const InteractiveCarousel: React.FC<{ navigateTo: (page: Page) => void }> = ({ n
         >
             <div className="carousel" ref={carouselRef}>
                 {carouselFeatures.map((feature, index) => (
-                    <div key={index} className="card border border-slate-200" onClick={() => navigateTo(feature.page)} style={{ transform: `rotateY(${index * 90}deg) translateZ(170px)` }}>
+                    <div 
+                        key={index} 
+                        className="card border border-slate-200" 
+                        onClick={() => navigateTo(feature.page, (feature as any).params)} 
+                        style={{ transform: `rotateY(${index * theta}deg) translateZ(${radius}px)` }}
+                    >
                         {feature.icon}
                         <h3 className="text-xl font-bold text-slate-800">{feature.title}</h3>
                         <p className="text-slate-500 mt-2 text-sm">{feature.description}</p>
@@ -177,7 +191,7 @@ const Home: React.FC<HomeProps> = ({ onGetStartedClick, navigateTo }) => {
                 <div className="container mx-auto px-4 text-center">
                     <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Why Choose SIP Buddy?</h2>
                     <p className="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">We combine cutting-edge technology with user-friendly design to make financial planning accessible and effective.</p>
-                    <div className="mt-12 grid md:grid-cols-3 gap-8">
+                    <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                         {highlightFeatures.map(feature => (
                             <div key={feature.title} className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
                                 <div className="inline-block bg-blue-100 p-4 rounded-full">{feature.icon}</div>

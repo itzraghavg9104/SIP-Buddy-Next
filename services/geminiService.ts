@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Chat, Type, Modality } from "@google/genai";
-import { UserProfile, InvestmentPlan, Fund, FundCategory, AssetAllocationItem, GrowthDataPoint, FinancialAdvisor } from '../types';
+import { UserProfile, InvestmentPlan, Fund, FundCategory, AssetAllocationItem, GrowthDataPoint, FinancialAdvisor, QuizDifficulty, QuizQuestion } from '../types';
 
 const API_KEY = process.env.API_KEY;
 
@@ -9,74 +10,8 @@ if (!API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
-const investmentPlanSchema = {
-  type: Type.OBJECT,
-  properties: {
-    monthlySip: { type: Type.NUMBER, description: "The recommended monthly SIP amount." },
-    riskProfile: { type: Type.STRING, description: "The user's calculated risk profile (e.g., 'Aggressive')." },
-    timeHorizon: { type: Type.NUMBER, description: "The investment time horizon in years." },
-    assetClasses: { type: Type.NUMBER, description: "The number of different asset classes recommended." },
-    investmentRationale: { type: Type.STRING, description: "A detailed explanation of the investment strategy." },
-    assetAllocation: {
-      type: Type.ARRAY,
-      description: "Breakdown of investment across different asset classes.",
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          name: { type: Type.STRING, description: "Name of the asset class (e.g., 'Large Cap Equity')." },
-          value: { type: Type.NUMBER, description: "Percentage allocation for this asset class." },
-        },
-        required: ['name', 'value'],
-      },
-    },
-    growthProjections: {
-      type: Type.ARRAY,
-      description: "Year-by-year growth projections under different market scenarios.",
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          year: { type: Type.NUMBER },
-          amountInvested: { type: Type.NUMBER },
-          conservative: { type: Type.NUMBER },
-          expected: { type: Type.NUMBER },
-          aggressive: { type: Type.NUMBER },
-          recovery: { type: Type.NUMBER },
-          crash: { type: Type.NUMBER },
-        },
-        required: ['year', 'amountInvested', 'conservative', 'expected', 'aggressive', 'recovery', 'crash'],
-      },
-    },
-    fundRecommendations: {
-      type: Type.ARRAY,
-      description: "Specific mutual fund recommendations for each asset category.",
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          category: { type: Type.STRING, description: "The asset category (e.g., 'Large Cap Fund')." },
-          allocationPercentage: { type: Type.NUMBER, description: "Percentage of the SIP allocated to this category." },
-          funds: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                name: { type: Type.STRING },
-                fundHouse: { type: Type.STRING },
-                threeYearReturns: { type: Type.STRING, description: "3-year Compound Annual Growth Rate (CAGR)." },
-                fiveYearReturns: { type: Type.STRING, description: "5-year Compound Annual Growth Rate (CAGR)." },
-                expenseRatio: { type: Type.STRING },
-                description: { type: Type.STRING, description: "A brief investment thesis for the fund." },
-              },
-              required: ['name', 'fundHouse', 'threeYearReturns', 'fiveYearReturns', 'expenseRatio', 'description'],
-            },
-          },
-        },
-        required: ['category', 'allocationPercentage', 'funds'],
-      },
-    },
-  },
-  required: ['monthlySip', 'riskProfile', 'timeHorizon', 'assetClasses', 'investmentRationale', 'assetAllocation', 'growthProjections', 'fundRecommendations'],
-};
-
+// Note: We cannot use responseSchema with googleSearch tool in the current API version for this specific call,
+// so we will instruct the model via prompt to follow this structure and parse the text manually.
 
 /**
  * Sanitizes the raw, parsed JSON object from the Gemini API to ensure it conforms to the InvestmentPlan interface.
@@ -143,59 +78,92 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
     - Risk Tolerance: ${profile.riskTolerance}
     - Investment Goal: "${profile.investmentGoal}"
 
-    Please provide a comprehensive investment plan.
-    
-    Here are the requirements for the plan:
-    1.  A recommended monthly SIP amount.
-    2.  A detailed investment rationale explaining the strategy.
-    3.  A diversified asset allocation based on SEBI's official mutual fund categorization. The total allocation must sum to 100%. The "name" in "assetAllocation" and "category" in "fundRecommendations" must use official SEBI categories. Examples of categories to use are:
-        *   **Equity Schemes**: Large Cap Fund, Mid Cap Fund, Small Cap Fund, Multi Cap Fund, Flexi Cap Fund, ELSS, Sectoral/Thematic Fund.
-        *   **Debt Schemes**: Corporate Bond Fund, Gilt Fund, Liquid Fund, Short Duration Fund, Money Market Fund.
-        *   **Hybrid Schemes**: Aggressive Hybrid Fund, Balanced Hybrid Fund, Conservative Hybrid Fund, Arbitrage Fund.
-        *   **Other Schemes**: Index Fund, Fund of Funds (for international exposure).
-    4.  Investment growth projections for the entire time horizon, with data points for years 0, 1, 3, 5, and the final year. Projections should cover 'Conservative (Bear Market)', 'Expected (Normal Market)', 'Aggressive (Bull Market)', 'Recovery Scenario', and 'Crash Scenario'. Also include the total 'Amount Invested' for each year.
-    5.  Specific mutual fund recommendations for each allocated asset class. Provide 2 top-performing funds for each category based on your knowledge. Provide their latest 3Y and 5Y CAGR returns, expense ratio, and a brief investment thesis.
-    
-    The entire response must be a single, valid JSON object that conforms to the provided schema. Do not include any markdown formatting, explanations, or any text outside of the JSON object itself.
+    Step 1: SEARCH. Use Google Search to find the latest top-performing mutual funds in India (Direct Plans, Growth option). 
+    Prioritize data from trusted sources like Moneycontrol, Value Research, and Groww. 
+    Look for funds with consistent 3Y and 5Y returns that match the user's risk profile and recommended asset allocation.
+
+    Step 2: GENERATE PLAN. Create a comprehensive investment plan.
+
+    Requirements:
+    1.  Calculate a recommended monthly SIP amount.
+    2.  Provide a detailed investment rationale.
+    3.  Create a detailed asset allocation summing to 100%. You MUST break down the allocation into specific categories like 'Large Cap Equity', 'Mid Cap Equity', 'Small Cap Equity', 'International Equity', 'Debt/Bonds', 'Gold', 'Silver', etc., based on the user's risk profile. Do NOT use broad generic terms like 'Equity' or 'Mutual Funds'.
+    4.  Provide investment growth projections for years 0, 1, 3, 5, and the final year (Conservative, Expected, Aggressive, Recovery, Crash scenarios).
+    5.  Recommend at least 2 specific mutual funds for each category based on your search results. Include 3Y/5Y returns, expense ratio, and a brief thesis.
+
+    OUTPUT FORMAT:
+    You must return ONLY a single valid JSON object. Do not include markdown code blocks (like \`\`\`json). 
+    The JSON must strictly follow this structure:
+    {
+      "monthlySip": number,
+      "riskProfile": string,
+      "timeHorizon": number,
+      "assetClasses": number,
+      "investmentRationale": string,
+      "assetAllocation": [ { "name": string, "value": number } ],
+      "growthProjections": [ 
+         { "year": number, "amountInvested": number, "conservative": number, "expected": number, "aggressive": number, "recovery": number, "crash": number } 
+      ],
+      "fundRecommendations": [
+        {
+          "category": string,
+          "allocationPercentage": number,
+          "funds": [
+            {
+              "name": string,
+              "fundHouse": string,
+              "threeYearReturns": string,
+              "fiveYearReturns": string,
+              "expenseRatio": string,
+              "description": string
+            }
+          ]
+        }
+      ]
+    }
     `;
 
-    const primaryModel = 'gemini-2.5-pro';
-    const fallbackModel = 'gemini-2.5-flash';
+    const model = 'gemini-2.5-flash';
 
-    const tryGenerate = async (model: string) => {
+    try {
+        console.log(`Attempting to generate plan with model: ${model} and Google Search`);
         const response = await ai.models.generateContent({
             model: model,
             contents: prompt,
             config: {
-                responseMimeType: "application/json",
-                responseSchema: investmentPlanSchema,
+                tools: [{ googleSearch: {} }],
+                // responseMimeType and responseSchema are NOT allowed when using googleSearch tool in this context.
+                // We rely on the prompt to enforce JSON structure.
             },
         });
         
-        try {
-            // With JSON mode, the response text is a guaranteed JSON string.
-            const plan = JSON.parse(response.text);
-            return sanitizeInvestmentPlan(plan);
-        } catch (e) {
-            console.error(`Failed to parse response from model ${model}:`, e);
-            console.error("Raw response text:", response.text);
-            // Re-throw the error to be caught by the outer catch block, triggering a fallback.
-            throw new Error(`Response from ${model} was not in the expected format.`);
+        // Extract JSON from the text response (handling potential markdown wrapping)
+        let text = response.text;
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            text = jsonMatch[0];
         }
-    };
 
-    try {
-        console.log(`Attempting to generate plan with primary model: ${primaryModel}`);
-        return await tryGenerate(primaryModel);
-    } catch (e) {
-        console.warn(`Primary model (${primaryModel}) failed. Error:`, e instanceof Error ? e.message : String(e));
-        console.log(`Falling back to model: ${fallbackModel}`);
+        let plan;
         try {
-            return await tryGenerate(fallbackModel);
-        } catch (finalError) {
-            console.error(`Fallback model (${fallbackModel}) also failed. Error:`, finalError instanceof Error ? finalError.message : String(finalError));
-            throw new Error("We're sorry, but we were unable to generate your investment plan at this time, even after a retry. Please try again later.");
+            plan = JSON.parse(text);
+        } catch (e) {
+            console.error("Failed to parse JSON from text:", text);
+            throw new Error("The AI response was not in valid JSON format.");
         }
+
+        const sanitizedPlan = sanitizeInvestmentPlan(plan);
+
+        // Attach grounding chunks (sources) if available
+        if (response.candidates?.[0]?.groundingMetadata?.groundingChunks) {
+            sanitizedPlan.groundingChunks = response.candidates[0].groundingMetadata.groundingChunks;
+        }
+
+        return sanitizedPlan;
+
+    } catch (e) {
+        console.error(`Model (${model}) failed. Error:`, e instanceof Error ? e.message : String(e));
+        throw new Error("We're sorry, but we were unable to generate your investment plan at this time. Please try again later.");
     }
 };
 
@@ -359,5 +327,63 @@ export const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
     } catch (error) {
         console.error("Error in transcribeAudio:", error);
         throw new Error("Failed to transcribe audio.");
+    }
+};
+
+// --- QUIZ GENERATION SERVICE ---
+
+export const generateQuizQuestions = async (difficulty: QuizDifficulty): Promise<QuizQuestion[]> => {
+    const prompt = `
+        Generate a financial literacy quiz with exactly 10 unique questions.
+        Difficulty Level: ${difficulty}.
+        Topics: Personal Finance, Investing (SIP, Mutual Funds, Stocks), Taxes (India context), and General Financial Literacy.
+
+        Output Requirements:
+        1. Return ONLY a JSON array of objects. Do not include markdown formatting (like \`\`\`json).
+        2. Ensure diverse question types in the following distribution:
+           - 4 Single Choice (type: 'single_choice')
+           - 2 Multiple Choice (type: 'multiple_choice') - require 2 or more correct options
+           - 2 True/False (type: 'true_false')
+           - 1 Fill in the Blank (type: 'fill_in_blank')
+           - 1 Short Answer (type: 'short_answer')
+        3. Structure each object exactly like this:
+           {
+             "id": number, // 1 to 10
+             "type": string, // one of the types listed above
+             "question": string,
+             "options": string[], // Array of options for MCQs. For 'true_false', MUST be ["True", "False"]. Null or empty array for text inputs.
+             "correctAnswer": string | string[], // String for single/text, Array of strings for multiple_choice
+             "acceptedKeywords": string[], // Array of acceptable keywords/synonyms for text answers (case-insensitive matching)
+             "explanation": string // Brief explanation of the correct answer
+           }
+        
+        For 'multiple_choice', 'correctAnswer' MUST be an array of strings matching the correct options.
+        For 'fill_in_blank' and 'short_answer', 'options' should be empty, and 'correctAnswer' should be the main answer string. 'acceptedKeywords' is crucial here for validation (e.g. if answer is "Equity", keywords could be ["Equity", "Equities", "Stock", "Stocks"]).
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+
+        let text = response.text;
+        // Cleanup markdown if present
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+            text = jsonMatch[0];
+        }
+
+        const questions: QuizQuestion[] = JSON.parse(text);
+        
+        // Basic validation
+        if (!Array.isArray(questions) || questions.length === 0) {
+            throw new Error("Invalid format returned from AI");
+        }
+
+        return questions;
+    } catch (error) {
+        console.error("Quiz generation failed:", error);
+        throw new Error("Failed to generate quiz questions. Please try again.");
     }
 };

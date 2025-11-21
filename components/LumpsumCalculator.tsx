@@ -90,11 +90,13 @@ const LumpsumCalculator: React.FC<LumpsumCalculatorProps> = ({ onBack }) => {
   const [returnRate, setReturnRate] = useState(12);
   const [years, setYears] = useState(10);
   const [months, setMonths] = useState(0);
+  const [inflation, setInflation] = useState(6);
 
   const [results, setResults] = useState({
     investedAmount: 0,
     futureValue: 0,
     wealthGained: 0,
+    futureValueAdjusted: 0,
   });
 
   useEffect(() => {
@@ -105,13 +107,19 @@ const LumpsumCalculator: React.FC<LumpsumCalculatorProps> = ({ onBack }) => {
 
     const futureVal = P * Math.pow(1 + r / n, n * t);
 
+    // Calculate Inflation Adjusted Value
+    // Formula: Future Value / (1 + inflation_rate)^years
+    const infRate = inflation / 100;
+    const futureValAdjusted = futureVal / Math.pow(1 + infRate, t);
+
     setResults({
         investedAmount: P,
         futureValue: futureVal,
         wealthGained: futureVal - P,
+        futureValueAdjusted: futureValAdjusted,
     });
 
-  }, [investmentAmount, returnRate, years, months]);
+  }, [investmentAmount, returnRate, years, months, inflation]);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -137,9 +145,10 @@ const LumpsumCalculator: React.FC<LumpsumCalculatorProps> = ({ onBack }) => {
                 </div>
             </div>
           </div>
+          <InputSlider label="Inflation Rate (% p.a.)" value={inflation} onChange={setInflation} min={0} max={15} step={0.5} unit="%" />
         </div>
         <div className="bg-purple-600 text-white p-8 rounded-xl shadow-lg flex flex-col justify-center text-center">
-            <div className="space-y-6">
+            <div className="space-y-4">
                 <div>
                     <p className="text-purple-200 text-sm">Invested Amount</p>
                     <p className="text-xl sm:text-2xl font-bold">{formatCurrency(results.investedAmount)}</p>
@@ -148,9 +157,13 @@ const LumpsumCalculator: React.FC<LumpsumCalculatorProps> = ({ onBack }) => {
                     <p className="text-purple-200 text-sm">Wealth Gained</p>
                     <p className="text-xl sm:text-2xl font-bold">{formatCurrency(results.wealthGained)}</p>
                 </div>
-                <div className="pt-2 border-t border-purple-500">
+                <div>
                     <p className="text-purple-200 text-lg">Future Value</p>
                     <p className="text-4xl sm:text-5xl font-extrabold">{formatCurrency(results.futureValue)}</p>
+                </div>
+                <div className="pt-4 border-t border-purple-500">
+                    <p className="text-purple-200 text-sm">Future Value (Inflation Adjusted)</p>
+                    <p className="text-xl font-bold">{formatCurrency(results.futureValueAdjusted)}</p>
                 </div>
             </div>
         </div>

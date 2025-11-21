@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
     createUserWithEmailAndPassword, 
@@ -8,7 +9,7 @@ import {
     getAdditionalUserInfo
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
-import { IconGoogle } from '../components/Icons';
+import { IconGoogle, IconSparkles } from '../components/Icons';
 import { logoIcon } from '../assets/logo';
 import SafeImage from '../components/SafeImage';
 import { createUserProfileDocument } from '../services/firestoreService';
@@ -76,76 +77,171 @@ const Auth: React.FC<AuthProps> = () => {
     }
 
     return (
-        <div className="max-w-md mx-auto mt-8">
-            <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
-                <div className="text-center mb-6">
-                    <SafeImage
-                        src={logoIcon}
-                        fallback={<div className="h-12 w-12 bg-slate-200 rounded-full mx-auto mb-2"></div>}
-                        alt="SIP Buddy Icon"
-                        className="h-12 w-12 mx-auto mb-2"
-                    />
-                    <h1 className="text-2xl font-bold text-slate-800">{isLogin ? 'Welcome Back!' : 'Create Your Account'}</h1>
-                    <p className="text-slate-500 text-sm mt-1">{isLogin ? 'Sign in to access your dashboard.' : 'Join to start planning your investments.'}</p>
-                </div>
+        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+            {/* Decorative Background Elements */}
+            <div className="absolute inset-0 -z-10">
+                {/* Base Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-cyan-50"></div>
+                
+                {/* Subtle Financial Grid Pattern */}
+                <svg className="absolute inset-0 h-full w-full opacity-[0.25]" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="grid-pattern" width="50" height="50" patternUnits="userSpaceOnUse">
+                            <path d="M0 50L50 0H25L0 25M50 50V25L25 50" stroke="#94a3b8" strokeWidth="0.5" fill="none"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+                </svg>
 
-                {error && <p className="bg-red-100 text-red-700 p-3 rounded-md text-sm mb-4">{error}</p>}
-
-                <form onSubmit={handleAuthAction} className="space-y-4">
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email Address</label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
-                    <div>
-                        <label htmlFor="password"className="block text-sm font-medium text-slate-700">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            minLength={6}
-                            className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full flex justify-center py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:bg-blue-300"
-                    >
-                        {isLoading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
-                    </button>
-                </form>
-
-                <div className="my-6 flex items-center">
-                    <div className="flex-grow border-t border-slate-300"></div>
-                    <span className="flex-shrink mx-4 text-slate-400 text-sm">OR</span>
-                    <div className="flex-grow border-t border-slate-300"></div>
-                </div>
-
-                <button
-                    onClick={handleGoogleSignIn}
-                    disabled={isLoading}
-                    className="w-full flex justify-center items-center gap-3 py-3 px-4 bg-white text-slate-700 font-semibold rounded-lg shadow-sm border border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:bg-slate-100"
-                >
-                    <IconGoogle className="h-5 w-5" />
-                    Sign in with Google
-                </button>
-
-                <p className="text-center text-sm text-slate-500 mt-6">
-                    {isLogin ? "Don't have an account?" : "Already have an account?"}
-                    <button onClick={() => setIsLogin(!isLogin)} className="font-semibold text-blue-600 hover:underline ml-1">
-                        {isLogin ? 'Sign Up' : 'Sign In'}
-                    </button>
-                </p>
+                {/* Soft Animated Blobs for Depth */}
+                <div className="absolute top-[10%] left-[15%] w-[30rem] h-[30rem] bg-blue-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+                <div className="absolute bottom-[10%] right-[15%] w-[30rem] h-[30rem] bg-cyan-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+                <div className="absolute top-[40%] right-[30%] w-[20rem] h-[20rem] bg-purple-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-4000"></div>
             </div>
+
+            {/* 3D Card Container */}
+            <div className="relative w-full max-w-md group perspective-1000">
+                
+                {/* Rotating Glowing Border Layer */}
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-border-spin"></div>
+                
+                {/* Main Card Content */}
+                <div className="relative bg-white rounded-2xl p-8 shadow-2xl ring-1 ring-gray-900/5 leading-none flex flex-col space-y-6 z-10 backdrop-blur-sm bg-white/95">
+                    
+                    {/* Header */}
+                    <div className="text-center">
+                        <div className="relative inline-block">
+                            {/* Glow removed as requested */}
+                            <SafeImage
+                                src={logoIcon}
+                                fallback={<div className="h-16 w-16 bg-slate-200 rounded-full mx-auto mb-2 flex items-center justify-center"><IconSparkles className="h-8 w-8 text-blue-600"/></div>}
+                                alt="SIP Buddy Icon"
+                                className="relative h-16 w-16 mx-auto mb-4 drop-shadow-lg"
+                            />
+                        </div>
+                        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                            {isLogin ? 'Welcome Back' : 'Start Your Journey'}
+                        </h2>
+                        <p className="mt-2 text-sm text-slate-500 font-medium">
+                            {isLogin ? 'Access your financial dashboard' : 'Create your personalized investment plan'}
+                        </p>
+                    </div>
+
+                    {error && (
+                        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm text-red-700">{error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleAuthAction} className="space-y-5">
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1">Email Address</label>
+                            <input
+                                type="email"
+                                id="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                placeholder="you@example.com"
+                                className="block w-full px-4 py-3 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ease-in-out shadow-sm"
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="password"className="block text-sm font-semibold text-slate-700 mb-1">Password</label>
+                            <input
+                                type="password"
+                                id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                minLength={6}
+                                placeholder="••••••••"
+                                className="block w-full px-4 py-3 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ease-in-out shadow-sm"
+                            />
+                        </div>
+                        
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg transform transition hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                            {isLoading && (
+                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            )}
+                            {isLoading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
+                        </button>
+                    </form>
+
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-slate-200"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-2 bg-white text-slate-500">Or continue with</span>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={handleGoogleSignIn}
+                        disabled={isLoading}
+                        className="w-full flex justify-center items-center gap-3 py-3 px-4 bg-white text-slate-700 font-semibold rounded-lg shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 disabled:bg-slate-100 disabled:text-slate-400"
+                    >
+                        <IconGoogle className="h-5 w-5" />
+                        <span>Sign in with Google</span>
+                    </button>
+
+                    <div className="text-center pt-2">
+                        <p className="text-sm text-slate-600">
+                            {isLogin ? "Don't have an account?" : "Already have an account?"}
+                            <button 
+                                onClick={() => setIsLogin(!isLogin)} 
+                                className="ml-2 font-bold text-blue-600 hover:text-blue-800 transition-colors duration-200 underline-offset-4 hover:underline focus:outline-none"
+                            >
+                                {isLogin ? 'Sign Up' : 'Sign In'}
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <style>{`
+                @keyframes border-spin {
+                    0% { background-position: 0% 50%; }
+                    50% { background-position: 100% 50%; }
+                    100% { background-position: 0% 50%; }
+                }
+                .animate-border-spin {
+                    background-size: 200% 200%;
+                    animation: border-spin 3s ease infinite;
+                }
+                @keyframes blob {
+                    0% { transform: translate(0px, 0px) scale(1); }
+                    33% { transform: translate(30px, -50px) scale(1.1); }
+                    66% { transform: translate(-20px, 20px) scale(0.9); }
+                    100% { transform: translate(0px, 0px) scale(1); }
+                }
+                .animate-blob {
+                    animation: blob 7s infinite;
+                }
+                .animation-delay-2000 {
+                    animation-delay: 2s;
+                }
+                .animation-delay-4000 {
+                    animation-delay: 4s;
+                }
+            `}</style>
         </div>
     );
 };

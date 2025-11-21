@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { InvestmentPlan, UserProfile, Fund, Page } from '../types';
 import {
@@ -13,7 +14,7 @@ import {
   CartesianGrid,
   Legend,
 } from 'recharts';
-import { IconChevronDown, IconInfoCircle, IconLayoutDashboard, IconListDetails, IconChartPie } from '../components/Icons';
+import { IconChevronDown, IconInfoCircle, IconLayoutDashboard, IconListDetails, IconChartPie, IconWorld } from '../components/Icons';
 import ComparisonModal from '../components/ComparisonModal';
 import { exportDashboardToPDF } from '../services/pdfExportService';
 import NotificationModal from '../components/NotificationModal';
@@ -28,7 +29,7 @@ interface DashboardProps {
   navigateTo: (page: Page) => void;
 }
 
-const COLORS = ['#3b82f6', '#10b981', '#ef4444', '#f97316', '#a855f7', '#84cc16', '#f59e0b'];
+const COLORS = ['#3b82f6', '#10b981', '#ef4444', '#f97316', '#a855f7', '#84cc16', '#f59e0b', '#06b6d4', '#ec4899', '#6366f1'];
 
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -417,6 +418,30 @@ const Dashboard: React.FC<DashboardProps> = ({ currentPlan, onSavePlan, onCreate
             ))}
           </div>
         </div>
+
+        {/* Search Grounding Sources Section */}
+        {investmentPlan.groundingChunks && investmentPlan.groundingChunks.length > 0 && (
+            <div className="bg-slate-50 p-6 rounded-xl shadow-lg border border-slate-200 pdf-export-section">
+                <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+                    <IconWorld className="h-5 w-5 text-blue-600" />
+                    Data Sources & References
+                </h2>
+                <p className="text-slate-500 mb-4 text-sm">The fund data and recommendations were sourced from the following live links:</p>
+                <ul className="space-y-2">
+                    {investmentPlan.groundingChunks.map((chunk, index) => (
+                         chunk.web && chunk.web.uri ? (
+                            <li key={index} className="text-sm truncate">
+                                <a href={chunk.web.uri} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0"></span>
+                                    {chunk.web.title || chunk.web.uri}
+                                </a>
+                            </li>
+                         ) : null
+                    ))}
+                </ul>
+            </div>
+        )}
+
       </div>
       
       <NotificationModal

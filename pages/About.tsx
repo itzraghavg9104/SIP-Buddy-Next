@@ -1,13 +1,12 @@
-
 import React from 'react';
 import { Page } from '../types';
-import { IconSparkles, IconLayoutDashboard, IconBook, IconCalculator, IconBrainCircuit, IconMapPin } from '../components/Icons';
+import { IconSparkles, IconLayoutDashboard, IconBook, IconCalculator, IconBrainCircuit, IconMapPin, IconTrophy } from '../components/Icons';
 import { logoFull } from '../assets/logo';
 import SafeImage from '../components/SafeImage';
 import Footer from '../components/Footer';
 
 interface AboutProps {
-    navigateTo: (page: Page) => void;
+    navigateTo: (page: Page, params?: any) => void;
 }
 
 const About: React.FC<AboutProps> = ({ navigateTo }) => {
@@ -36,6 +35,11 @@ const About: React.FC<AboutProps> = ({ navigateTo }) => {
             icon: <IconMapPin className="h-8 w-8 text-cyan-600" />,
             title: 'Advisor Locator',
             description: 'Need professional help? Find registered financial advisors near your location with our integrated map tool.'
+        },
+        {
+            icon: <IconTrophy className="h-8 w-8 text-yellow-500" />,
+            title: 'FinIQ Challenge',
+            description: 'Test your financial literacy with our gamified quiz. Compete against time, earn scores, and learn while you play.'
         },
         {
             icon: <IconBook className="h-8 w-8 text-indigo-600" />,

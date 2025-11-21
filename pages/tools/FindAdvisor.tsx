@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { findFinancialAdvisors } from '../../services/geminiService';
 import { FinancialAdvisor, GroundingChunk } from '../../types';
@@ -186,9 +187,11 @@ const FindAdvisor: React.FC = () => {
                         <p className="font-semibold mb-2">Data Sources:</p>
                         <ul className="list-disc list-inside space-y-1">
                         {groundingChunks.map((chunk, index) => (
-                            <li key={index} className="truncate">
-                                <a href={chunk.maps.uri} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{chunk.maps.title || 'Google Maps Source'}</a>
-                            </li>
+                            chunk.maps?.uri ? (
+                                <li key={index} className="truncate">
+                                    <a href={chunk.maps.uri} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{chunk.maps.title || 'Google Maps Source'}</a>
+                                </li>
+                            ) : null
                         ))}
                         </ul>
                     </div>

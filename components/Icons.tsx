@@ -186,7 +186,7 @@ export const IconReceiptTax: React.FC<IconProps> = (props) => (
 );
 
 
-const IconChecklist: React.FC<IconProps> = (props) => (
+export const IconChecklist: React.FC<IconProps> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
         <path d="M14 3v4a1 1 0 0 0 1 1h4" />
@@ -332,6 +332,103 @@ export const IconLock: React.FC<IconProps> = (props) => (
     </svg>
 );
 
+export const IconBrainCircuit: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 1a8 8 0 0 1 8 8c0 1.964 -.71 3.73 -1.868 5.132l-1.132 1.868h-2l-1 -1.5" />
+        <path d="M16 15.5l-2.5 -2.5" />
+        <path d="M12.003 8.004l-.004 -.004" />
+        <path d="M15.5 12.5l-1.5 -1.5" />
+        <path d="M4 14a8 8 0 0 1 8 -13" />
+        <path d="M4.141 9.141l1.859 -1.859m4 7.718l-2 2" />
+        <path d="M12 22a8 8 0 0 0 8 -8" />
+        <path d="M20 10a8 8 0 0 0 -8 -8" />
+        <path d="M12 15a3 3 0 1 0 -3 -3" />
+    </svg>
+);
+
+export const IconDeviceDesktop: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" />
+        <path d="M7 20h10" />
+        <path d="M9 16v4" />
+        <path d="M15 16v4" />
+    </svg>
+);
+
+export const IconTools: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M3 21h4l13 -13a1.5 1.5 0 0 0 -2 -2l-13 13v4" />
+        <line x1="14.5" y1="5.5" x2="18.5" y2="9.5" />
+        <path d="M12 8l-5 5l-4 4l0 0l9 -9" />
+        <path d="M7 8l4 -4" />
+    </svg>
+);
+
+export const IconArrowUp: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 5l0 14" />
+        <path d="M18 11l-6 -6" />
+        <path d="M6 11l6 -6" />
+    </svg>
+);
+
+export const IconTrophy: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M8 21l8 0" />
+        <path d="M12 17l0 4" />
+        <path d="M7 4l10 0" />
+        <path d="M17 4v8a5 5 0 0 1 -10 0v-8" />
+        <path d="M5 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+        <path d="M19 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+    </svg>
+);
+
+export const IconClock: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <circle cx="12" cy="12" r="9" />
+        <polyline points="12 7 12 12 15 15" />
+    </svg>
+);
+
+export const IconBrain: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M15.5 13a3.5 3.5 0 0 0 -3.5 3.5v1a3.5 3.5 0 0 0 7 0v-1.8" />
+        <path d="M8.5 13a3.5 3.5 0 0 1 3.5 3.5v1a3.5 3.5 0 0 1 -7 0v-1.8" />
+        <path d="M17.5 16a3.5 3.5 0 0 0 0 -7h-.5" />
+        <path d="M19 9.3v-2.8a3.5 3.5 0 0 0 -7 0" />
+        <path d="M6.5 16a3.5 3.5 0 0 1 0 -7h.5" />
+        <path d="M5 9.3v-2.8a3.5 3.5 0 0 1 7 0v10" />
+    </svg>
+);
+
+export const IconParty: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M5 21a6 6 0 0 0 3.715 -10.712" />
+        <path d="M15 5a6 6 0 0 0 -3.715 10.712" />
+        <path d="M11 11l-7.5 7.5" />
+        <path d="M11 11l7.5 -7.5" />
+        <path d="M2 2l9 9" />
+        <path d="M13 13l9 9" />
+    </svg>
+);
+
+export const IconTarget: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <circle cx="12" cy="12" r="1" />
+        <circle cx="12" cy="12" r="5" />
+        <circle cx="12" cy="12" r="9" />
+    </svg>
+);
+
 export const learnIcons: { [key: string]: React.FC<IconProps> } = {
   'What is SIP?': (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-calendar-plus" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -392,47 +489,3 @@ export const learnIcons: { [key: string]: React.FC<IconProps> } = {
   'Key Ratios & Metrics': (props) => <IconChartDots {...props} />,
   'The Danger of Portfolio Overlap': (props) => <IconLayersIntersect {...props} />,
 };
-
-export const IconBrainCircuit: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <path d="M12 1a8 8 0 0 1 8 8c0 1.964 -.71 3.73 -1.868 5.132l-1.132 1.868h-2l-1 -1.5" />
-        <path d="M16 15.5l-2.5 -2.5" />
-        <path d="M12.003 8.004l-.004 -.004" />
-        <path d="M15.5 12.5l-1.5 -1.5" />
-        <path d="M4 14a8 8 0 0 1 8 -13" />
-        <path d="M4.141 9.141l1.859 -1.859m4 7.718l-2 2" />
-        <path d="M12 22a8 8 0 0 0 8 -8" />
-        <path d="M20 10a8 8 0 0 0 -8 -8" />
-        <path d="M12 15a3 3 0 1 0 -3 -3" />
-    </svg>
-);
-
-export const IconDeviceDesktop: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" />
-        <path d="M7 20h10" />
-        <path d="M9 16v4" />
-        <path d="M15 16v4" />
-    </svg>
-);
-
-export const IconTools: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <path d="M3 21h4l13 -13a1.5 1.5 0 0 0 -2 -2l-13 13v4" />
-        <line x1="14.5" y1="5.5" x2="18.5" y2="9.5" />
-        <path d="M12 8l-5 5l-4 4l0 0l9 -9" />
-        <path d="M7 8l4 -4" />
-    </svg>
-);
-
-export const IconArrowUp: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <path d="M12 5l0 14" />
-        <path d="M18 11l-6 -6" />
-        <path d="M6 11l6 -6" />
-    </svg>
-);

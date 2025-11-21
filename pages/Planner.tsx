@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { InvestmentPlan, RiskTolerance, UserProfile } from '../types';
 import { generateInvestmentPlan } from '../services/geminiService';
@@ -30,13 +31,11 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
-  const [loadingText, setLoadingText] = useState(loadingSteps[0]);
   const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (isLoading) {
         setProgress(0);
-        setLoadingText(loadingSteps[0]);
         const startTime = Date.now();
         // Animation duration for reaching 90%. The last 10% is reserved for the actual completion.
         const animationDuration = 12000; 
@@ -47,12 +46,6 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
             const calculatedProgress = Math.min((elapsedTime / animationDuration) * 100, 90);
             
             setProgress(calculatedProgress);
-
-            const stepIndex = Math.min(
-              Math.floor((calculatedProgress / 100) * loadingSteps.length),
-              loadingSteps.length - 1
-            );
-            setLoadingText(loadingSteps[stepIndex]);
 
             if (calculatedProgress < 90 && isLoading) {
                 animationFrameRef.current = requestAnimationFrame(animate);
@@ -117,7 +110,6 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
         cancelAnimationFrame(animationFrameRef.current);
       }
       setProgress(100);
-      setLoadingText('Plan generated successfully!');
       
       // Allow the UI to render the 100% state briefly before switching views
       setTimeout(() => {
@@ -132,30 +124,72 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
   };
 
   if (isLoading) {
+    const currentStepIndex = Math.min(
+      Math.floor((progress / 100) * loadingSteps.length),
+      loadingSteps.length - 1
+    );
+
     return (
-      <div className="max-w-xl mx-auto text-center py-12">
-        <IconSparkles className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
-        <h2 className="mt-4 text-2xl font-bold text-slate-800">{loadingText}</h2>
-        <div className="w-full bg-slate-200 rounded-full h-2.5 mt-6 overflow-hidden">
-            <div 
-                className="bg-blue-600 h-2.5 rounded-full animated-gradient" 
-                style={{ 
-                    width: `${progress}%`, 
-                    transition: 'width 0.2s ease-out' // Smooth transition
-                }}
-            ></div>
+      <div className="max-w-xl mx-auto py-12 px-4">
+        <div className="bg-white rounded-2xl shadow-xl border border-blue-100 p-8 relative overflow-hidden">
+           {/* Background decorative elements */}
+           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500"></div>
+           
+           <div className="text-center mb-8">
+             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full mb-4 animate-pulse">
+                <IconSparkles className="h-8 w-8 text-blue-600" />
+             </div>
+             <h2 className="text-2xl font-bold text-slate-800">Generating Your Plan</h2>
+             <p className="text-slate-500 mt-2">Our AI is analyzing thousands of data points...</p>
+           </div>
+
+           <div className="space-y-4 relative z-10">
+             {loadingSteps.map((step, index) => {
+                const isCompleted = index < currentStepIndex;
+                const isCurrent = index === currentStepIndex;
+                
+                return (
+                  <div key={index} className={`flex items-center transition-all duration-500 ${isCurrent ? 'transform translate-x-2' : ''}`}>
+                    <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full border-2 mr-4 transition-colors duration-300 ${
+                        isCompleted ? 'bg-green-500 border-green-500' : 
+                        isCurrent ? 'border-blue-500 bg-blue-50' : 
+                        'border-slate-200'
+                    }`}>
+                        {isCompleted ? (
+                             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                        ) : isCurrent ? (
+                            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-ping" />
+                        ) : (
+                            <div className="w-2 h-2 bg-slate-300 rounded-full" />
+                        )}
+                    </div>
+                    <span className={`font-medium transition-colors duration-300 ${
+                        isCompleted ? 'text-slate-500' : 
+                        isCurrent ? 'text-blue-700 text-lg' : 
+                        'text-slate-400'
+                    }`}>
+                        {step}
+                    </span>
+                  </div>
+                )
+             })}
+           </div>
+           
+           {/* Progress bar */}
+           <div className="mt-8 relative pt-1">
+              <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-slate-100">
+                <div style={{ width: `${progress}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 ease-out"></div>
+              </div>
+           </div>
+
+           {error && (
+                <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative text-sm">
+                    <strong className="font-bold">Error: </strong>
+                    <span className="block sm:inline">{error}</span>
+                    <button onClick={() => { setIsLoading(false); setError(null); }} className="mt-2 underline block mx-auto font-semibold">Go back to form</button>
+                </div>
+            )}
         </div>
-        <p className="mt-2 text-sm text-slate-500">{Math.round(progress)}% complete</p>
-        
-        {error && (
-            <div className="mt-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
-                <strong className="font-bold">Error: </strong>
-                <span className="block sm:inline">{error}</span>
-                <button onClick={() => { setIsLoading(false); setError(null); }} className="mt-2 block mx-auto text-sm font-semibold text-blue-600 hover:underline">
-                    Go back to form
-                </button>
-            </div>
-        )}
       </div>
     );
   }
