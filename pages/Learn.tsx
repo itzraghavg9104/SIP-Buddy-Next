@@ -517,8 +517,8 @@ const Learn: React.FC = () => {
         </div>
         
         <div className="relative z-10">
-            <div className="inline-flex items-center justify-center bg-white/20 backdrop-blur-md p-3 rounded-xl mb-6 shadow-inner ring-1 ring-white/30">
-              <IconSearch className="h-8 w-8 text-white" />
+            <div className="inline-flex items-center justify-center bg-white p-4 rounded-2xl mb-6 shadow-lg">
+              <IconSearch className="h-10 w-10 text-blue-600" />
             </div>
             <h1 className="text-3xl sm:text-5xl font-extrabold mb-4 tracking-tight text-white">SIP Buddy Knowledge Hub</h1>
             <p className="text-lg text-blue-100 max-w-2xl mx-auto mb-8 leading-relaxed">
@@ -527,8 +527,9 @@ const Learn: React.FC = () => {
             
             {/* Search Bar */}
             <div className="max-w-xl mx-auto relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <IconSearch className="h-5 w-5 text-blue-200 group-focus-within:text-white transition-colors" />
+                <div className="absolute z-50 inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    {/* Updated: z-50 added above to bring it to the front */}
+                    <IconSearch className="h-5 w-5 text-white group-focus-within:text-blue-100 transition-colors" />
                 </div>
                 <input
                     type="text"
