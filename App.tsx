@@ -10,10 +10,12 @@ import More from './pages/More';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import MyPlans from './pages/MyPlans';
-import Home from './pages/Home'; // Import the new Home page
+import Home from './pages/Home'; 
 import Chatbot from './components/Chatbot';
 import { Page, InvestmentPlan, UserProfile, SavedPlan } from './types';
 import NotificationModal from './components/NotificationModal';
+import LoginRequiredModal from './components/LoginRequiredModal';
+import PlanGeneratedLoginModal from './components/PlanGeneratedLoginModal';
 import OnboardingTour from './components/OnboardingTour';
 import { auth } from './services/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
@@ -28,12 +30,14 @@ export interface CurrentPlanState {
 }
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<Page>(Page.Home); // Set Home as the default page
+  const [currentPage, setCurrentPage] = useState<Page>(Page.Home);
   const [currentPlan, setCurrentPlan] = useState<CurrentPlanState | null>(null);
   const [pageParams, setPageParams] = useState<any>(null);
   
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isPlanLoginModalOpen, setIsPlanLoginModalOpen] = useState(false);
   
   const [authRedirectPlan, setAuthRedirectPlan] = useState<{ plan: InvestmentPlan, profile: UserProfile } | null>(null);
 
@@ -71,7 +75,8 @@ const App: React.FC = () => {
       setCurrentPage(Page.Dashboard);
     } else {
       setAuthRedirectPlan({ plan, profile });
-      setCurrentPage(Page.Auth);
+      // Prompt for login via special modal instead of direct redirect
+      setIsPlanLoginModalOpen(true);
     }
   };
 
@@ -89,7 +94,6 @@ const App: React.FC = () => {
       setCurrentPlan(prev => prev ? { ...prev, isSaved: true, id: newPlanId } : null);
     } catch (error) {
       console.error("Failed to save plan in App.tsx:", error);
-      // Re-throw the error so the UI component can handle it
       throw error; 
     }
   };
@@ -105,18 +109,22 @@ const App: React.FC = () => {
   };
   
   const navigateTo = (page: Page, params?: any) => {
-    const protectedPages = [Page.Dashboard, Page.Profile, Page.MyPlans, Page.Planner]; // Planner is now semi-protected by Get Started logic
+    const protectedPages = [Page.Dashboard, Page.Profile, Page.MyPlans]; 
+    
+    // Planner is semi-protected. We let them see it, but plan generation handles the auth redirect.
+    // For fully protected pages like My Plans or Profile:
     if (protectedPages.includes(page) && !user) {
-        setCurrentPage(Page.Auth);
+        setIsLoginModalOpen(true);
         return;
     }
+    
     setCurrentPage(page);
     setPageParams(params || null);
   };
   
   const handleLogout = () => {
     auth.signOut();
-    setCurrentPage(Page.Home); // Redirect to Home on logout
+    setCurrentPage(Page.Home); 
     setCurrentPlan(null);
   }
 
@@ -131,6 +139,21 @@ const App: React.FC = () => {
       navigateTo(Page.Auth);
     }
   };
+
+  const handleLoginFromModal = () => {
+      setIsLoginModalOpen(false);
+      setCurrentPage(Page.Auth);
+  }
+
+  const handlePlanLoginConfirm = () => {
+      setIsPlanLoginModalOpen(false);
+      setCurrentPage(Page.Auth);
+  }
+
+  const handlePlanLoginCancel = () => {
+      setIsPlanLoginModalOpen(false);
+      setAuthRedirectPlan(null);
+  }
 
   const renderPage = () => {
     if (authLoading) {
@@ -189,6 +212,19 @@ const App: React.FC = () => {
       </main>
       <Chatbot />
       { !authLoading && <OnboardingTour /> }
+      
+      {/* Modals */}
+      <LoginRequiredModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+        onLogin={handleLoginFromModal} 
+      />
+      
+      <PlanGeneratedLoginModal
+        isOpen={isPlanLoginModalOpen}
+        onClose={handlePlanLoginCancel}
+        onLogin={handlePlanLoginConfirm}
+      />
     </div>
   );
 };

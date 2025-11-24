@@ -71,6 +71,10 @@ const Chatbot: React.FC = () => {
   };
 
   useEffect(() => {
+    // Listen for custom event to open chatbot from other components
+    const handleOpenChat = () => setIsOpen(true);
+    window.addEventListener('open-chatbot', handleOpenChat);
+
     if (isOpen) {
       startChat();
       // Initialize AudioContext on user interaction
@@ -79,6 +83,10 @@ const Chatbot: React.FC = () => {
       }
     } else {
       stopCurrentAudio();
+    }
+
+    return () => {
+        window.removeEventListener('open-chatbot', handleOpenChat);
     }
   }, [isOpen]);
 

@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { InvestmentPlan, UserProfile, Fund, Page } from '../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { InvestmentPlan, UserProfile, Fund, Page, GrowthDataPoint } from '../types';
 import {
   ResponsiveContainer,
   PieChart,
@@ -44,11 +44,58 @@ const CustomTooltip = ({ active, payload }: any) => {
   
 const formatCurrency = (value: number) => `₹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(value)}`;
 const formatLargeCurrency = (value: number) => {
+    if (value >= 10000000) {
+        return `₹${(value / 10000000).toFixed(1)}Cr`;
+    }
     if (value >= 100000) {
         return `₹${(value / 100000).toFixed(1)}L`;
     }
     return `₹${(value / 1000).toFixed(0)}K`;
 };
+
+// --- Interpolation Helper ---
+const interpolateGrowthData = (data: GrowthDataPoint[]): GrowthDataPoint[] => {
+    if (!data || data.length < 2) return data;
+
+    // Ensure data is sorted by year
+    const sortedData = [...data].sort((a, b) => a.year - b.year);
+    const result: GrowthDataPoint[] = [];
+    const maxYear = sortedData[sortedData.length - 1].year;
+
+    // Keys to interpolate
+    const keys: (keyof GrowthDataPoint)[] = ['amountInvested', 'conservative', 'expected', 'aggressive', 'recovery', 'crash'];
+
+    for (let i = 0; i < sortedData.length - 1; i++) {
+        const start = sortedData[i];
+        const end = sortedData[i + 1];
+        
+        // Push the start point
+        if (result.length === 0 || result[result.length - 1].year !== start.year) {
+            result.push(start);
+        }
+
+        const steps = end.year - start.year;
+        for (let j = 1; j < steps; j++) {
+            const currentYear = start.year + j;
+            const fraction = j / steps;
+            
+            const interpolatedPoint: any = { year: currentYear };
+            
+            keys.forEach(key => {
+                const startVal = start[key] as number;
+                const endVal = end[key] as number;
+                interpolatedPoint[key] = Math.round(startVal + (endVal - startVal) * fraction);
+            });
+
+            result.push(interpolatedPoint as GrowthDataPoint);
+        }
+    }
+    // Push final point
+    result.push(sortedData[sortedData.length - 1]);
+    
+    return result;
+};
+
 
 const SummaryCard: React.FC<{ title: string; value: string; subtext: string }> = ({ title, value, subtext }) => (
     <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
@@ -90,6 +137,14 @@ const Dashboard: React.FC<DashboardProps> = ({ currentPlan, onSavePlan, onCreate
             });
     }
   }, [currentPlan]);
+
+  const { planData: investmentPlan, userProfile, isSaved: isPlanSaved } = currentPlan || { planData: {} as any, userProfile: {} as any, isSaved: false };
+
+  // Use memo to calculate interpolated data only when growthProjections change
+  const interpolatedData = useMemo(() => {
+    if (!investmentPlan?.growthProjections) return [];
+    return interpolateGrowthData(investmentPlan.growthProjections);
+  }, [investmentPlan?.growthProjections]);
 
 
   const handleExportPDF = async () => {
@@ -189,23 +244,21 @@ const Dashboard: React.FC<DashboardProps> = ({ currentPlan, onSavePlan, onCreate
     );
   }
 
-  const { planData: investmentPlan, userProfile, isSaved: isPlanSaved } = currentPlan;
-
   const projectionsChart = (
     <div className="h-96 mt-6">
         <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={investmentPlan.growthProjections || []} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
+            <LineChart data={interpolatedData} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                 <XAxis dataKey="year" tick={{ fontSize: 12 }} label={{ value: 'Years', position: 'insideBottom', offset: -10 }} />
                 <YAxis tickFormatter={formatLargeCurrency} tick={{ fontSize: 12 }} />
-                <RechartsTooltip formatter={(value: number) => formatCurrency(value)} />
+                <RechartsTooltip formatter={(value: number) => formatCurrency(value)} labelFormatter={(label) => `Year ${label}`} />
                 <Legend wrapperStyle={{fontSize: "12px", paddingTop: "20px"}}/>
                 <Line type="monotone" dataKey="amountInvested" name="Amount Invested" stroke="#8884d8" strokeDasharray="5 5" dot={false} isAnimationActive={!isExporting}/>
-                <Line type="monotone" dataKey="conservative" name="Conservative" stroke="#ef4444" dot={{ r: 4 }} activeDot={{ r: 6 }} isAnimationActive={!isExporting}/>
-                <Line type="monotone" dataKey="expected" name="Expected" stroke="#3b82f6" dot={{ r: 4 }} activeDot={{ r: 6 }} isAnimationActive={!isExporting}/>
-                <Line type="monotone" dataKey="aggressive" name="Aggressive" stroke="#10b981" dot={{ r: 4 }} activeDot={{ r: 6 }} isAnimationActive={!isExporting}/>
-                <Line type="monotone" dataKey="recovery" name="Recovery" stroke="#f97316" dot={{ r: 4 }} activeDot={{ r: 6 }} isAnimationActive={!isExporting}/>
-                <Line type="monotone" dataKey="crash" name="Crash" stroke="#6b7280" dot={{ r: 4 }} activeDot={{ r: 6 }} isAnimationActive={!isExporting}/>
+                <Line type="monotone" dataKey="conservative" name="Conservative" stroke="#ef4444" dot={false} strokeWidth={2} isAnimationActive={!isExporting}/>
+                <Line type="monotone" dataKey="expected" name="Expected" stroke="#3b82f6" dot={false} strokeWidth={2} isAnimationActive={!isExporting}/>
+                <Line type="monotone" dataKey="aggressive" name="Aggressive" stroke="#10b981" dot={false} strokeWidth={2} isAnimationActive={!isExporting}/>
+                <Line type="monotone" dataKey="recovery" name="Recovery" stroke="#f97316" dot={false} strokeWidth={2} isAnimationActive={!isExporting}/>
+                <Line type="monotone" dataKey="crash" name="Crash" stroke="#6b7280" dot={false} strokeWidth={2} isAnimationActive={!isExporting}/>
             </LineChart>
         </ResponsiveContainer>
     </div>
@@ -286,11 +339,14 @@ const Dashboard: React.FC<DashboardProps> = ({ currentPlan, onSavePlan, onCreate
             </div>
           )}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pdf-export-section">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 pdf-export-section">
           <SummaryCard title="Monthly SIP" value={formatCurrency(investmentPlan.monthlySip)} subtext="Recommended investment" />
           <SummaryCard title="Risk Profile" value={investmentPlan.riskProfile} subtext="Investment strategy" />
           <SummaryCard title="Time Horizon" value={`${investmentPlan.timeHorizon} Years`} subtext="Investment period" />
           <SummaryCard title="Asset Classes" value={String(investmentPlan.assetClasses)} subtext="Diversified portfolio" />
+          {userProfile.stepUpPercentage && userProfile.stepUpPercentage > 0 && (
+            <SummaryCard title="Annual Step-Up" value={`${userProfile.stepUpPercentage}%`} subtext="Growth strategy" />
+          )}
         </div>
         <div className="bg-slate-50 p-6 rounded-xl shadow-lg border border-slate-200 pdf-export-section">
           <h2 className="text-xl font-semibold mb-2">Investment Rationale</h2>

@@ -27,6 +27,7 @@ export interface UserProfile {
     investmentTimeHorizon: number;
     riskTolerance: RiskTolerance;
     investmentGoal: string;
+    stepUpPercentage?: number;
 }
 
 export interface Fund {

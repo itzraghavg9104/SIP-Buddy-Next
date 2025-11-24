@@ -6,6 +6,11 @@ import { User } from 'firebase/auth';
 const plansCollection = collection(db, 'plans');
 const usersCollection = collection(db, 'users');
 
+// Helper to remove undefined values which Firestore does not support
+const sanitizeForFirestore = <T>(obj: T): T => {
+  return JSON.parse(JSON.stringify(obj));
+};
+
 // Save a new investment plan to Firestore
 export const savePlan = async (
     userId: string, 
@@ -17,8 +22,8 @@ export const savePlan = async (
         const docRef = await addDoc(plansCollection, {
             userId,
             planName,
-            investmentPlan,
-            userProfile,
+            investmentPlan: sanitizeForFirestore(investmentPlan),
+            userProfile: sanitizeForFirestore(userProfile),
             createdAt: serverTimestamp()
         });
         return docRef.id;

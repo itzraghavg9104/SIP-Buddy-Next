@@ -61,7 +61,7 @@ const NavItem: React.FC<NavItemProps> = ({
       } ${
         isActive
           ? 'bg-white text-blue-600 shadow-sm'
-          : 'text-slate-500 hover:bg-slate-100'
+          : 'text-slate-500 hover:bg-slate-100/50 hover:text-slate-700'
       }`}
     >
       {icon}
@@ -156,6 +156,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout
       : 'bg-transparent border-b border-transparent'
   }`;
 
+  // Logic for transparency of the nav items container
+  const navContainerClass = currentPage === Page.Home 
+    ? 'bg-white/30 backdrop-blur-md border border-white/40 shadow-sm' 
+    : 'bg-slate-100';
+
   return (
     <header className={headerClass}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -172,7 +177,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, navigateTo, user, onLogout
           </div>
           
           {/* Desktop Navigation: Responsive (Icon only on md/lg, Label on xl) */}
-          <div className="hidden md:flex items-center space-x-2 bg-slate-100 p-1 rounded-lg flex-shrink overflow-x-auto no-scrollbar">
+          <div className={`hidden md:flex items-center space-x-2 p-1 rounded-lg flex-shrink overflow-x-auto no-scrollbar transition-colors ${navContainerClass}`}>
             <NavItem
               label="Planner"
               icon={<IconChartPie className="h-5 w-5" />}

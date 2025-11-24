@@ -27,7 +27,9 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
     investmentTimeHorizon: '',
     riskTolerance: RiskTolerance.Moderate,
     investmentGoal: '',
+    stepUpPercentage: '10',
   });
+  const [isStepUpEnabled, setIsStepUpEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
@@ -101,6 +103,7 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
         investmentTimeHorizon: Number(formData.investmentTimeHorizon) || 10,
         riskTolerance: formData.riskTolerance,
         investmentGoal: formData.investmentGoal || 'Retirement planning, child education, wealth creation...',
+        stepUpPercentage: isStepUpEnabled ? (Number(formData.stepUpPercentage) || 0) : undefined,
     };
 
     try {
@@ -303,6 +306,37 @@ const Planner: React.FC<PlannerProps> = ({ onPlanGenerated }) => {
               />
               <p className="mt-1 text-xs text-slate-500">How long you plan to stay invested</p>
             </div>
+            
+            {/* Step-Up Toggle and Input */}
+            <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between border p-3 rounded-md bg-white border-slate-300 h-10 mt-6">
+                    <label className="text-sm font-medium text-slate-700">Enable Annual Step-Up?</label>
+                    <button
+                        type="button"
+                        onClick={() => setIsStepUpEnabled(!isStepUpEnabled)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${isStepUpEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}
+                    >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isStepUpEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                </div>
+                {isStepUpEnabled && (
+                    <div>
+                        <label htmlFor="stepUpPercentage" className="block text-sm font-medium text-slate-700">Annual Step-Up (%)</label>
+                        <input
+                            type="number"
+                            name="stepUpPercentage"
+                            value={formData.stepUpPercentage}
+                            onChange={handleChange}
+                            onWheel={handleWheel}
+                            min="1"
+                            max="100"
+                            className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <p className="mt-1 text-xs text-slate-500">Increase your SIP amount annually</p>
+                    </div>
+                )}
+            </div>
+
             <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-700">Risk Tolerance</label>
                 <div className="mt-2 grid grid-cols-3 gap-3">

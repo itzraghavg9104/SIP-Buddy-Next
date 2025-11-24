@@ -9,6 +9,63 @@ interface FinIQChallengeProps {
   navigateTo?: (page: Page, params?: any) => void;
 }
 
+// --- Levenshtein Distance for Fuzzy Matching ---
+// Returns the number of edits (inserts, deletes, substitutions) required to change 'a' to 'b'
+const levenshteinDistance = (a: string, b: string): number => {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+
+    const matrix = [];
+
+    // Increment along the first column of each row
+    for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+    }
+
+    // Increment each column in the first row
+    for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+    }
+
+    // Fill in the rest of the matrix
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1, // substitution
+                    Math.min(
+                        matrix[i][j - 1] + 1, // insertion
+                        matrix[i - 1][j] + 1  // deletion
+                    )
+                );
+            }
+        }
+    }
+
+    return matrix[b.length][a.length];
+};
+
+// Returns true if the distance is within an acceptable threshold based on word length
+const isFuzzyMatch = (input: string, target: string): boolean => {
+    const normalizedInput = input.trim().toLowerCase();
+    const normalizedTarget = target.trim().toLowerCase();
+    
+    if (normalizedInput === normalizedTarget) return true;
+    
+    const distance = levenshteinDistance(normalizedInput, normalizedTarget);
+    
+    // Threshold logic:
+    // Length <= 4: Exact match required (dist 0)
+    // Length 5-8: Allow 1 error
+    // Length > 8: Allow 2 errors
+    const threshold = normalizedTarget.length <= 4 ? 0 : normalizedTarget.length <= 8 ? 1 : 2;
+    
+    return distance <= threshold;
+};
+
+
 // --- Circular Timer Component ---
 const CircularTimer: React.FC<{ time: number; maxTime?: number; mode: QuizMode }> = ({ time, maxTime, mode }) => {
   const radius = 20;
@@ -165,7 +222,8 @@ const FinIQChallenge: React.FC<FinIQChallengeProps> = ({ onBack, navigateTo }) =
   
   const [error, setError] = useState<string | null>(null);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Changed from NodeJS.Timeout to number for browser environment compatibility
+  const timerRef = useRef<number | null>(null);
 
   // --- CONFETTI EFFECT ---
   useEffect(() => {
@@ -215,7 +273,7 @@ const FinIQChallenge: React.FC<FinIQChallengeProps> = ({ onBack, navigateTo }) =
     // If submitted, stop timer but don't clear it (to show time taken)
     if (isSubmitted) return;
 
-    timerRef.current = setInterval(() => {
+    timerRef.current = window.setInterval(() => {
       setTimeTaken(prev => prev + 1);
       
       if (mode !== 'Relaxed') {
@@ -292,10 +350,16 @@ const FinIQChallenge: React.FC<FinIQChallengeProps> = ({ onBack, navigateTo }) =
       case 'fill_in_blank':
       case 'short_answer':
       default:
-        const input = String(answer).trim().toLowerCase();
-        const correct = String(question.correctAnswer).trim().toLowerCase();
-        const keywords = question.acceptedKeywords?.map(k => k.toLowerCase()) || [];
-        return input === correct || keywords.includes(input);
+        // Use fuzzy matching for text inputs
+        const input = String(answer);
+        const correct = String(question.correctAnswer);
+        const keywords = question.acceptedKeywords || [];
+        
+        // Check main answer with fuzzy logic
+        if (isFuzzyMatch(input, correct)) return true;
+        
+        // Check keywords with fuzzy logic
+        return keywords.some(keyword => isFuzzyMatch(input, keyword));
     }
   };
 

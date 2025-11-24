@@ -77,6 +77,7 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
     - Investment Time Horizon: ${profile.investmentTimeHorizon} years
     - Risk Tolerance: ${profile.riskTolerance}
     - Investment Goal: "${profile.investmentGoal}"
+    - Annual Step-Up: ${profile.stepUpPercentage ? profile.stepUpPercentage + '%' : 'None'}
 
     Step 1: SEARCH. Use Google Search to find the latest top-performing mutual funds in India (Direct Plans, Growth option). 
     Prioritize data from trusted sources like Moneycontrol, Value Research, and Groww. 
@@ -86,9 +87,9 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
 
     Requirements:
     1.  Calculate a recommended monthly SIP amount.
-    2.  Provide a detailed investment rationale.
+    2.  Provide a detailed investment rationale. If a step-up percentage is provided, incorporate annual increases in the SIP amount into your growth projections and rationale.
     3.  Create a detailed asset allocation summing to 100%. You MUST break down the allocation into specific categories like 'Large Cap Equity', 'Mid Cap Equity', 'Small Cap Equity', 'International Equity', 'Debt/Bonds', 'Gold', 'Silver', etc., based on the user's risk profile. Do NOT use broad generic terms like 'Equity' or 'Mutual Funds'.
-    4.  Provide investment growth projections for years 0, 1, 3, 5, and the final year (Conservative, Expected, Aggressive, Recovery, Crash scenarios).
+    4.  Provide investment growth projections for years 0, 1, 3, 5, and the final year (Conservative, Expected, Aggressive, Recovery, Crash scenarios). Factor in the annual step-up if applicable.
     5.  Recommend at least 2 specific mutual funds for each category based on your search results. Include 3Y/5Y returns, expense ratio, and a brief thesis.
 
     OUTPUT FORMAT:
