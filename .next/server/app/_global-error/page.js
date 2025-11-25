@@ -1,0 +1,10 @@
+var R=require("../../chunks/ssr/[turbopack]_runtime.js")("server/app/_global-error/page.js")
+R.c("server/chunks/ssr/98ee6_ccfcdd18._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__757471b0._.js")
+R.c("server/chunks/ssr/98ee6_next_dist_0e83f634._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__1e980a06._.js")
+R.c("server/chunks/ssr/98ee6_next_dist_967d195a._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__59ff94f9._.js")
+R.c("server/chunks/ssr/Desktop_SIP-Buddy__next-internal_server_app__global-error_page_actions_fc50226b.js")
+R.m(69457)
+module.exports=R.m(69457).exports

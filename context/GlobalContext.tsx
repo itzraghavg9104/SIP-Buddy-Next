@@ -1,0 +1,174 @@
+'use client';
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { auth } from '../services/firebase';
+import { User, onAuthStateChanged } from 'firebase/auth';
+import { savePlan } from '../services/firestoreService';
+import { InvestmentPlan, UserProfile, SavedPlan, Page } from '../types';
+
+// Define the shape of the context
+interface GlobalContextType {
+    user: User | null;
+    authLoading: boolean;
+    currentPlan: CurrentPlanState | null;
+    setCurrentPlan: React.Dispatch<React.SetStateAction<CurrentPlanState | null>>;
+    isLoginModalOpen: boolean;
+    setIsLoginModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    isPlanLoginModalOpen: boolean;
+    setIsPlanLoginModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    handlePlanGenerated: (plan: InvestmentPlan, profile: UserProfile) => void;
+    handleSavePlan: (planName: string) => Promise<void>;
+    handleCreateNewPlan: () => void;
+    handleViewPlan: (savedPlan: SavedPlan) => void;
+    handleLogout: () => void;
+    handleProfileUpdate: (updatedUser: User) => void;
+    handleLoginFromModal: () => void;
+    handlePlanLoginConfirm: () => void;
+    handlePlanLoginCancel: () => void;
+}
+
+export interface CurrentPlanState {
+    planData: InvestmentPlan;
+    userProfile: UserProfile;
+    isSaved: boolean;
+    id?: string;
+}
+
+const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
+
+export const GlobalProvider = ({ children }: { children: ReactNode }) => {
+    const router = useRouter();
+    const pathname = usePathname();
+
+    const [user, setUser] = useState<User | null>(null);
+    const [authLoading, setAuthLoading] = useState(true);
+    const [currentPlan, setCurrentPlan] = useState<CurrentPlanState | null>(null);
+
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const [isPlanLoginModalOpen, setIsPlanLoginModalOpen] = useState(false);
+    const [authRedirectPlan, setAuthRedirectPlan] = useState<{ plan: InvestmentPlan, profile: UserProfile } | null>(null);
+
+    // Auth Listener
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            setAuthLoading(false);
+
+            if (currentUser && authRedirectPlan) {
+                setCurrentPlan({
+                    planData: authRedirectPlan.plan,
+                    userProfile: authRedirectPlan.profile,
+                    isSaved: false,
+                });
+                router.push('/dashboard');
+                setAuthRedirectPlan(null);
+            } else if (currentUser && pathname === '/auth') {
+                // After login/signup, redirect to Planner
+                router.push('/planner');
+            } else if (!currentUser) {
+                const protectedRoutes = ['/dashboard', '/profile', '/my-plans'];
+                if (pathname && protectedRoutes.includes(pathname)) {
+                    router.push('/');
+                    setCurrentPlan(null);
+                }
+            }
+        });
+        return () => unsubscribe();
+    }, [authRedirectPlan, pathname, router]);
+
+    const handlePlanGenerated = (plan: InvestmentPlan, profile: UserProfile) => {
+        if (user) {
+            setCurrentPlan({ planData: plan, userProfile: profile, isSaved: false });
+            router.push('/dashboard');
+        } else {
+            setAuthRedirectPlan({ plan, profile });
+            setIsPlanLoginModalOpen(true);
+        }
+    };
+
+    const handleCreateNewPlan = () => {
+        setCurrentPlan(null);
+        router.push('/planner');
+    };
+
+    const handleSavePlan = async (planName: string) => {
+        if (!currentPlan || !user) {
+            throw new Error("Cannot save plan: user or plan data is missing.");
+        };
+        try {
+            const newPlanId = await savePlan(user.uid, planName, currentPlan.planData, currentPlan.userProfile);
+            setCurrentPlan(prev => prev ? { ...prev, isSaved: true, id: newPlanId } : null);
+        } catch (error) {
+            console.error("Failed to save plan:", error);
+            throw error;
+        }
+    };
+
+    const handleViewPlan = (savedPlan: SavedPlan) => {
+        setCurrentPlan({
+            planData: savedPlan.investmentPlan,
+            userProfile: savedPlan.userProfile,
+            isSaved: true,
+            id: savedPlan.id,
+        });
+        router.push('/dashboard');
+    };
+
+    const handleLogout = () => {
+        auth.signOut();
+        router.push('/');
+        setCurrentPlan(null);
+    }
+
+    const handleProfileUpdate = (updatedUser: User) => {
+        setUser(updatedUser);
+    };
+
+    const handleLoginFromModal = () => {
+        setIsLoginModalOpen(false);
+        router.push('/auth');
+    }
+
+    const handlePlanLoginConfirm = () => {
+        setIsPlanLoginModalOpen(false);
+        router.push('/auth');
+    }
+
+    const handlePlanLoginCancel = () => {
+        setIsPlanLoginModalOpen(false);
+        setAuthRedirectPlan(null);
+    }
+
+    return (
+        <GlobalContext.Provider value={{
+            user,
+            authLoading,
+            currentPlan,
+            setCurrentPlan,
+            isLoginModalOpen,
+            setIsLoginModalOpen,
+            isPlanLoginModalOpen,
+            setIsPlanLoginModalOpen,
+            handlePlanGenerated,
+            handleSavePlan,
+            handleCreateNewPlan,
+            handleViewPlan,
+            handleLogout,
+            handleProfileUpdate,
+            handleLoginFromModal,
+            handlePlanLoginConfirm,
+            handlePlanLoginCancel
+        }}>
+            {children}
+        </GlobalContext.Provider>
+    );
+};
+
+export const useGlobalContext = () => {
+    const context = useContext(GlobalContext);
+    if (context === undefined) {
+        throw new Error('useGlobalContext must be used within a GlobalProvider');
+    }
+    return context;
+};

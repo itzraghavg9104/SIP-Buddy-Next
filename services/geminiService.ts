@@ -1,14 +1,22 @@
-
 import { GoogleGenAI, Chat, Type, Modality } from "@google/genai";
 import { UserProfile, InvestmentPlan, Fund, FundCategory, AssetAllocationItem, GrowthDataPoint, FinancialAdvisor, QuizDifficulty, QuizQuestion } from '../types';
 
-const API_KEY = process.env.API_KEY;
+const getAIClient = () => {
+    const API_KEY = process.env.API_KEY || process.env.NEXT_PUBLIC_API_KEY;
+    if (!API_KEY) {
+        throw new Error("API_KEY environment variable not set");
+    }
+    return new GoogleGenAI({ apiKey: API_KEY });
+};
 
-if (!API_KEY) {
-  throw new Error("API_KEY environment variable not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+// Initialize ai lazily to avoid build-time errors if env vars are missing
+let aiInstance: GoogleGenAI | null = null;
+const getAI = () => {
+    if (!aiInstance) {
+        aiInstance = getAIClient();
+    }
+    return aiInstance;
+};
 
 // Note: We cannot use responseSchema with googleSearch tool in the current API version for this specific call,
 // so we will instruct the model via prompt to follow this structure and parse the text manually.
@@ -61,7 +69,7 @@ const sanitizeInvestmentPlan = (plan: any): InvestmentPlan => {
             value: Number(((item.value / totalAllocation) * 100).toFixed(2)),
         }));
     }
-    
+
     return sanitizedPlan;
 };
 
@@ -128,7 +136,7 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
 
     try {
         console.log(`Attempting to generate plan with model: ${model} and Google Search`);
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: model,
             contents: prompt,
             config: {
@@ -137,9 +145,13 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
                 // We rely on the prompt to enforce JSON structure.
             },
         });
-        
+
         // Extract JSON from the text response (handling potential markdown wrapping)
         let text = response.text;
+        if (!text) {
+            throw new Error("No text returned from AI");
+        }
+
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             text = jsonMatch[0];
@@ -171,26 +183,26 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
 let chat: Chat | null = null;
 
 export const startChat = () => {
-  chat = ai.chats.create({
-    model: 'gemini-2.5-flash',
-    config: {
-      systemInstruction: `You are SIP Buddy, a specialized AI assistant for the SIP Buddy investment planning platform. Your sole purpose is to help users with questions about Systematic Investment Plans (SIPs), mutual funds, investment strategies, and using the SIP Buddy application.
+    chat = getAI().chats.create({
+        model: 'gemini-2.5-flash',
+        config: {
+            systemInstruction: `You are SIP Buddy, a specialized AI assistant for the SIP Buddy investment planning platform. Your sole purpose is to help users with questions about Systematic Investment Plans (SIPs), mutual funds, investment strategies, and using the SIP Buddy application.
 - Your name is SIP Buddy.
 - You MUST NOT answer questions about your origin, who created you, your underlying technology, or any topic outside of financial planning and the SIP Buddy platform.
 - If a user asks an off-topic question (e.g., "Who made you?", "Are you from Google?", "Tell me a joke"), you MUST politely decline and steer the conversation back to financial planning. For example: "As SIP Buddy, my expertise is in financial planning. How can I help you with your investment questions?"
 - Keep your answers concise, helpful, and strictly within your designated role.`,
-    },
+        },
 
-  });
+    });
 };
 
 export const sendMessageToChat = async (message: string): Promise<string> => {
-    if(!chat) {
+    if (!chat) {
         startChat();
     }
-    if(chat) {
+    if (chat) {
         const response = await chat.sendMessage({ message });
-        return response.text;
+        return response.text || "No response text";
     }
     return "Chat not initialized. Please try again.";
 };
@@ -213,7 +225,7 @@ export const findFinancialAdvisors = async (location: { latitude: number; longit
     `;
 
     const model = 'gemini-2.5-flash';
-    
+
     const toolConfig = 'latitude' in location ? {
         retrievalConfig: {
             latLng: {
@@ -223,7 +235,7 @@ export const findFinancialAdvisors = async (location: { latitude: number; longit
         }
     } : undefined;
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
         model: model,
         contents: prompt,
         config: {
@@ -234,9 +246,12 @@ export const findFinancialAdvisors = async (location: { latitude: number; longit
 
     const text = response.text;
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    
+
     let advisors: FinancialAdvisor[] = [];
     try {
+        if (!text) {
+            throw new Error("No text returned from AI");
+        }
         // Find the JSON array within the response text. This handles cases where the API might add extra text.
         const jsonMatch = text.match(/\[[\s\S]*\]/);
         if (jsonMatch && jsonMatch[0]) {
@@ -256,10 +271,10 @@ export const findFinancialAdvisors = async (location: { latitude: number; longit
                     // Filter out any entries that are missing essential information
                     .filter(advisor => advisor.name !== 'Unnamed Advisor' && advisor.address !== 'No address provided');
             } else {
-                 console.warn("Parsed data is not an array:", parsed);
+                console.warn("Parsed data is not an array:", parsed);
             }
         } else {
-             console.warn("No valid JSON array found in the response.", text);
+            console.warn("No valid JSON array found in the response.", text);
         }
     } catch (e) {
         console.error("Failed to parse JSON response for financial advisors:", e);
@@ -270,28 +285,28 @@ export const findFinancialAdvisors = async (location: { latitude: number; longit
 }
 
 export const textToSpeech = async (text: string): Promise<string> => {
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Say this in a friendly and helpful tone: ${text}` }] }],
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Kore' },
+    try {
+        const response = await getAI().models.generateContent({
+            model: "gemini-2.5-flash-preview-tts",
+            contents: [{ parts: [{ text: `Say this in a friendly and helpful tone: ${text}` }] }],
+            config: {
+                responseModalities: [Modality.AUDIO],
+                speechConfig: {
+                    voiceConfig: {
+                        prebuiltVoiceConfig: { voiceName: 'Kore' },
+                    },
+                },
             },
-        },
-      },
-    });
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (base64Audio) {
-      return base64Audio;
+        });
+        const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+        if (base64Audio) {
+            return base64Audio;
+        }
+        throw new Error("No audio data received from TTS API.");
+    } catch (error) {
+        console.error("Error in textToSpeech:", error);
+        throw new Error("Failed to generate speech.");
     }
-    throw new Error("No audio data received from TTS API.");
-  } catch (error) {
-    console.error("Error in textToSpeech:", error);
-    throw new Error("Failed to generate speech.");
-  }
 };
 
 const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -319,12 +334,12 @@ export const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
             text: "Transcribe the following audio accurately:"
         };
 
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: 'gemini-2.5-flash',
             contents: { parts: [audioPart, textPart] },
         });
 
-        return response.text;
+        return response.text || "";
     } catch (error) {
         console.error("Error in transcribeAudio:", error);
         throw new Error("Failed to transcribe audio.");
@@ -363,12 +378,15 @@ export const generateQuizQuestions = async (difficulty: QuizDifficulty): Promise
     `;
 
     try {
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
         });
 
         let text = response.text;
+        if (!text) {
+            throw new Error("No text returned from AI");
+        }
         // Cleanup markdown if present
         const jsonMatch = text.match(/\[[\s\S]*\]/);
         if (jsonMatch) {
@@ -376,7 +394,7 @@ export const generateQuizQuestions = async (difficulty: QuizDifficulty): Promise
         }
 
         const questions: QuizQuestion[] = JSON.parse(text);
-        
+
         // Basic validation
         if (!Array.isArray(questions) || questions.length === 0) {
             throw new Error("Invalid format returned from AI");

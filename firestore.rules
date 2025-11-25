@@ -1,1 +1,50 @@
-��^��ޮȨ�
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // By default, deny all read and write access to the entire database.
+    // This is a security best practice. We will grant access to specific collections below.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Rules for the 'users' collection
+    // This collection stores basic user profile information.
+    match /users/{userId} {
+      // A user can read their own profile document.
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // A user can create their own profile document when they sign up.
+      // We also validate that the UID and email being written match the authenticated user.
+      allow create: if request.auth != null && request.auth.uid == userId
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.email == request.auth.token.email;
+
+      // A user can update their own profile document (e.g., changing their display name or photo URL).
+      allow update: if request.auth != null && request.auth.uid == userId;
+      
+      // A user cannot delete their profile document through the app.
+      allow delete: if false;
+    }
+
+    // Rules for the 'plans' collection
+    // This collection stores the personalized investment plans created by users.
+    match /plans/{planId} {
+      // A user can only read (get, list) plans where their UID matches the 'userId' field in the document.
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // A user must be logged in to create a plan.
+      // The 'userId' field in the new plan document MUST match the creator's own UID.
+      // This prevents a user from creating a plan on behalf of someone else.
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      
+      // The current application does not support updating a saved plan, so we explicitly deny it.
+      // If you add this feature later, this rule would need to be updated.
+      allow update: if false;
+      
+      // A user can only delete a plan where their UID matches the 'userId' field in the document.
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+  }
+}

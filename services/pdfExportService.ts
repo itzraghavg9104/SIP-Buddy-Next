@@ -1,4 +1,6 @@
 import { logoFull, logoIcon } from '../assets/logo';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 // --- ADDED IMPORT ---
 // Fix: Removed the import of the IconSparkles component because it cannot be passed as a URL.
 // The icon will be defined as an SVG string and converted to a data URL instead.
@@ -6,8 +8,6 @@ import { logoFull, logoIcon } from '../assets/logo';
 // import { InvestmentPlan, UserProfile } from '../types'; // This was in the original, uncomment if needed
 
 // Declare global variables for CDN libraries to inform TypeScript
-declare const jspdf: any;
-declare const html2canvas: any;
 
 // Fix: Defined the IconSparkles SVG as a string to be programmatically converted to a data URL.
 const iconSparklesSVGString = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="#2563eb" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="9" /></svg>`;
@@ -161,7 +161,8 @@ const expandAllFundSections = (): HTMLButtonElement[] => {
     const expandedButtons: HTMLButtonElement[] = [];
 
     // Find the Fund Recommendations section by looking through all pdf-export-section elements
-    const allSections = document.querySelectorAll('.pdf-export-section');
+    // Convert NodeList to Array to avoid iteration issues
+    const allSections = Array.from(document.querySelectorAll('.pdf-export-section'));
     let fundSection: Element | null = null;
 
     for (const section of allSections) {
@@ -222,7 +223,6 @@ export const exportDashboardToPDF = async (
 
     try {
         onProgressUpdate('Initializing PDF export...');
-        const { jsPDF } = jspdf;
         const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -347,13 +347,13 @@ export const exportDashboardToPDF = async (
                 // Handle Fund Recommendations section specially with sub-section rendering
                 // Corrected: Assign the returned yPos back
                 yPos = await renderFundRecommendationsSection(section, pdf, pageMargin, contentWidth, pdfHeight, yPos);
-                
+
                 // If the fund section ended near the bottom, force a new page for the next section
                 if (yPos > pdfHeight - pageMargin * 3) {
-                     pdf.addPage();
-                     yPos = pageMargin;
+                    pdf.addPage();
+                    yPos = pageMargin;
                 }
-                
+
             } else {
                 // Regular section rendering (including disclaimer in its natural position)
                 const canvas = await html2canvas(section, {
@@ -388,7 +388,7 @@ export const exportDashboardToPDF = async (
 
         // 7. Add watermark to all pages (with text fallback)
         onProgressUpdate('Adding watermark...');
-        const totalPages = pdf.internal.getNumberOfPages();
+        const totalPages = (pdf as any).internal.pages.length - 1; // -1 because pages array has a null first element
         const watermarkSize = 100;
 
         for (let i = 1; i <= totalPages; i++) {
@@ -414,7 +414,7 @@ export const exportDashboardToPDF = async (
                 pdf.setTextColor(150, 150, 150); // Light gray
 
                 // Set transparency using a graphics state
-                const gState = new (jspdf as any).GState({ opacity: 0.08 });
+                const gState = new (jsPDF as any).GState({ opacity: 0.08 });
                 pdf.setGState(gState);
 
                 // Add centered, rotated text
@@ -430,7 +430,7 @@ export const exportDashboardToPDF = async (
                 );
 
                 // Reset graphics state to avoid affecting other elements
-                pdf.setGState(new (jspdf as any).GState({ opacity: 1 }));
+                pdf.setGState(new (jsPDF as any).GState({ opacity: 1 }));
             }
         }
 

@@ -1,0 +1,13 @@
+var R=require("../../chunks/ssr/[turbopack]_runtime.js")("server/app/_not-found/page.js")
+R.c("server/chunks/ssr/Desktop_SIP-Buddy_8297503c._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__757471b0._.js")
+R.c("server/chunks/ssr/98ee6_next_dist_esm_build_templates_app-page_4bbf1a45.js")
+R.c("server/chunks/ssr/[root-of-the-server]__1e980a06._.js")
+R.c("server/chunks/ssr/98ee6_next_dist_967d195a._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__59ff94f9._.js")
+R.c("server/chunks/ssr/Desktop_SIP-Buddy_6d3fb3e1._.js")
+R.c("server/chunks/ssr/98ee6_next_dist_client_components_28d9c5b5._.js")
+R.c("server/chunks/ssr/98ee6_next_dist_client_components_builtin_forbidden_4e6a37da.js")
+R.c("server/chunks/ssr/Desktop_SIP-Buddy__next-internal_server_app__not-found_page_actions_1be754bf.js")
+R.m(32422)
+module.exports=R.m(32422).exports
