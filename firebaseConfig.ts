@@ -1,11 +1,11 @@
 // These values have been populated with your Firebase project configuration.
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyAlGfqwz3TYz4WO2Lj3tk2jnQQVHKSbLVc",
-  authDomain: "sip-buddy.firebaseapp.com",
-  projectId: "sip-buddy",
-  storageBucket: "sip-buddy.firebasestorage.app",
-  messagingSenderId: "329679257181",
-  appId: "1:329679257181:web:cbb3286fdba97790f297b4",
-  measurementId: "G-H745BT9M6D"
+  apiKey: "AIzaSyA2ghz8QYwf3wSNk322ODvwvvjwyr8wnXA",
+  authDomain: "sip-buddy-next.firebaseapp.com",
+  projectId: "sip-buddy-next",
+  storageBucket: "sip-buddy-next.firebasestorage.app",
+  messagingSenderId: "15541359078",
+  appId: "1:15541359078:web:bef78b2c68d4e236d30627",
+  measurementId: "G-QP47RTQ474"
 };
