@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     robots: 'index, follow',
     openGraph: {
         type: 'website',
-        url: 'https://sip-buddy.vercel.app',
+        url: 'https://sipbuddy.vercel.app',
         title: 'AI SIP Planner | Smart Mutual Fund & SIP Investment Plans',
         description: 'Get AI-powered, personalized SIP & mutual fund investment plans. Our smart planner analyzes your financial profile to provide top fund recommendations, growth projections, and a clear path to wealth creation.',
         images: [
