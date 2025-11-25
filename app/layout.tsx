@@ -26,6 +26,9 @@ export const metadata: Metadata = {
         description: 'Get AI-powered, personalized SIP & mutual fund investment plans. Our smart planner analyzes your financial profile to provide top fund recommendations, growth projections, and a clear path to wealth creation.',
         images: ['https://res.cloudinary.com/dz5nzppe0/image/upload/v1762520441/logoFull_wmoqob.png'],
     },
+    verification: {
+        google: 'rAAzIjmpK23zry0I96bgGY6d2jtjdDRuKsyloHFT4Gw',
+    },
 };
 
 export default function RootLayout({
