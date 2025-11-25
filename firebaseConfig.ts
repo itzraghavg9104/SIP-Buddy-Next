@@ -6,6 +6,6 @@ export const firebaseConfig = {
   projectId: "sip-buddy",
   storageBucket: "sip-buddy.firebasestorage.app",
   messagingSenderId: "329679257181",
-  appId: "1:329679257181:web:7817a50d16b6def8f297b4",
-  measurementId: "G-LMDJRNRJH1"
+  appId: "1:329679257181:web:cbb3286fdba97790f297b4",
+  measurementId: "G-H745BT9M6D"
 };
