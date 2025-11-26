@@ -7,7 +7,7 @@ import { Analytics } from '@vercel/analytics/next';
 export const metadata: Metadata = {
     title: 'SIP Buddy | AI SIP Planner | Smart Mutual Fund & SIP Investment Plans',
     description: 'Get AI-powered, personalized SIP & mutual fund investment plans. Our smart planner analyzes your financial profile to provide top fund recommendations, growth projections, and a clear path to wealth creation.',
-    keywords: 'SIP planner, AI investment advisor, mutual funds, systematic investment plan, financial planning, wealth management, investment calculator, India, stock market, SEBI',
+    keywords: 'SIP planner, AI investment advisor, mutual funds, systematic investment plan, financial planning, wealth management, investment calculator, India, stock market, SEBI, SIP calculator, lumpsum calculator, SWP calculator, income tax calculator India, tax regime comparison, retirement planning, ELSS, tax saving mutual funds, inflation adjusted returns, mutual fund portfolio, robo advisor, personal finance India, FY 2024-25 tax calculator, best mutual funds 2025, top rated mutual funds, direct mutual funds, large cap funds, mid cap funds, small cap funds, index funds, compound interest calculator, goal based investing, financial freedom, save tax, 80C deductions, old vs new tax regime, mutual fund analysis, portfolio tracker, investment advice, child education planning, home buying plan, wealth creation, rupee cost averaging, Nifty 50, Sensex, AMFI, mutual fund sahi hai, SIP Buddy AI, SIP Buddy, sipbuddy, sipbuddy.ai, sipbuddy ai, sipbuddy mutual funds, ai mutual fund recommender ',
     authors: [{ name: 'SIP Buddy' }],
     robots: 'index, follow',
     openGraph: {
