@@ -1,25 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { updateProfile, updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider, sendEmailVerification } from 'firebase/auth';
+import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { updateUserProfileDocument } from '../services/firestoreService';
-import { IconUser, IconMail, IconLogout, IconKey, IconShield } from '../components/Icons';
+import { IconUser, IconMail, IconLogout, IconShield } from '../components/Icons';
 import { useGlobalContext } from '../context/GlobalContext';
 import EmailVerificationBanner from './EmailVerificationBanner';
 
 const Profile: React.FC = () => {
-  const { user, handleLogout, handleProfileUpdate, needsEmailVerification, refreshEmailVerification } = useGlobalContext();
+  const { user, handleLogout, handleProfileUpdate, needsEmailVerification } = useGlobalContext();
 
   // Display name state
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Change email state
-  const [showChangeEmail, setShowChangeEmail] = useState(false);
-  const [newEmail, setNewEmail] = useState('');
-  const [emailPassword, setEmailPassword] = useState('');
-  const [isEmailLoading, setIsEmailLoading] = useState(false);
 
   // Change password state
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -63,51 +57,6 @@ const Profile: React.FC = () => {
     } finally {
       setIsLoading(false);
       setTimeout(() => setSuccessMessage(null), 3000);
-    }
-  };
-
-  const handleEmailChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!auth.currentUser || !newEmail || !emailPassword) return;
-
-    setIsEmailLoading(true);
-    setError(null);
-    setSuccessMessage(null);
-
-    try {
-      // Reauthenticate user before changing email
-      const credential = EmailAuthProvider.credential(user.email!, emailPassword);
-      await reauthenticateWithCredential(auth.currentUser, credential);
-
-      // Update email
-      await updateEmail(auth.currentUser, newEmail);
-
-      // Send verification email to new address
-      await sendEmailVerification(auth.currentUser);
-
-      setSuccessMessage('Email updated! Please verify your new email address.');
-      setShowChangeEmail(false);
-      setNewEmail('');
-      setEmailPassword('');
-
-      // Refresh verification status
-      await refreshEmailVerification();
-    } catch (err: any) {
-      if (err.code === 'auth/wrong-password') {
-        setError('Incorrect password. Please try again.');
-      } else if (err.code === 'auth/email-already-in-use') {
-        setError('This email is already in use by another account.');
-      } else if (err.code === 'auth/invalid-email') {
-        setError('Invalid email address.');
-      } else if (err.code === 'auth/requires-recent-login') {
-        setError('Please log out and log in again before changing your email.');
-      } else if (err.code === 'auth/operation-not-allowed') {
-        setError('Please verify your current email before changing to a new one.');
-      } else {
-        setError(err.message || 'Failed to update email.');
-      }
-    } finally {
-      setIsEmailLoading(false);
     }
   };
 
@@ -254,150 +203,74 @@ const Profile: React.FC = () => {
             Account Security
           </h2>
 
-          <div className="space-y-4">
-            {/* Change Email Section */}
-            <div className="border-b border-slate-200 pb-4">
-              <div className="flex justify-between items-center mb-2">
-                <div>
-                  <h3 className="font-medium text-slate-900">Change Email</h3>
-                  <p className="text-sm text-slate-500">Update your email address</p>
-                  {!user.emailVerified && (
-                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                      <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      Verify current email first
-                    </p>
-                  )}
-                </div>
-                <button
-                  onClick={() => {
-                    if (!user.emailVerified) {
-                      setError('Please verify your current email before changing to a new one.');
-                      return;
-                    }
-                    setShowChangeEmail(!showChangeEmail);
-                    setShowChangePassword(false);
-                    setError(null);
-                    setSuccessMessage(null);
-                  }}
-                  disabled={!user.emailVerified}
-                  className={`font-medium text-sm transition-colors ${user.emailVerified
-                      ? 'text-blue-600 hover:text-blue-800'
-                      : 'text-slate-400 cursor-not-allowed'
-                    }`}
-                >
-                  {showChangeEmail ? 'Cancel' : 'Change'}
-                </button>
+          {/* Change Password Section */}
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <div>
+                <h3 className="font-medium text-slate-900">Change Password</h3>
+                <p className="text-sm text-slate-500">Update your password</p>
               </div>
-
-              {showChangeEmail && (
-                <form onSubmit={handleEmailChange} className="mt-4 space-y-3">
-                  <div>
-                    <label htmlFor="newEmail" className="block text-sm font-medium text-slate-700 mb-1">New Email</label>
-                    <input
-                      type="email"
-                      id="newEmail"
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                      required
-                      placeholder="newemail@example.com"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="emailPassword" className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
-                    <input
-                      type="password"
-                      id="emailPassword"
-                      value={emailPassword}
-                      onChange={(e) => setEmailPassword(e.target.value)}
-                      required
-                      placeholder="••••••••"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={isEmailLoading || !newEmail || !emailPassword}
-                    className="w-full py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed"
-                  >
-                    {isEmailLoading ? 'Updating...' : 'Update Email'}
-                  </button>
-                </form>
-              )}
+              <button
+                onClick={() => {
+                  setShowChangePassword(!showChangePassword);
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+                className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors"
+              >
+                {showChangePassword ? 'Cancel' : 'Change'}
+              </button>
             </div>
 
-            {/* Change Password Section */}
-            <div className="pt-2">
-              <div className="flex justify-between items-center mb-2">
+            {showChangePassword && (
+              <form onSubmit={handlePasswordChange} className="mt-4 space-y-3">
                 <div>
-                  <h3 className="font-medium text-slate-900">Change Password</h3>
-                  <p className="text-sm text-slate-500">Update your password</p>
+                  <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
+                  <input
+                    type="password"
+                    id="currentPassword"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    placeholder="••••••••"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    placeholder="••••••••"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
                 <button
-                  onClick={() => {
-                    setShowChangePassword(!showChangePassword);
-                    setShowChangeEmail(false);
-                    setError(null);
-                    setSuccessMessage(null);
-                  }}
-                  className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors"
+                  type="submit"
+                  disabled={isPasswordLoading || !currentPassword || !newPassword || !confirmPassword}
+                  className="w-full py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed"
                 >
-                  {showChangePassword ? 'Cancel' : 'Change'}
+                  {isPasswordLoading ? 'Updating...' : 'Update Password'}
                 </button>
-              </div>
-
-              {showChangePassword && (
-                <form onSubmit={handlePasswordChange} className="mt-4 space-y-3">
-                  <div>
-                    <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
-                    <input
-                      type="password"
-                      id="currentPassword"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      required
-                      placeholder="••••••••"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
-                    <input
-                      type="password"
-                      id="newPassword"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                      minLength={6}
-                      placeholder="••••••••"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
-                    <input
-                      type="password"
-                      id="confirmPassword"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      minLength={6}
-                      placeholder="••••••••"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={isPasswordLoading || !currentPassword || !newPassword || !confirmPassword}
-                    className="w-full py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed"
-                  >
-                    {isPasswordLoading ? 'Updating...' : 'Update Password'}
-                  </button>
-                </form>
-              )}
-            </div>
+              </form>
+            )}
           </div>
         </div>
       )}
