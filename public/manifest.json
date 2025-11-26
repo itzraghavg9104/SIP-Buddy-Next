@@ -1,0 +1,76 @@
+{
+  "name": "SIP Buddy - AI SIP Planner",
+  "short_name": "SIP Buddy",
+  "description": "AI-powered personalized SIP and mutual fund investment planning platform for Indian investors",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity", "business"],
+  "shortcuts": [
+    {
+      "name": "Create Investment Plan",
+      "short_name": "Planner",
+      "description": "Generate AI-powered SIP plan",
+      "url": "/planner",
+      "icons": [
+        {
+          "src": "https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Calculators",
+      "short_name": "Calculate",
+      "description": "SIP, Lumpsum, SWP calculators",
+      "url": "/calculator",
+      "icons": [
+        {
+          "src": "https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}
