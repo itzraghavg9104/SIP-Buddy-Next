@@ -5,7 +5,9 @@ import {
     signInWithPopup,
     GoogleAuthProvider,
     updateProfile,
-    getAdditionalUserInfo
+    getAdditionalUserInfo,
+    sendEmailVerification,
+    sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { IconGoogle, IconSparkles } from '../components/Icons';
@@ -24,6 +26,9 @@ const Auth: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
+    const [resetEmail, setResetEmail] = useState('');
 
     useEffect(() => {
         if (user) {
@@ -35,6 +40,7 @@ const Auth: React.FC = () => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
+        setSuccessMessage(null);
 
         try {
             if (isLogin) {
@@ -46,8 +52,11 @@ const Auth: React.FC = () => {
                 if (newUser) {
                     const nameFromEmail = email.substring(0, email.indexOf('@'));
                     await updateProfile(newUser, { displayName: nameFromEmail });
-                    // Create the user's profile document in Firestore
-                    await createUserProfileDocument(newUser);
+                    // Create the user's profile document in Firestore with email provider
+                    await createUserProfileDocument(newUser, 'email');
+                    // Send email verification
+                    await sendEmailVerification(newUser);
+                    setSuccessMessage('Account created! Please check your email to verify your account.');
                 }
             }
             // Redirect handled by useEffect
@@ -66,9 +75,9 @@ const Auth: React.FC = () => {
             const result = await signInWithPopup(auth, provider);
             const additionalUserInfo = getAdditionalUserInfo(result);
 
-            // If it's a new user, create their profile document in Firestore
+            // If it's a new user, create their profile document in Firestore with google provider
             if (additionalUserInfo?.isNewUser) {
-                await createUserProfileDocument(result.user);
+                await createUserProfileDocument(result.user, 'google');
             }
             // Redirect handled by useEffect
         } catch (err: any) {
@@ -81,6 +90,24 @@ const Auth: React.FC = () => {
             setIsLoading(false);
         }
     }
+
+    const handleForgotPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError(null);
+        setSuccessMessage(null);
+
+        try {
+            await sendPasswordResetEmail(auth, resetEmail);
+            setSuccessMessage('Password reset email sent! Please check your inbox.');
+            setShowForgotPassword(false);
+            setResetEmail('');
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
@@ -148,6 +175,21 @@ const Auth: React.FC = () => {
                         </div>
                     )}
 
+                    {successMessage && (
+                        <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-md">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm text-green-700">{successMessage}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <form onSubmit={handleAuthAction} className="space-y-5">
                         <div>
                             <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1">Email Address</label>
@@ -173,6 +215,17 @@ const Auth: React.FC = () => {
                                 placeholder="••••••••"
                                 className="block w-full px-4 py-3 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ease-in-out shadow-sm"
                             />
+                            {isLogin && (
+                                <div className="text-right mt-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowForgotPassword(true)}
+                                        className="text-sm text-blue-600 hover:text-blue-800 font-semibold transition-colors"
+                                    >
+                                        Forgot Password?
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         <button
@@ -221,6 +274,50 @@ const Auth: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Forgot Password Modal */}
+            {showForgotPassword && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+                        <h3 className="text-2xl font-bold text-slate-900 mb-4">Reset Password</h3>
+                        <p className="text-sm text-slate-600 mb-6">Enter your email address and we'll send you a link to reset your password.</p>
+                        <form onSubmit={handleForgotPassword}>
+                            <div className="mb-4">
+                                <label htmlFor="resetEmail" className="block text-sm font-semibold text-slate-700 mb-1">Email Address</label>
+                                <input
+                                    type="email"
+                                    id="resetEmail"
+                                    value={resetEmail}
+                                    onChange={(e) => setResetEmail(e.target.value)}
+                                    required
+                                    placeholder="you@example.com"
+                                    className="block w-full px-4 py-3 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                />
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowForgotPassword(false);
+                                        setResetEmail('');
+                                        setError(null);
+                                    }}
+                                    className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="flex-1 py-2.5 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isLoading ? 'Sending...' : 'Send Reset Link'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             <style>{`
                 @keyframes border-spin {

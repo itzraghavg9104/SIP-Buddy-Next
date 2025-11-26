@@ -11,6 +11,8 @@ import { InvestmentPlan, UserProfile, SavedPlan, Page } from '../types';
 interface GlobalContextType {
     user: User | null;
     authLoading: boolean;
+    isEmailVerified: boolean;
+    needsEmailVerification: boolean;
     currentPlan: CurrentPlanState | null;
     setCurrentPlan: React.Dispatch<React.SetStateAction<CurrentPlanState | null>>;
     isLoginModalOpen: boolean;
@@ -26,6 +28,7 @@ interface GlobalContextType {
     handleLoginFromModal: () => void;
     handlePlanLoginConfirm: () => void;
     handlePlanLoginCancel: () => void;
+    refreshEmailVerification: () => Promise<void>;
 }
 
 export interface CurrentPlanState {
@@ -44,6 +47,8 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
     const [currentPlan, setCurrentPlan] = useState<CurrentPlanState | null>(null);
+    const [isEmailVerified, setIsEmailVerified] = useState(false);
+    const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
 
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [isPlanLoginModalOpen, setIsPlanLoginModalOpen] = useState(false);
@@ -54,6 +59,20 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
             setAuthLoading(false);
+
+            // Check email verification status
+            if (currentUser) {
+                const isVerified = currentUser.emailVerified;
+                const providerId = currentUser.providerData[0]?.providerId;
+                const isGoogleUser = providerId === 'google.com';
+
+                setIsEmailVerified(isVerified || isGoogleUser);
+                // Users need verification if they used email/password AND haven't verified
+                setNeedsEmailVerification(!isGoogleUser && !isVerified);
+            } else {
+                setIsEmailVerified(false);
+                setNeedsEmailVerification(false);
+            }
 
             if (currentUser && authRedirectPlan) {
                 setCurrentPlan({
@@ -140,10 +159,24 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         setAuthRedirectPlan(null);
     }
 
+    const refreshEmailVerification = async () => {
+        if (auth.currentUser) {
+            await auth.currentUser.reload();
+            const isVerified = auth.currentUser.emailVerified;
+            const providerId = auth.currentUser.providerData[0]?.providerId;
+            const isGoogleUser = providerId === 'google.com';
+
+            setIsEmailVerified(isVerified || isGoogleUser);
+            setNeedsEmailVerification(!isGoogleUser && !isVerified);
+        }
+    };
+
     return (
         <GlobalContext.Provider value={{
             user,
             authLoading,
+            isEmailVerified,
+            needsEmailVerification,
             currentPlan,
             setCurrentPlan,
             isLoginModalOpen,
@@ -158,7 +191,8 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
             handleProfileUpdate,
             handleLoginFromModal,
             handlePlanLoginConfirm,
-            handlePlanLoginCancel
+            handlePlanLoginCancel,
+            refreshEmailVerification
         }}>
             {children}
         </GlobalContext.Provider>

@@ -8,14 +8,14 @@ const usersCollection = collection(db, 'users');
 
 // Helper to remove undefined values which Firestore does not support
 const sanitizeForFirestore = <T>(obj: T): T => {
-  return JSON.parse(JSON.stringify(obj));
+    return JSON.parse(JSON.stringify(obj));
 };
 
 // Save a new investment plan to Firestore
 export const savePlan = async (
-    userId: string, 
-    planName: string, 
-    investmentPlan: InvestmentPlan, 
+    userId: string,
+    planName: string,
+    investmentPlan: InvestmentPlan,
     userProfile: UserProfile
 ): Promise<string> => {
     try {
@@ -74,8 +74,9 @@ export const deletePlan = async (planId: string): Promise<void> => {
  * Creates a new user profile document in Firestore.
  * This should be called once when a user signs up.
  * @param user The User object from Firebase Authentication.
+ * @param provider The authentication provider ('email' or 'google')
  */
-export const createUserProfileDocument = async (user: User): Promise<void> => {
+export const createUserProfileDocument = async (user: User, provider: 'email' | 'google' = 'email'): Promise<void> => {
     const userDocRef = doc(db, 'users', user.uid);
     try {
         await setDoc(userDocRef, {
@@ -83,6 +84,8 @@ export const createUserProfileDocument = async (user: User): Promise<void> => {
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
+            authProvider: provider,
+            emailVerified: user.emailVerified || provider === 'google', // Google users are auto-verified
             createdAt: serverTimestamp(),
         });
     } catch (error) {
@@ -121,5 +124,32 @@ export const deleteUserDocument = async (uid: string): Promise<void> => {
     } catch (error) {
         console.error("Error deleting user profile document:", error);
         // We don't throw, as the auth deletion is more critical.
+    }
+};
+
+/**
+ * Updates the email verification status in Firestore.
+ * @param uid The user's unique ID.
+ * @param verified Whether the email is verified.
+ */
+export const updateEmailVerificationStatus = async (uid: string, verified: boolean): Promise<void> => {
+    const userDocRef = doc(db, 'users', uid);
+    try {
+        await setDoc(userDocRef, { emailVerified: verified }, { merge: true });
+    } catch (error) {
+        console.error("Error updating email verification status:", error);
+    }
+};
+
+/**
+ * Records when a verification email was sent.
+ * @param uid The user's unique ID.
+ */
+export const recordVerificationEmailSent = async (uid: string): Promise<void> => {
+    const userDocRef = doc(db, 'users', uid);
+    try {
+        await setDoc(userDocRef, { lastEmailVerificationSent: serverTimestamp() }, { merge: true });
+    } catch (error) {
+        console.error("Error recording verification email send:", error);
     }
 };

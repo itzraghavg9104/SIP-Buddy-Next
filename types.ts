@@ -1,15 +1,15 @@
 
 export enum Page {
-  Home = 'Home',
-  Planner = 'Planner',
-  Dashboard = 'Dashboard',
-  Learn = 'Learn',
-  Calculator = 'Calculator',
-  About = 'About',
-  More = 'More',
-  Auth = 'Auth',
-  Profile = 'Profile',
-  MyPlans = 'MyPlans',
+    Home = 'Home',
+    Planner = 'Planner',
+    Dashboard = 'Dashboard',
+    Learn = 'Learn',
+    Calculator = 'Calculator',
+    About = 'About',
+    More = 'More',
+    Auth = 'Auth',
+    Profile = 'Profile',
+    MyPlans = 'MyPlans',
 }
 
 export enum RiskTolerance {
@@ -98,10 +98,10 @@ export interface SavedPlan {
 
 
 export interface ChatMessage {
-  role: 'user' | 'model';
-  text: string;
-  audioData?: string; 
-  isPlaying?: boolean; 
+    role: 'user' | 'model';
+    text: string;
+    audioData?: string;
+    isPlaying?: boolean;
 }
 
 export interface FinancialAdvisor {
@@ -135,4 +135,17 @@ export interface QuizResult {
     userAnswer: string | string[];
     isCorrect: boolean;
     timeTaken: number;
+}
+
+// --- User Profile Types ---
+
+export interface StoredUserProfile {
+    uid: string;
+    email: string | null;
+    displayName: string | null;
+    photoURL: string | null;
+    authProvider: 'email' | 'google';
+    emailVerified: boolean;
+    createdAt: any; // Firestore Timestamp
+    lastEmailVerificationSent?: any; // Firestore Timestamp
 }

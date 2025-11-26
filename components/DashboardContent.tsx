@@ -20,6 +20,7 @@ import NotificationModal from '../components/NotificationModal';
 import { getUserPlans } from '../services/firestoreService';
 import { useGlobalContext } from '../context/GlobalContext';
 import { useRouter } from 'next/navigation';
+import EmailVerificationBanner from '../components/EmailVerificationBanner';
 
 const COLORS = ['#3b82f6', '#10b981', '#ef4444', '#f97316', '#a855f7', '#84cc16', '#f59e0b', '#06b6d4', '#ec4899', '#6366f1'];
 
@@ -98,7 +99,7 @@ const SummaryCard: React.FC<{ title: string; value: string; subtext: string }> =
 );
 
 const Dashboard: React.FC = () => {
-  const { currentPlan, handleSavePlan, handleCreateNewPlan } = useGlobalContext();
+  const { currentPlan, handleSavePlan, handleCreateNewPlan, needsEmailVerification } = useGlobalContext();
   const router = useRouter();
 
   const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({});
@@ -306,6 +307,10 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Email Verification Banner */}
+        {needsEmailVerification && <EmailVerificationBanner />}
+
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Your Investment Dashboard</h1>
