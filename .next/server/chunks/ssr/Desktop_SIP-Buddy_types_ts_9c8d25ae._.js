@@ -1,3 +1,0 @@
-module.exports=[5079,a=>{"use strict";var b,c,d=((b={}).Home="Home",b.Planner="Planner",b.Dashboard="Dashboard",b.Learn="Learn",b.Calculator="Calculator",b.About="About",b.More="More",b.Auth="Auth",b.Profile="Profile",b.MyPlans="MyPlans",b),e=((c={}).Conservative="Conservative",c.Moderate="Moderate",c.Aggressive="Aggressive",c);a.s(["Page",()=>d,"RiskTolerance",()=>e])}];
-
-//# sourceMappingURL=Desktop_SIP-Buddy_types_ts_9c8d25ae._.js.map

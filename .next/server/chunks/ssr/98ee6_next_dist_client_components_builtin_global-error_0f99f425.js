@@ -1,3 +1,0 @@
-module.exports=[84769,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(56649);a.n(d("[project]/Desktop/SIP-Buddy/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},48638,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(56649);a.n(d("[project]/Desktop/SIP-Buddy/node_modules/next/dist/client/components/builtin/global-error.js"))},35877,a=>{"use strict";a.i(84769);var b=a.i(48638);a.n(b)}];
-
-//# sourceMappingURL=98ee6_next_dist_client_components_builtin_global-error_0f99f425.js.map
