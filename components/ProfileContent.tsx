@@ -101,6 +101,8 @@ const Profile: React.FC = () => {
         setError('Invalid email address.');
       } else if (err.code === 'auth/requires-recent-login') {
         setError('Please log out and log in again before changing your email.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('Please verify your current email before changing to a new one.');
       } else {
         setError(err.message || 'Failed to update email.');
       }
@@ -248,6 +250,51 @@ const Profile: React.FC = () => {
       {!isGoogleUser && (
         <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 mb-6">
           <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            <IconShield className="h-5 w-5 text-blue-600" />
+            Account Security
+          </h2>
+
+          <div className="space-y-4">
+            {/* Change Email Section */}
+            <div className="border-b border-slate-200 pb-4">
+              <div className="flex justify-between items-center mb-2">
+                <div>
+                  <h3 className="font-medium text-slate-900">Change Email</h3>
+                  <p className="text-sm text-slate-500">Update your email address</p>
+                  {!user.emailVerified && (
+                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                      <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      Verify current email first
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    if (!user.emailVerified) {
+                      setError('Please verify your current email before changing to a new one.');
+                      return;
+                    }
+                    setShowChangeEmail(!showChangeEmail);
+                    setShowChangePassword(false);
+                    setError(null);
+                    setSuccessMessage(null);
+                  }}
+                  disabled={!user.emailVerified}
+                  className={`font-medium text-sm transition-colors ${user.emailVerified
+                      ? 'text-blue-600 hover:text-blue-800'
+                      : 'text-slate-400 cursor-not-allowed'
+                    }`}
+                >
+                  {showChangeEmail ? 'Cancel' : 'Change'}
+                </button>
+              </div>
+
+              {showChangeEmail && (
+                <form onSubmit={handleEmailChange} className="mt-4 space-y-3">
+                  <div>
+                    <label htmlFor="newEmail" className="block text-sm font-medium text-slate-700 mb-1">New Email</label>
                     <input
                       type="email"
                       id="newEmail"
@@ -278,118 +325,113 @@ const Profile: React.FC = () => {
                     {isEmailLoading ? 'Updating...' : 'Update Email'}
                   </button>
                 </form>
-  )
-}
-            </div >
+              )}
+            </div>
 
-  {/* Change Password Section */ }
-  < div className = "pt-2" >
-    <div className="flex justify-between items-center mb-2">
-      <div>
-        <h3 className="font-medium text-slate-900">Change Password</h3>
-        <p className="text-sm text-slate-500">Update your password</p>
-      </div>
-      <button
-        onClick={() => {
-          setShowChangePassword(!showChangePassword);
-          setShowChangeEmail(false);
-          setError(null);
-          setSuccessMessage(null);
-        }}
-        className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors"
-      >
-        {showChangePassword ? 'Cancel' : 'Change'}
-      </button>
-    </div>
+            {/* Change Password Section */}
+            <div className="pt-2">
+              <div className="flex justify-between items-center mb-2">
+                <div>
+                  <h3 className="font-medium text-slate-900">Change Password</h3>
+                  <p className="text-sm text-slate-500">Update your password</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowChangePassword(!showChangePassword);
+                    setShowChangeEmail(false);
+                    setError(null);
+                    setSuccessMessage(null);
+                  }}
+                  className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors"
+                >
+                  {showChangePassword ? 'Cancel' : 'Change'}
+                </button>
+              </div>
 
-{
-  showChangePassword && (
-    <form onSubmit={handlePasswordChange} className="mt-4 space-y-3">
-      <div>
-        <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
-        <input
-          type="password"
-          id="currentPassword"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          required
-          placeholder="••••••••"
-          className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div>
-        <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
-        <input
-          type="password"
-          id="newPassword"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          required
-          minLength={6}
-          placeholder="••••••••"
-          className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
-        <input
-          type="password"
-          id="confirmPassword"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-          minLength={6}
-          placeholder="••••••••"
-          className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={isPasswordLoading || !currentPassword || !newPassword || !confirmPassword}
-        className="w-full py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed"
-      >
-        {isPasswordLoading ? 'Updating...' : 'Update Password'}
-      </button>
-    </form>
-  )
-}
-            </div >
-          </div >
-        </div >
+              {showChangePassword && (
+                <form onSubmit={handlePasswordChange} className="mt-4 space-y-3">
+                  <div>
+                    <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
+                    <input
+                      type="password"
+                      id="currentPassword"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+                    <input
+                      type="password"
+                      id="newPassword"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      placeholder="••••••••"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      placeholder="••••••••"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isPasswordLoading || !currentPassword || !newPassword || !confirmPassword}
+                    className="w-full py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed"
+                  >
+                    {isPasswordLoading ? 'Updating...' : 'Update Password'}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
-{/* Google User Notice */ }
-{
-  isGoogleUser && (
-    <div className="bg-blue-50 border border-blue-200 p-6 rounded-2xl mb-6">
-      <div className="flex items-start gap-3">
-        <svg className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 01202 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-        </svg>
-        <div>
-          <h3 className="font-semibold text-blue-900">Signed in with Google</h3>
-          <p className="text-sm text-blue-700 mt-1">
-            Your account is managed through Google. To change your email or password, please visit your Google Account settings.
-          </p>
+      {/* Google User Notice */}
+      {isGoogleUser && (
+        <div className="bg-blue-50 border border-blue-200 p-6 rounded-2xl mb-6">
+          <div className="flex items-start gap-3">
+            <svg className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <h3 className="font-semibold text-blue-900">Signed in with Google</h3>
+              <p className="text-sm text-blue-700 mt-1">
+                Your account is managed through Google. To change your email or password, please visit your Google Account settings.
+              </p>
+            </div>
+          </div>
         </div>
+      )}
+
+      {/* Logout Section */}
+      <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">Session</h2>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full sm:w-auto flex justify-center items-center gap-2 py-2.5 px-6 bg-red-50 text-red-600 font-semibold rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+        >
+          <IconLogout className="w-5 h-5" />
+          Logout
+        </button>
       </div>
     </div>
-  )
-}
-
-{/* Logout Section */ }
-<div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
-  <h2 className="text-lg font-semibold text-slate-900 mb-4">Session</h2>
-  <button
-    type="button"
-    onClick={handleLogout}
-    className="w-full sm:w-auto flex justify-center items-center gap-2 py-2.5 px-6 bg-red-50 text-red-600 font-semibold rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
-  >
-    <IconLogout className="w-5 h-5" />
-    Logout
-  </button>
-</div>
-    </div >
   );
 };
 
