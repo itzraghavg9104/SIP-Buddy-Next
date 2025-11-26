@@ -3,6 +3,7 @@ import './globals.css';
 import { GlobalProvider } from '../context/GlobalContext';
 import ClientLayout from '../components/ClientLayout';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
     title: 'SIP Buddy | AI SIP Planner | Smart Mutual Fund & SIP Investment Plans',
@@ -84,6 +85,7 @@ export default function RootLayout({
                     <ClientLayout>{children}</ClientLayout>
                 </GlobalProvider>
                 <Analytics />
+                <SpeedInsights />
             </body>
         </html>
     );
