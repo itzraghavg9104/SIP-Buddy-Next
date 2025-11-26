@@ -40,15 +40,15 @@ export default function RootLayout({
     return (
         <html lang="en">
             <head>
-                {/* Multiple Favicon Sizes for Different Devices */}
-                <link rel="icon" type="image/png" sizes="16x16" href="https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png" />
-                <link rel="icon" type="image/png" sizes="32x32" href="https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png" />
-                <link rel="icon" type="image/png" sizes="48x48" href="https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png" />
-                <link rel="icon" type="image/png" sizes="192x192" href="https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png" />
-                <link rel="icon" type="image/png" sizes="512x512" href="https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png" />
+                {/* Multiple Favicon Sizes for Different Devices - Using Local Files for PWA Support */}
+                <link rel="icon" type="image/png" sizes="16x16" href="/logoIcon.png" />
+                <link rel="icon" type="image/png" sizes="32x32" href="/logoIcon.png" />
+                <link rel="icon" type="image/png" sizes="48x48" href="/logoIcon.png" />
+                <link rel="icon" type="image/png" sizes="192x192" href="/logoIcon.png" />
+                <link rel="icon" type="image/png" sizes="512x512" href="/logoIcon.png" />
 
-                {/* Apple Touch Icon for iOS */}
-                <link rel="apple-touch-icon" sizes="180x180" href="https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png" />
+                {/* Apple Touch Icon for iOS - Using Local File */}
+                <link rel="apple-touch-icon" sizes="180x180" href="/logoIcon.png" />
 
                 {/* Web App Manifest */}
                 <link rel="manifest" href="/manifest.json" />
@@ -67,7 +67,7 @@ export default function RootLayout({
                             url: 'https://sipbuddy.vercel.app',
                             logo: {
                                 '@type': 'ImageObject',
-                                url: 'https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_1_h863jz.png',
+                                url: 'https://sipbuddy.vercel.app/logoIcon.png',
                                 width: 512,
                                 height: 512
                             },
