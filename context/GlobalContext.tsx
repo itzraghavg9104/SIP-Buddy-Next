@@ -25,6 +25,7 @@ interface GlobalContextType {
     handleViewPlan: (savedPlan: SavedPlan) => void;
     handleLogout: () => void;
     handleProfileUpdate: (updatedUser: User) => void;
+    handleLoginModalClose: () => void;
     handleLoginFromModal: () => void;
     handlePlanLoginConfirm: () => void;
     handlePlanLoginCancel: () => void;
@@ -144,6 +145,12 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         setUser(updatedUser);
     };
 
+    const handleLoginModalClose = () => {
+        setIsLoginModalOpen(false);
+        // Redirect to homepage when user cancels login from protected route
+        router.push('/');
+    };
+
     const handleLoginFromModal = () => {
         setIsLoginModalOpen(false);
         router.push('/auth');
@@ -157,6 +164,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     const handlePlanLoginCancel = () => {
         setIsPlanLoginModalOpen(false);
         setAuthRedirectPlan(null);
+        // Stay on planner page (no redirect)
     }
 
     const refreshEmailVerification = async () => {
@@ -189,6 +197,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
             handleViewPlan,
             handleLogout,
             handleProfileUpdate,
+            handleLoginModalClose,
             handleLoginFromModal,
             handlePlanLoginConfirm,
             handlePlanLoginCancel,

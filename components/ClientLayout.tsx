@@ -11,7 +11,7 @@ import { usePathname } from 'next/navigation';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     const {
-        isLoginModalOpen, setIsLoginModalOpen, handleLoginFromModal,
+        isLoginModalOpen, handleLoginModalClose, handleLoginFromModal,
         isPlanLoginModalOpen, handlePlanLoginConfirm, handlePlanLoginCancel,
         authLoading
     } = useGlobalContext();
@@ -30,7 +30,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
             <LoginRequiredModal
                 isOpen={isLoginModalOpen}
-                onClose={() => setIsLoginModalOpen(false)}
+                onClose={handleLoginModalClose}
                 onLogin={handleLoginFromModal}
             />
             <PlanGeneratedLoginModal
