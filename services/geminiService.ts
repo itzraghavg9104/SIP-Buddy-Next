@@ -132,7 +132,7 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
     }
     `;
 
-    const model = 'gemini-2.5-flash';
+    const model = 'gemini-2.5-pro';
 
     try {
         console.log(`Attempting to generate plan with model: ${model} and Google Search`);
@@ -379,7 +379,7 @@ export const generateQuizQuestions = async (difficulty: QuizDifficulty): Promise
 
     try {
         const response = await getAI().models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.5-pro',
             contents: prompt,
         });
 
