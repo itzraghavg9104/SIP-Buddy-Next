@@ -324,12 +324,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
 ## 👨‍💻 Author
 
 **Raghav Gupta**
@@ -357,6 +351,6 @@ For support, email contact.sipbuddy@gmail.com or open an issue on GitHub.
 
 Made with ❤️ for smart investors
 
-[Website](https://sipbuddy.vercel.app) • [Documentation](#) • [API Reference](#)
+[Website](https://sipbuddy.vercel.app)
 
 </div>
