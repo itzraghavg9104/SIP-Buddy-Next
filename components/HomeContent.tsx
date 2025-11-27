@@ -24,6 +24,12 @@ const faqs = [
     { q: 'Is my data secure?', a: 'Yes, absolutely. We use industry-standard security measures and Firebase Authentication to ensure your data is safe and private. You are in complete control of your information.' },
     { q: 'Do I need to be an expert to use this?', a: 'Not at all! SIP Buddy is designed for everyone, from absolute beginners to seasoned investors. Our platform guides you through every step and our Knowledge Hub explains concepts in simple terms.' },
     { q: 'Is this financial advice?', a: 'SIP Buddy provides AI-generated suggestions for educational purposes to help you plan. It is not official financial advice. We always recommend consulting with a SEBI-registered financial advisor before making any investment decisions.' },
+    { q: 'How does the AI Planner work?', a: 'Our AI analyzes your financial profile including income, risk tolerance, goals, and investment horizon to create a customized SIP strategy. It recommends specific mutual funds, asset allocation percentages, and provides year-by-year growth projections based on realistic market scenarios.' },
+    { q: 'Can I save multiple investment plans?', a: 'Yes! You can create and save multiple plans for different financial goals. View and compare all your saved plans in the "My Plans" section. You can also export each plan as a PDF for your records.' },
+    { q: 'What calculators are available?', a: 'We offer 4 powerful calculators: SIP Calculator (with step-up option), Lumpsum Investment Calculator, SWP Calculator for retirement planning, and Income Tax Calculator for FY 2024-25 with old vs new regime comparison.' },
+    { q: 'How do I find a financial advisor?', a: 'Use our "Finance Buddy Near Me" tool in the More section. It uses an interactive map to help you locate SEBI-registered financial advisors and certified financial planners (CFP) in your area.' },
+    { q: 'What is the FinIQ Challenge?', a: 'FinIQ Challenge is our gamified financial literacy quiz with 3 difficulty levels (Easy, Medium, Hard). Test your knowledge on mutual funds, SIP strategies, taxation, and personal finance while having fun!' },
+    { q: 'Is SIP Buddy free to use?', a: 'Yes! SIP Buddy is completely free to use. You can create unlimited investment plans, use all calculators, access educational content, and explore all features without any charges.' },
 ];
 
 const LazySection: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => {
@@ -163,7 +169,11 @@ const Home: React.FC = () => {
 
     const navigateTo = (path: string, params?: any) => {
         if (params) {
-            router.push(`${path}?active=${params}`);
+            if (path === '/more') {
+                router.push(`/more/${params}`);
+            } else {
+                router.push(`${path}/${params}`);
+            }
         } else {
             router.push(path);
         }

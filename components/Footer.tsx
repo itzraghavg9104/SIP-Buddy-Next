@@ -122,6 +122,11 @@ const Footer: React.FC = () => {
                 <div className="mt-12 border-t border-slate-200 pt-8 text-center text-sm text-slate-500">
                     <p>&copy; {new Date().getFullYear()} SIP Buddy. All rights reserved.</p>
                     <p className="mt-2">Disclaimer: For educational purposes only. Consult a financial advisor before investing.</p>
+                    <p className="mt-3">
+                        <a href="mailto:contact.sipbuddy@gmail.com" className="text-blue-600 hover:text-blue-700 font-medium">
+                            contact.sipbuddy@gmail.com
+                        </a>
+                    </p>
                 </div>
             </div>
 

@@ -29,24 +29,33 @@ SIP Buddy is a comprehensive web application that leverages AI to provide person
 - **Growth Projections**: Visualize your investment growth with realistic projections (conservative, expected, aggressive scenarios)
 - **Fund Recommendations**: Curated mutual fund suggestions with performance metrics and expense ratios
 
-#### 📊 Investment Calculators
-- **SIP Calculator**: Calculate returns on systematic monthly investments with step-up options
+#### 📊 Investment Calculators 
+- **SIP Calculator**: Calculate returns on systematic monthly investments with step-up options and inflation adjustments
 - **Lumpsum Calculator**: Analyze one-time investment returns across different market scenarios
-- **SWP Calculator**: Plan systematic withdrawals for retirement or regular income
+- **SWP Calculator**: Plan systematic withdrawals for retirement or regular income needs
+- **Income Tax Calculator (FY 2024-25)**: 
+  - Compare Old vs New tax regime side-by-side
+  - Calculate tax liability with all deductions (80C, 80D, HRA, Home Loan)
+  - Automatic regime recommendation based on tax savings
+  - Section 87A rebate support
+  - Surcharge and cess calculations for high-income earners
+- **Smart Search**: All calculator pages include search functionality for easy filtering
 
 #### 📚 Financial Education
 - **Interactive Learning**: Comprehensive guides on mutual funds, SIP, asset allocation, and tax-saving
-- **Quiz System**: Test your financial knowledge with quizzes across different difficulty levels (Easy, Medium, Hard)
+- **FinIQ Challenge Quiz**: Test your financial knowledge with AI-powered quizzes
 - **Three Quiz Modes**:
   - **Relaxed**: Unlimited time to learn at your pace
-  - **Speed Run**: 5 minutes for 10 question for quick practice
+  - **Speed Run**: 5 minutes for 10 questions for quick practice
   - **Blitz**: 45 seconds per question for ultimate challenge
+- **Searchable Content**: Find articles instantly with built-in search
+- **10 Comprehensive FAQs**: Common questions answered on homepage
 
 #### 👤 User Management
 - **Firebase Authentication**: Secure login with Email/Password and Google OAuth
 - **Profile Management**: Update display name, email verification, and password
 - **Profile Picture Upload**: Upload custom profile pictures with automatic compression to 25KB (Cloudinary integration)
-- **Plan Management**: Save, view, and manage multiple investment plans
+- **Plan Management**: Save, view, and manage multiple investment plans with search functionality
 
 #### 🤖 AI Assistant
 - **Conversational Chatbot**: Get instant answers about your investment plans and financial queries
@@ -56,8 +65,17 @@ SIP Buddy is a comprehensive web application that leverages AI to provide person
 #### 📱 Modern UI/UX
 - **Responsive Design**: Fully optimized for desktop, tablet, and mobile devices
 - **Light Theme**: Sleek, modern interface with excellent visual hierarchy
-- **PWA Ready**: Progressive Web App with offline capabilities
-- **Onboarding Tour**: Interactive first-time user guidance
+- **PWA Ready**: Progressive Web App with offline capabilities and installable
+- **Enhanced Onboarding Tour**: Interactive first-time user guidance with emojis and detailed descriptions
+- **3D Rotating Cube**: Interactive feature carousel on homepage
+- **Search Everywhere**: Search bars on calculators, tools, and plans pages
+
+#### 🔍 SEO & Discovery
+- **17 Indexed Pages**: Comprehensive sitemap for better search engine visibility
+- **Unique Meta Tags**: Each page has optimized title, description, and keywords
+- **Structured Routes**: Dedicated pages for each calculator and tool (e.g., `/calculator/sip`, `/more/find-advisor`)
+- **Backward Compatibility**: Old query parameter URLs automatically redirect to new routes
+- **Auth Page Indexed**: Login page discoverable via searches like "SIP Buddy login"
 
 ---
 

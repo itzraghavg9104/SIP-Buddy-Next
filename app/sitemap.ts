@@ -18,9 +18,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.9,
         },
         {
-            url: `${baseUrl}/calculator`,
+            url: `${baseUrl}/dashboard`,
             lastModified: currentDate,
-            changeFrequency: 'monthly',
+            changeFrequency: 'weekly',
+            priority: 0.9,
+        },
+        {
+            url: `${baseUrl}/my-plans`,
+            lastModified: currentDate,
+            changeFrequency: 'weekly',
             priority: 0.8,
         },
         {
@@ -29,6 +35,38 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'weekly',
             priority: 0.8,
         },
+        // Calculator landing page
+        {
+            url: `${baseUrl}/calculator`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly',
+            priority: 0.8,
+        },
+        // Individual calculator pages
+        {
+            url: `${baseUrl}/calculator/sip`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly',
+            priority: 0.7,
+        },
+        {
+            url: `${baseUrl}/calculator/lumpsum`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly',
+            priority: 0.7,
+        },
+        {
+            url: `${baseUrl}/calculator/swp`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly',
+            priority: 0.7,
+        },
+        {
+            url: `${baseUrl}/calculator/income-tax`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly',
+            priority: 0.7,
+        },
         {
             url: `${baseUrl}/about`,
             lastModified: currentDate,
@@ -36,15 +74,35 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.7,
         },
         {
-            url: `${baseUrl}/more`,
+            url: `${baseUrl}/profile`,
             lastModified: currentDate,
             changeFrequency: 'monthly',
             priority: 0.6,
         },
         {
-            url: `${baseUrl}/dashboard`,
+            url: `${baseUrl}/auth`,
             lastModified: currentDate,
-            changeFrequency: 'weekly',
+            changeFrequency: 'monthly',
+            priority: 0.6,
+        },
+        // More tools landing page
+        {
+            url: `${baseUrl}/more`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly',
+            priority: 0.6,
+        },
+        // Individual tool pages
+        {
+            url: `${baseUrl}/more/find-advisor`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly',
+            priority: 0.5,
+        },
+        {
+            url: `${baseUrl}/more/finiq-challenge`,
+            lastModified: currentDate,
+            changeFrequency: 'monthly',
             priority: 0.5,
         },
     ];

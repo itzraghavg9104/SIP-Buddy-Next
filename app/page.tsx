@@ -1,7 +1,7 @@
 'use client';
 
-import Home from '../components/HomeContent';
+import HomeContent from '../components/HomeContent';
 
-export default function HomePage() {
-    return <Home />;
+export default function Home() {
+    return <HomeContent />;
 }
