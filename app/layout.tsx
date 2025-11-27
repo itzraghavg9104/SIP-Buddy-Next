@@ -18,7 +18,7 @@ export const metadata: Metadata = {
         description: 'Get AI-powered, personalized SIP & mutual fund investment plans. Our smart planner analyzes your financial profile to provide top fund recommendations, growth projections, and a clear path to wealth creation.',
         images: [
             {
-                url: 'https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_txrlqf.png',
+                url: 'https://sipbuddy.vercel.app/logoFull.png',
             },
         ],
     },
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         title: 'AI SIP Planner | Smart Mutual Fund & SIP Investment Plans',
         description: 'Get AI-powered, personalized SIP & mutual fund investment plans. Our smart planner analyzes your financial profile to provide top fund recommendations, growth projections, and a clear path to wealth creation.',
-        images: ['https://res.cloudinary.com/dz5nzppe0/image/upload/v1762817912/image-removebg-preview_txrlqf.png'],
+        images: ['https://sipbuddy.vercel.app/logoFull.png'],
     },
     verification: {
         google: 'rAAzIjmpK23zry0I96bgGY6d2jtjdDRuKsyloHFT4Gw',
