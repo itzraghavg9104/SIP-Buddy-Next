@@ -100,7 +100,7 @@ export const createUserProfileDocument = async (user: User, provider: 'email' | 
  * @param uid The user's unique ID.
  * @param data An object containing the fields to update (e.g., { displayName, photoURL }).
  */
-export const updateUserProfileDocument = async (uid: string, data: { displayName?: string, photoURL?: string }): Promise<void> => {
+export const updateUserProfileDocument = async (uid: string, data: { displayName?: string, photoURL?: string, cloudinaryPublicId?: string | null }): Promise<void> => {
     const userDocRef = doc(db, 'users', uid);
     try {
         // Use setDoc with merge: true to create the document if it doesn't exist, or update it if it does.

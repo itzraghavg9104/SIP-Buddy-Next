@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { updateUserProfileDocument } from '../services/firestoreService';
 import { IconUser, IconMail, IconLogout, IconShield } from '../components/Icons';
 import { useGlobalContext } from '../context/GlobalContext';
 import EmailVerificationBanner from './EmailVerificationBanner';
+import imageCompression from 'browser-image-compression';
 
 const Profile: React.FC = () => {
   const { user, handleLogout, handleProfileUpdate, needsEmailVerification } = useGlobalContext();
@@ -14,6 +15,12 @@ const Profile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Profile picture upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Change password state
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -34,6 +41,148 @@ const Profile: React.FC = () => {
   if (!user) {
     return <div>Loading profile...</div>;
   }
+
+  // Helper to check if URL is from Cloudinary
+  const isCloudinaryUrl = (url: string): boolean => {
+    return url.includes('res.cloudinary.com');
+  };
+
+  // Helper to extract Cloudinary public ID from URL
+  const extractPublicId = (url: string): string | null => {
+    try {
+      const match = url.match(/\/profile-pictures\/[^.]+/);
+      return match ? match[0].substring(1) : null; // Remove leading slash
+    } catch {
+      return null;
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Please select a valid image file (JPG, PNG, WebP, or GIF)');
+      return;
+    }
+
+    // Validate file size (max 10MB before compression)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File size must be less than 10MB');
+      return;
+    }
+
+    setError(null);
+    setIsUploading(true);
+
+    try {
+      // Compress image
+      const compressionOptions = {
+        maxSizeMB: 0.025, // 25KB max
+        maxWidthOrHeight: 400,
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+        initialQuality: 0.6,
+      };
+
+      const compressedFile = await imageCompression(file, compressionOptions);
+      setSelectedFile(compressedFile);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (err) {
+      setError('Failed to process image. Please try again.');
+      console.error('Compression error:', err);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleProfilePictureUpload = async () => {
+    if (!selectedFile || !auth.currentUser) return;
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      // Upload to Cloudinary
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('userId', user.uid);
+
+      const uploadResponse = await fetch('/api/upload-profile-picture', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json();
+        throw new Error(errorData.error || 'Failed to upload image');
+      }
+
+      const { url: newPhotoURL, publicId: newPublicId } = await uploadResponse.json();
+
+      // Delete old Cloudinary image if exists
+      const oldPhotoURL = user.photoURL;
+      if (oldPhotoURL && isCloudinaryUrl(oldPhotoURL)) {
+        const oldPublicId = extractPublicId(oldPhotoURL);
+        if (oldPublicId) {
+          try {
+            await fetch('/api/delete-profile-picture', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ publicId: oldPublicId }),
+            });
+          } catch (deleteErr) {
+            console.error('Failed to delete old image:', deleteErr);
+            // Don't block on deletion failure
+          }
+        }
+      }
+
+      // Update Firebase Auth profile
+      await updateProfile(auth.currentUser, { photoURL: newPhotoURL });
+
+      // Update Firestore
+      await updateUserProfileDocument(user.uid, {
+        photoURL: newPhotoURL,
+        cloudinaryPublicId: newPublicId,
+      });
+
+      // Update global context
+      if (auth.currentUser) {
+        handleProfileUpdate(auth.currentUser);
+      }
+
+      setSuccessMessage('Profile picture updated successfully!');
+      setSelectedFile(null);
+      setPreviewUrl(null);
+
+      // Clear file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload profile picture');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleCancelUpload = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,16 +273,73 @@ const Profile: React.FC = () => {
         {successMessage && <p className="bg-green-100 text-green-700 p-3 rounded-md text-sm mb-4">{successMessage}</p>}
 
         <form onSubmit={handleProfileSave} className="space-y-6">
+          {/* Profile Picture Section */}
           <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              {user.photoURL ? (
+            <div className="relative group">
+              {previewUrl ? (
+                <img src={previewUrl} alt="Preview" className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-4 ring-blue-500" />
+              ) : user.photoURL ? (
                 <img src={user.photoURL} alt="Profile" className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-4 ring-slate-200" />
               ) : (
                 <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-200 flex items-center justify-center ring-4 ring-slate-200">
                   <IconUser className="h-12 w-12 sm:h-14 sm:w-14 text-slate-500" />
                 </div>
               )}
+
+              {/* Edit overlay button */}
+              {!previewUrl && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              )}
             </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+
+            {/* Upload controls */}
+            {selectedFile && (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleProfilePictureUpload}
+                  disabled={isUploading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                >
+                  {isUploading ? 'Uploading...' : 'Upload Photo'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelUpload}
+                  disabled={isUploading}
+                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 disabled:opacity-50 transition-colors text-sm font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {!selectedFile && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Change Profile Picture
+              </button>
+            )}
           </div>
 
           <div>

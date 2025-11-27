@@ -144,6 +144,7 @@ export interface StoredUserProfile {
     email: string | null;
     displayName: string | null;
     photoURL: string | null;
+    cloudinaryPublicId?: string | null; // Track Cloudinary public ID for deletion
     authProvider: 'email' | 'google';
     emailVerified: boolean;
     createdAt: any; // Firestore Timestamp
