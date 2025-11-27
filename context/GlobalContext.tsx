@@ -88,7 +88,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
             } else if (!currentUser) {
                 const protectedRoutes = ['/dashboard', '/profile', '/my-plans'];
                 if (pathname && protectedRoutes.includes(pathname)) {
-                    router.push('/');
+                    setIsLoginModalOpen(true);
                     setCurrentPlan(null);
                 }
             }
