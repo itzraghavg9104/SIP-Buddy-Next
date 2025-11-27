@@ -102,6 +102,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
             setCurrentPlan({ planData: plan, userProfile: profile, isSaved: false });
             router.push('/dashboard');
         } else {
+            console.log('Plan generated without login - showing modal');
             setAuthRedirectPlan({ plan, profile });
             setIsPlanLoginModalOpen(true);
         }
