@@ -130,7 +130,7 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
     }
     `;
 
-    const model = 'gemini-2.5-pro';
+    const model = 'gemini-2.5-flash-live';
 
     try {
         console.log(`Attempting to generate plan with model: ${model} and Google Search`);
@@ -197,7 +197,7 @@ export const sendMessageToChat = async (history: ChatMessage[], message: string)
     }));
 
     const chat = getAI().chats.create({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.5-flash-live',
         history: geminiHistory,
         config: {
             systemInstruction: `You are SIP Buddy, a specialized AI assistant for the SIP Buddy investment planning platform. Your sole purpose is to help users with questions about Systematic Investment Plans (SIPs), mutual funds, investment strategies, and using the SIP Buddy application.
@@ -234,7 +234,7 @@ export const findFinancialAdvisors = async (location: { latitude: number; longit
         Do not include any introductory text, explanations, markdown formatting (like \`\`\`json), or any text outside of the single JSON array itself.
     `;
 
-    const model = 'gemini-2.5-flash';
+    const model = 'gemini-2.5-flash-live';
 
     const toolConfig = 'latitude' in location ? {
         retrievalConfig: {
@@ -297,7 +297,7 @@ export const findFinancialAdvisors = async (location: { latitude: number; longit
 export const textToSpeech = async (text: string): Promise<string> => {
     try {
         const response = await getAI().models.generateContent({
-            model: "gemini-2.5-flash-preview-tts",
+            model: "gemini-2.5-flash-live",
             contents: [{ parts: [{ text: `Say this in a friendly and helpful tone: ${text}` }] }],
             config: {
                 responseModalities: [Modality.AUDIO],
@@ -341,7 +341,7 @@ export const transcribeAudio = async (formData: FormData): Promise<string> => {
         };
 
         const response = await getAI().models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.5-flash-live',
             contents: { parts: [audioPart, textPart] },
         });
 
@@ -383,7 +383,7 @@ export const generateQuizQuestions = async (difficulty: QuizDifficulty): Promise
 
     try {
         const response = await getAI().models.generateContent({
-            model: 'gemini-2.5-pro',
+            model: 'gemini-2.5-flash-live',
             contents: prompt,
         });
 
