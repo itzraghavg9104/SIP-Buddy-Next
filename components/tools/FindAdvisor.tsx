@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { findFinancialAdvisors } from '../../services/geminiService';
+import { findFinancialAdvisors } from '../../actions/geminiActions';
 import { FinancialAdvisor, GroundingChunk } from '../../types';
 import { IconInfoCircle, IconMapPin, IconPhone, IconWorld } from '../../components/Icons';
 

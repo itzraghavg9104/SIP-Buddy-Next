@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { IconBrandMessenger, IconSend, IconX, IconSparkles, IconUser, IconMicrophone, IconPlayerStop, IconVolume, IconPlayerPlay } from './Icons';
-import { sendMessageToChat, startChat, textToSpeech, transcribeAudio } from '../services/geminiService';
+import { sendMessageToChat, textToSpeech, transcribeAudio } from '../actions/geminiActions';
 import { ChatMessage } from '../types';
 import { logoIcon } from '../assets/logo';
 import SafeImage from './SafeImage';
@@ -8,37 +8,37 @@ import { decode, decodeAudioData } from '../services/audioUtils';
 
 // A simple markdown to HTML converter to handle bold text and lists.
 const parseMarkdownToHTML = (markdown: string): string => {
-    const lines = markdown.split('\n');
-    let html = '';
-    let inList = false;
-  
-    for (let line of lines) {
-      // Bold text
-      line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  
-      // List items
-      if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
-        if (!inList) {
-          html += '<ul>';
-          inList = true;
-        }
-        html += `<li>${line.trim().substring(2)}</li>`;
-      } else {
-        if (inList) {
-          html += '</ul>';
-          inList = false;
-        }
-        if (line.trim().length > 0) {
-          html += `<p>${line}</p>`;
-        }
+  const lines = markdown.split('\n');
+  let html = '';
+  let inList = false;
+
+  for (let line of lines) {
+    // Bold text
+    line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // List items
+    if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
+      if (!inList) {
+        html += '<ul>';
+        inList = true;
+      }
+      html += `<li>${line.trim().substring(2)}</li>`;
+    } else {
+      if (inList) {
+        html += '</ul>';
+        inList = false;
+      }
+      if (line.trim().length > 0) {
+        html += `<p>${line}</p>`;
       }
     }
-  
-    if (inList) {
-      html += '</ul>';
-    }
-  
-    return html;
+  }
+
+  if (inList) {
+    html += '</ul>';
+  }
+
+  return html;
 };
 
 
@@ -76,7 +76,6 @@ const Chatbot: React.FC = () => {
     window.addEventListener('open-chatbot', handleOpenChat);
 
     if (isOpen) {
-      startChat();
       // Initialize AudioContext on user interaction
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
@@ -86,7 +85,7 @@ const Chatbot: React.FC = () => {
     }
 
     return () => {
-        window.removeEventListener('open-chatbot', handleOpenChat);
+      window.removeEventListener('open-chatbot', handleOpenChat);
     }
   }, [isOpen]);
 
@@ -133,7 +132,7 @@ const Chatbot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const responseText = await sendMessageToChat(input);
+      const responseText = await sendMessageToChat(messages, input);
       const audioData = await textToSpeech(responseText);
       const modelMessage: ChatMessage = { role: 'model', text: responseText, audioData, isPlaying: false };
       setMessages((prev) => [...prev, modelMessage]);
@@ -172,7 +171,9 @@ const Chatbot: React.FC = () => {
 
         setIsTranscribing(true);
         try {
-          const transcript = await transcribeAudio(audioBlob);
+          const formData = new FormData();
+          formData.append('audio', audioBlob);
+          const transcript = await transcribeAudio(formData);
           setInput(prev => prev + transcript);
         } catch (error) {
           console.error("Transcription error:", error);
@@ -212,10 +213,10 @@ const Chatbot: React.FC = () => {
           <header className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50 rounded-t-2xl">
             <div className="flex items-center">
               <SafeImage
-                  src={logoIcon}
-                  fallback={<IconSparkles className="h-8 w-8 text-blue-600" />}
-                  alt="SIP Buddy Icon"
-                  className="h-8 w-8 rounded-full"
+                src={logoIcon}
+                fallback={<IconSparkles className="h-8 w-8 text-blue-600" />}
+                alt="SIP Buddy Icon"
+                className="h-8 w-8 rounded-full"
               />
               <h2 className="text-lg font-semibold ml-3 text-slate-800">SIP Buddy</h2>
             </div>
@@ -229,45 +230,45 @@ const Chatbot: React.FC = () => {
                 {msg.role === 'model' && (
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                     <SafeImage
-                        src={logoIcon}
-                        fallback={<IconSparkles className="h-7 w-7 text-blue-600" />}
-                        alt="SIP Buddy Icon"
-                        className="h-7 w-7 rounded-full"
+                      src={logoIcon}
+                      fallback={<IconSparkles className="h-7 w-7 text-blue-600" />}
+                      alt="SIP Buddy Icon"
+                      className="h-7 w-7 rounded-full"
                     />
                   </div>
                 )}
                 <div className={`max-w-xs md:max-w-md px-4 py-2.5 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none shadow-sm'}`}>
-                    <div className="flex items-start gap-2">
-                        {msg.role === 'model' ? (
-                            <div
-                            className="prose prose-sm prose-slate max-w-none break-words"
-                            dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(msg.text) }}
-                            />
-                        ) : (
-                            <p className="text-sm break-words">{msg.text}</p>
-                        )}
-                        {msg.role === 'model' && msg.audioData && (
-                            <button onClick={() => toggleAudio(msg.audioData!, index)} className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0">
-                                {msg.isPlaying ? <IconPlayerStop className="h-4 w-4 text-red-500" /> : <IconPlayerPlay className="h-4 w-4" />}
-                            </button>
-                        )}
-                    </div>
+                  <div className="flex items-start gap-2">
+                    {msg.role === 'model' ? (
+                      <div
+                        className="prose prose-sm prose-slate max-w-none break-words"
+                        dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(msg.text) }}
+                      />
+                    ) : (
+                      <p className="text-sm break-words">{msg.text}</p>
+                    )}
+                    {msg.role === 'model' && msg.audioData && (
+                      <button onClick={() => toggleAudio(msg.audioData!, index)} className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0">
+                        {msg.isPlaying ? <IconPlayerStop className="h-4 w-4 text-red-500" /> : <IconPlayerPlay className="h-4 w-4" />}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                 {msg.role === 'user' && (
+                {msg.role === 'user' && (
                   <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0">
                     <IconUser className="h-5 w-5 text-slate-600" />
                   </div>
                 )}
               </div>
             ))}
-             {isLoading && (
+            {isLoading && (
               <div className="flex items-start gap-3 my-4">
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                   <SafeImage
-                      src={logoIcon}
-                      fallback={<IconSparkles className="h-7 w-7 text-blue-600" />}
-                      alt="SIP Buddy Icon"
-                      className="h-7 w-7 rounded-full"
+                    src={logoIcon}
+                    fallback={<IconSparkles className="h-7 w-7 text-blue-600" />}
+                    alt="SIP Buddy Icon"
+                    className="h-7 w-7 rounded-full"
                   />
                 </div>
                 <div className="max-w-xs md:max-w-md px-4 py-2.5 rounded-2xl bg-white text-slate-700 rounded-bl-none shadow-sm flex items-center">

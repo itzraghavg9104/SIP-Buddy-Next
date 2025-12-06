@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { InvestmentPlan, RiskTolerance, UserProfile } from '../types';
-import { generateInvestmentPlan } from '../services/geminiService';
+import { generateInvestmentPlan } from '../actions/geminiActions';
 import { IconSparkles } from '../components/Icons';
 import { useGlobalContext } from '../context/GlobalContext';
 import { useRouter } from 'next/navigation';
@@ -157,8 +157,8 @@ const Planner: React.FC = () => {
               return (
                 <div key={index} className={`flex items-center transition-all duration-500 ${isCurrent ? 'transform translate-x-2' : ''}`}>
                   <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full border-2 mr-4 transition-colors duration-300 ${isCompleted ? 'bg-green-500 border-green-500' :
-                      isCurrent ? 'border-blue-500 bg-blue-50' :
-                        'border-slate-200'
+                    isCurrent ? 'border-blue-500 bg-blue-50' :
+                      'border-slate-200'
                     }`}>
                     {isCompleted ? (
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
@@ -169,8 +169,8 @@ const Planner: React.FC = () => {
                     )}
                   </div>
                   <span className={`font-medium transition-colors duration-300 ${isCompleted ? 'text-slate-500' :
-                      isCurrent ? 'text-blue-700 text-lg' :
-                        'text-slate-400'
+                    isCurrent ? 'text-blue-700 text-lg' :
+                      'text-slate-400'
                     }`}>
                     {step}
                   </span>
@@ -347,8 +347,8 @@ const Planner: React.FC = () => {
                     type="button"
                     onClick={() => handleRiskChange(risk)}
                     className={`px-4 py-3 text-sm font-semibold rounded-md transition-colors text-center ${formData.riskTolerance === risk
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
                   >
                     {risk}

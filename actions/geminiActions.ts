@@ -1,10 +1,12 @@
+"use server";
+
 import { GoogleGenAI, Chat, Type, Modality } from "@google/genai";
-import { UserProfile, InvestmentPlan, Fund, FundCategory, AssetAllocationItem, GrowthDataPoint, FinancialAdvisor, QuizDifficulty, QuizQuestion } from '../types';
+import { UserProfile, InvestmentPlan, Fund, FundCategory, AssetAllocationItem, GrowthDataPoint, FinancialAdvisor, QuizDifficulty, QuizQuestion, ChatMessage } from '../types';
 
 const getAIClient = () => {
-    const API_KEY = process.env.API_KEY || process.env.NEXT_PUBLIC_API_KEY;
+    const API_KEY = process.env.GEMINI_API_KEY;
     if (!API_KEY) {
-        throw new Error("API_KEY environment variable not set");
+        throw new Error("GEMINI_API_KEY environment variable not set");
     }
     return new GoogleGenAI({ apiKey: API_KEY });
 };
@@ -18,14 +20,8 @@ const getAI = () => {
     return aiInstance;
 };
 
-// Note: We cannot use responseSchema with googleSearch tool in the current API version for this specific call,
-// so we will instruct the model via prompt to follow this structure and parse the text manually.
-
 /**
  * Sanitizes the raw, parsed JSON object from the Gemini API to ensure it conforms to the InvestmentPlan interface.
- * This prevents runtime errors from undefined values, NaN, or incorrect data types.
- * @param plan The raw, parsed object from the API.
- * @returns A clean, type-safe InvestmentPlan object.
  */
 const sanitizeInvestmentPlan = (plan: any): InvestmentPlan => {
     const sanitizedPlan: InvestmentPlan = {
@@ -180,11 +176,16 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
     }
 };
 
-let chat: Chat | null = null;
+export const sendMessageToChat = async (history: ChatMessage[], message: string): Promise<string> => {
+    // Reconstruct chat history for the Gemini API
+    const geminiHistory = history.map(msg => ({
+        role: msg.role === 'model' ? 'model' : 'user',
+        parts: [{ text: msg.text }]
+    }));
 
-export const startChat = () => {
-    chat = getAI().chats.create({
+    const chat = getAI().chats.create({
         model: 'gemini-2.5-flash',
+        history: geminiHistory,
         config: {
             systemInstruction: `You are SIP Buddy, a specialized AI assistant for the SIP Buddy investment planning platform. Your sole purpose is to help users with questions about Systematic Investment Plans (SIPs), mutual funds, investment strategies, and using the SIP Buddy application.
 - Your name is SIP Buddy.
@@ -192,19 +193,15 @@ export const startChat = () => {
 - If a user asks an off-topic question (e.g., "Who made you?", "Are you from Google?", "Tell me a joke"), you MUST politely decline and steer the conversation back to financial planning. For example: "As SIP Buddy, my expertise is in financial planning. How can I help you with your investment questions?"
 - Keep your answers concise, helpful, and strictly within your designated role.`,
         },
-
     });
-};
 
-export const sendMessageToChat = async (message: string): Promise<string> => {
-    if (!chat) {
-        startChat();
-    }
-    if (chat) {
+    try {
         const response = await chat.sendMessage({ message });
         return response.text || "No response text";
+    } catch (error) {
+        console.error("Error in sendMessageToChat:", error);
+        throw new Error("Failed to send message.");
     }
-    return "Chat not initialized. Please try again.";
 };
 
 export const findFinancialAdvisors = async (location: { latitude: number; longitude: number } | { query: string }): Promise<{ advisors: FinancialAdvisor[], groundingChunks: any[] }> => {
@@ -309,24 +306,20 @@ export const textToSpeech = async (text: string): Promise<string> => {
     }
 };
 
-const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const base64String = (reader.result as string).split(',')[1];
-            resolve(base64String);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-};
+export const transcribeAudio = async (formData: FormData): Promise<string> => {
+    const audioFile = formData.get('audio') as Blob;
+    if (!audioFile) {
+        throw new Error("No audio file provided");
+    }
 
-export const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
     try {
-        const base64Audio = await blobToBase64(audioBlob);
+        const arrayBuffer = await audioFile.arrayBuffer();
+        // Convert to base64
+        const base64Audio = Buffer.from(arrayBuffer).toString('base64');
+
         const audioPart = {
             inlineData: {
-                mimeType: audioBlob.type,
+                mimeType: audioFile.type || 'audio/webm',
                 data: base64Audio,
             },
         };
@@ -345,8 +338,6 @@ export const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
         throw new Error("Failed to transcribe audio.");
     }
 };
-
-// --- QUIZ GENERATION SERVICE ---
 
 export const generateQuizQuestions = async (difficulty: QuizDifficulty): Promise<QuizQuestion[]> => {
     const prompt = `
