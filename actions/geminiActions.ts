@@ -6,8 +6,10 @@ import { UserProfile, InvestmentPlan, Fund, FundCategory, AssetAllocationItem, G
 const getAIClient = () => {
     const API_KEY = process.env.GEMINI_API_KEY;
     if (!API_KEY) {
+        console.error("CRITICAL: GEMINI_API_KEY is missing in server environment");
         throw new Error("GEMINI_API_KEY environment variable not set");
     }
+    // console.log("GEMINI_API_KEY loaded successfully (length: " + API_KEY.length + ")");
     return new GoogleGenAI({ apiKey: API_KEY });
 };
 
@@ -168,11 +170,22 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
             sanitizedPlan.groundingChunks = response.candidates[0].groundingMetadata.groundingChunks;
         }
 
-        return sanitizedPlan;
+        const finalPlan = { ...sanitizedPlan };
+        // Attach grounding chunks (sources) if available
+        if (response.candidates?.[0]?.groundingMetadata?.groundingChunks) {
+            // Force deep clone/serialization to remove any non-serializable SDK internals
+            finalPlan.groundingChunks = JSON.parse(JSON.stringify(response.candidates[0].groundingMetadata.groundingChunks));
+        }
 
-    } catch (e) {
-        console.error(`Model (${model}) failed. Error:`, e instanceof Error ? e.message : String(e));
-        throw new Error("We're sorry, but we were unable to generate your investment plan at this time. Please try again later.");
+        return finalPlan;
+
+    } catch (e: any) {
+        console.error(`Gemini Action Failed. Model: ${model}. Error details:`, e);
+        // Log the specific API error message if available
+        if (e.message) console.error("Error Message:", e.message);
+        if (e.response) console.error("Error Response:", JSON.stringify(e.response, null, 2));
+
+        throw new Error(`Failed to generate investment plan: ${e.message || "Unknown error"}`);
     }
 };
 
