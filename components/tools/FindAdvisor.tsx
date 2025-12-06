@@ -1,4 +1,6 @@
 
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import { findFinancialAdvisors } from '../../actions/geminiActions';
 import { FinancialAdvisor, GroundingChunk } from '../../types';

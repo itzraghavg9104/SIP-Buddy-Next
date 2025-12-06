@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useRef } from 'react';
 import { InvestmentPlan, RiskTolerance, UserProfile } from '../types';
 import { generateInvestmentPlan } from '../actions/geminiActions';

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef, useEffect } from 'react';
 import { IconBrandMessenger, IconSend, IconX, IconSparkles, IconUser, IconMicrophone, IconPlayerStop, IconVolume, IconPlayerPlay } from './Icons';
 import { sendMessageToChat, textToSpeech, transcribeAudio } from '../actions/geminiActions';
