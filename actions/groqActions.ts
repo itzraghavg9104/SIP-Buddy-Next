@@ -97,9 +97,10 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
     - **Aggressive**: High Equity (70-80%), Low Debt (10-20%), Small/Mid Cap exposure (10-20%).
     - Ensure the total sums exactly to 100%. Do not be random. Use standard financial planning norms.
 
-    Step 2: ADVANCED FUND RESEARCH (Performance First).
-    - **Strategy**: Identify the absolute best-performing funds in India (Direct/Growth) for 2024-2025.
-    - **Sources**: You MUST synthesize data from **Value Research** (prioritize 5-Star Rated), **Groww**, **Morningstar**, and **Moneycontrol**.
+    Step 2: ADVANCED FUND RESEARCH (Performance First - DATA MUST BE FRESH).
+    - **CRITICAL**: You MUST use your internet search/browsing capabilities to fetch the **LATEST 2024-2025** data. Do NOT use internal training knowledge for fund NAV or returns.
+    - **Strategy**: Identify the absolute best-performing funds in India (Direct/Growth) right now.
+    - **Sources**: Search specifically on **Value Research**, **Groww**, **Morningstar**, and **Moneycontrol** or any other highly trusted sources.
     - **Selection Algorithm**:
         1. **High Returns**: Filter for top decile performance in 3Y and 5Y CAGR. This is the #1 priority.
         2. **Alpha**: Select funds with high Alpha (outperformance vs benchmark).
@@ -117,10 +118,11 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
         - Expected: ~12%
         - Aggressive: ~15%
     5.  **Fund Recommendations**: You MUST recommend 2 specific mutual funds for **EVERY single category** listed in the 'Asset Allocation'.
-        - **Description MUST mention**: "3Y Return: X%, Alpha: Y, Expense: Z%".
+        - **Description MUST mention**: "3Y Return: [Real Value]%, Alpha: [Real Value], Expense: [Real Value]%".
+        - **Verification**: Ensure these strings match the LATEST available data from your search.
         - **Selection**: Ensure these are actually top-rated funds on Value Research/Groww.
-    6.  **Sources**: You MUST provide at least 4 specific links from different trusted sites.
-        - Example: { "title": "Top Flexi Cap Funds - Value Research", "url": "..." }
+    6.  **Sources**: You MUST provide at least 4 specific links to the SEARCH RESULTS or fund pages you used.
+        - Example: { "title": "Quant Mid Cap Fund Direct Growth - Value Research", "url": "..." }
         - Example: { "title": "Best Small Cap Funds - Groww", "url": "..." }
         - Do not rely only on Moneycontrol. Mix the sources.
 
@@ -159,13 +161,16 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
     }
     `;
 
-    // Strategy: Groq Compound -> Compound Mini -> GPT-OSS 120B -> Gemini 2.5 Flash -> Gemini 2.5 Flash Lite
+    // Strategy: Groq Compound -> GPT-OSS 120B (Browser) -> Gemini 2.5 Flash (Search) -> Compound Mini -> Flash Lite -> Kimi K2 (Extreme Fallback Handling)
     const planProviders = [
         { type: 'groq', model: 'groq/compound' },
-        { type: 'groq', model: 'groq/compound-mini' },
         { type: 'groq', model: 'openai/gpt-oss-120b' },
         { type: 'gemini', model: 'gemini-2.5-flash' },
+        { type: 'groq', model: 'moonshotai/kimi-k2-instruct-0905' },
+        { type: 'groq', model: 'moonshotai/kimi-k2-instruct' },
+        { type: 'groq', model: 'groq/compound-mini' },
         { type: 'gemini', model: 'gemini-2.5-flash-lite' },
+        { type: 'groq', model: 'openai/gpt-oss-20b' },
     ];
 
     for (const provider of planProviders) {
@@ -175,21 +180,39 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
             let content = "";
 
             if (provider.type === 'groq') {
-                const completion = await getGroqClient().chat.completions.create({
+                const params: any = {
                     messages: [{ role: 'user', content: prompt }],
                     model: provider.model,
-                    response_format: { type: "json_object" },
                     max_tokens: 5000,
                     temperature: 0.5,
-                });
+                };
+
+                // Enable 'browser_search' strictly for supported OSS models
+                // Note: Kimi does not support 'browser_search' built-in, only standard function calling
+                const supportsBrowser = provider.model.includes('gpt-oss');
+
+                if (supportsBrowser) {
+                    params.tools = [{ type: "browser_search" }];
+                    // JSON mode cannot be used with tools on Groq
+                    // We rely on the prompt to enforce JSON output
+                } else {
+                    // For models without tools (like Compound-Mini or Kimi), force JSON mode if supported
+                    // Compound models handle tools internally, so we generally rely on them.
+                    // But explicitly setting json_object is good for non-tool models.
+                    params.response_format = { type: "json_object" };
+                }
+
+                const completion = await getGroqClient().chat.completions.create(params);
                 content = completion.choices[0]?.message?.content || "";
             } else {
-                // Gemini Fallback
+                // Gemini Fallback WITH Search Grounding
+                // Note: 'responseMimeType: application/json' is NOT compatible with tools (Google Search)
                 const response = await getGeminiClient().models.generateContent({
                     model: provider.model,
                     contents: prompt,
                     config: {
-                        responseMimeType: 'application/json',
+                        // responseMimeType: 'application/json', // DISABLED because we are using tools
+                        tools: [{ googleSearch: {} }], // Enable Google Search
                     }
                 });
                 content = response.text || "";
@@ -198,7 +221,15 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
             if (!content) throw new Error("No content returned");
 
             // Sanitize JSON
+            // Since we disabled JSON mode/MIME for some, we must likely strip markdown blocks
             let jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
+            // Fallback: sometimes models return text before JSON
+            const firstBrace = jsonStr.indexOf('{');
+            const lastBrace = jsonStr.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1) {
+                jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+            }
+
             const plan = JSON.parse(jsonStr);
 
             const sanitized = sanitizeInvestmentPlan(plan);
@@ -226,13 +257,39 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
 };
 
 export const sendMessageToChat = async (history: ChatMessage[], message: string): Promise<string> => {
+    const chatProviders = [
+        { type: 'groq', model: 'moonshotai/kimi-k2-instruct-0905' },
+        { type: 'groq', model: 'moonshotai/kimi-k2-instruct' },
+        { type: 'groq', model: 'openai/gpt-oss-120b' },
+        { type: 'groq', model: 'openai/gpt-oss-20b' },
+    ];
+
+    const makeRequest = async (provider: { type: string, model: string }, systemMessage: any, groqHistory: any[]) => {
+        // Create a fresh message array for each attempt to avoid mutation issues
+        const messages = [systemMessage, ...groqHistory];
+
+        const params: any = {
+            messages: messages,
+            model: provider.model,
+            max_tokens: 2048,
+        };
+
+        // Enable 'browser_search' strictly for supported OSS models (120b, 20b)
+        // Kimi K2 does NOT support 'browser_search' on Groq
+        if (provider.model.includes('gpt-oss')) {
+            params.tools = [{ type: "browser_search" }];
+        }
+
+        const completion = await getGroqClient().chat.completions.create(params);
+        return completion.choices[0]?.message?.content;
+    };
+
+
     try {
         const groqHistory = history.map(msg => ({
-            role: (msg.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user', // Groq uses 'assistant'
+            role: (msg.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user',
             content: msg.text
         }));
-
-        // Add current user message
         groqHistory.push({ role: 'user', content: message });
 
         const systemMessage = {
@@ -245,21 +302,24 @@ export const sendMessageToChat = async (history: ChatMessage[], message: string)
               - Use **Tables** for comparisons (e.g., Fund A vs Fund B).
               - Use **LaTeX** for math formulas (wrap in single dollar signs $...$ for inline, double $$...$$ for block).
               - Use **Bold** for key concepts.
-            - Do NOT answer off-topic questions (e.g., coding, general knowledge, jokes).
+            - Do NOT answer off-topic questions.
             - Keep answers concise and helpful.`
         };
 
-        const completion = await getGroqClient().chat.completions.create({
-            messages: [systemMessage, ...groqHistory],
-            model: 'openai/gpt-oss-120b', // High-reasoning model
-            max_tokens: 2048,
-        });
-
-        return completion.choices[0]?.message?.content || "No response received.";
+        for (const provider of chatProviders) {
+            try {
+                const response = await makeRequest(provider, systemMessage, groqHistory);
+                if (response) return response;
+            } catch (e: any) {
+                console.warn(`Chat provider ${provider.model} failed:`, e.message);
+                // Continue to next provider
+            }
+        }
+        throw new Error("All chat providers failed.");
 
     } catch (error) {
         console.error("Error in sendMessageToChat:", error);
-        throw new Error("Failed to send message.");
+        throw new Error("Failed to send message. Please try again.");
     }
 };
 
@@ -284,34 +344,68 @@ export const generateQuizQuestions = async (difficulty: QuizDifficulty): Promise
            }
     `;
 
-    try {
-        const completion = await getGroqClient().chat.completions.create({
-            messages: [{ role: 'user', content: prompt }],
-            model: 'llama-3.3-70b-versatile',
-            response_format: { type: "json_object" },
-            max_tokens: 4096,
-        });
+    // Strategy: GPT-OSS 120B -> Kimi K2 -> GPT-OSS 20B -> Gemma 3 27B (Google) -> Qwen 3 32B (Groq)
+    const providers = [
+        { type: 'groq', model: 'openai/gpt-oss-120b' },
+        { type: 'groq', model: 'moonshotai/kimi-k2-instruct-0905' },
+        { type: 'groq', model: 'moonshotai/kimi-k2-instruct' },
+        { type: 'groq', model: 'openai/gpt-oss-20b' },
+        { type: 'gemini', model: 'gemma-3-27b' },
+        { type: 'groq', model: 'qwen/qwen3-32b' },
+    ];
 
-        let content = completion.choices[0]?.message?.content;
-        if (!content) throw new Error("No content");
+    for (const provider of providers) {
+        try {
+            console.log(`Generating quiz with ${provider.type}/${provider.model}`);
+            let content = "";
 
-        // Robust JSON extraction
-        const jsonMatch = content.match(/\[[\s\S]*\]/); // Look for array
-        if (jsonMatch) content = jsonMatch[0];
-        else if (content.trim().startsWith('{')) {
-            // Sometimes it wraps array in an object key like "questions": [...]
-            const parsed = JSON.parse(content);
-            if (parsed.questions && Array.isArray(parsed.questions)) return parsed.questions;
-            // If strictly object but not array, try to salvage or fail
+            if (provider.type === 'groq') {
+                const params: any = {
+                    messages: [{ role: 'user', content: prompt }],
+                    model: provider.model,
+                    max_tokens: 4096,
+                };
+
+                // Force JSON mode if NOT using tools (Quiz doesn't need tools, needs strict JSON)
+                // Kimi and others respect json_object
+                params.response_format = { type: "json_object" };
+
+                const completion = await getGroqClient().chat.completions.create(params);
+                content = completion.choices[0]?.message?.content || "";
+            } else {
+                // Google GenAI (Gemma)
+                const client = getGeminiClient();
+                const response = await client.models.generateContent({
+                    model: provider.model,
+                    contents: prompt,
+                    config: {
+                        responseMimeType: 'application/json',
+                    }
+                });
+                content = response.text || "";
+            }
+
+            if (!content) throw new Error("No content returned");
+
+            // Robust JSON extraction
+            let jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
+            const firstBrace = jsonStr.indexOf('[');
+            const lastBrace = jsonStr.lastIndexOf(']');
+            if (firstBrace !== -1 && lastBrace !== -1) {
+                jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+            } else if (jsonStr.startsWith('{')) {
+                // Handle wrapped object case
+                const parsed = JSON.parse(jsonStr);
+                if (parsed.questions) return parsed.questions;
+            }
+
+            const questions = JSON.parse(jsonStr);
+            if (Array.isArray(questions)) return questions;
+
+        } catch (e: any) {
+            console.warn(`Quiz provider ${provider.model} failed:`, e.message);
         }
-
-        const questions: QuizQuestion[] = JSON.parse(content);
-        if (!Array.isArray(questions)) throw new Error("Parsed content is not an array");
-
-        return questions;
-
-    } catch (error) {
-        console.error("Quiz generation failed:", error);
-        throw new Error("Failed to generate quiz.");
     }
+
+    throw new Error("Failed to generate quiz from all providers.");
 };
