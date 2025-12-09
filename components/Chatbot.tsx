@@ -10,6 +10,9 @@ import { logoIcon } from '../assets/logo';
 import SafeImage from './SafeImage';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,10 +37,6 @@ const Chatbot: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (chatbotRef.current && !chatbotRef.current.contains(event.target as Node) && isOpen) {
-        // Check if the click was on the toggle button (which is outside this ref)
-        // We'll rely on the fact that if the user clicks the toggle button, it will toggle safely.
-        // But if we close it here, the toggle button might re-open it due to event bubbling or logic overlap.
-        // Safest is to check if it's NOT the toggle button.
         const toggleBtn = document.getElementById('chatbot-toggle-btn');
         if (toggleBtn && toggleBtn.contains(event.target as Node)) {
           return;
@@ -80,7 +79,6 @@ const Chatbot: React.FC = () => {
     } else {
       setSpeakingMessageId(index);
       speakText(text, () => {
-        // onEnd callback: reset state when speech finishes
         setSpeakingMessageId(null);
       });
     }
@@ -100,7 +98,6 @@ const Chatbot: React.FC = () => {
 
       setMessages((prev) => {
         const newMessages = [...prev, modelMessage];
-        // Auto-speak removed
         return newMessages;
       });
 
@@ -214,12 +211,32 @@ const Chatbot: React.FC = () => {
                     {msg.role === 'model' ? (
                       <div className="prose prose-sm prose-slate max-w-none break-words overflow-x-auto">
                         <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
+                          remarkPlugins={[remarkGfm, remarkMath]}
+                          rehypePlugins={[rehypeKatex]}
                           components={{
-                            table: ({ node, ...props }) => <table className="min-w-full border-collapse border border-slate-300 my-2" {...props} />,
-                            th: ({ node, ...props }) => <th className="border border-slate-300 px-2 py-1 bg-slate-100 font-semibold" {...props} />,
-                            td: ({ node, ...props }) => <td className="border border-slate-300 px-2 py-1" {...props} />,
-                            a: ({ node, ...props }) => <a className="text-blue-600 underline" target="_blank" rel="noopener noreferrer" {...props} />
+                            table: ({ node, ...props }) => <div className="overflow-x-auto my-2"><table className="min-w-full border-collapse border border-slate-300" {...props} /></div>,
+                            th: ({ node, ...props }) => <th className="border border-slate-300 px-3 py-2 bg-slate-100 font-semibold text-left text-xs sm:text-sm" {...props} />,
+                            td: ({ node, ...props }) => <td className="border border-slate-300 px-3 py-2 text-xs sm:text-sm" {...props} />,
+                            a: ({ node, ...props }) => <a className="text-blue-600 underline hover:text-blue-800" target="_blank" rel="noopener noreferrer" {...props} />,
+                            p: ({ node, ...props }) => <p className="mb-2 last:mb-0 leading-relaxed" {...props} />,
+                            ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
+                            ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
+                            li: ({ node, ...props }) => <li className="pl-1" {...props} />,
+                            h1: ({ node, ...props }) => <h1 className="text-xl font-bold mt-4 mb-2 text-slate-900 border-b pb-1" {...props} />,
+                            h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-3 mb-2 text-slate-800" {...props} />,
+                            h3: ({ node, ...props }) => <h3 className="text-base font-semibold mt-2 mb-1 text-slate-800" {...props} />,
+                            blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-blue-500 pl-4 italic bg-slate-50 py-1 my-2 rounded-r" {...props} />,
+                            code: ({ node, inline, className, children, ...props }: any) => {
+                              return inline ? (
+                                <code className="bg-slate-100 px-1 py-0.5 rounded text-red-500 font-mono text-xs" {...props}>
+                                  {children}
+                                </code>
+                              ) : (
+                                <code className="block bg-slate-800 text-slate-100 p-2 rounded-lg overflow-x-auto font-mono text-xs my-2" {...props}>
+                                  {children}
+                                </code>
+                              );
+                            }
                           }}
                         >
                           {msg.text}
