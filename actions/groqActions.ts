@@ -158,7 +158,7 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
                 messages: [{ role: 'user', content: prompt }],
                 model: model,
                 response_format: { type: "json_object" },
-                max_tokens: 6000,
+                max_tokens: 5000,
                 temperature: 0.5, // Balanced creativity and coherence
             });
 
