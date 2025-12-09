@@ -4,14 +4,25 @@
 import Groq from "groq-sdk";
 import { UserProfile, InvestmentPlan, Fund, FundCategory, AssetAllocationItem, GrowthDataPoint, QuizDifficulty, QuizQuestion, ChatMessage } from '../types';
 
+import { GoogleGenAI } from "@google/genai";
+
 // --- Initialization ---
 const getGroqClient = () => {
     const API_KEY = process.env.GROQ_API_KEY;
     if (!API_KEY) {
-        console.error("CRITICAL: GROQ_API_KEY is missing. Available keys:", Object.keys(process.env).filter(k => k.includes('KEY') || k.includes('GROQ')));
+        console.error("CRITICAL: GROQ_API_KEY is missing.");
         throw new Error("GROQ_API_KEY environment variable not set");
     }
     return new Groq({ apiKey: API_KEY });
+};
+
+const getGeminiClient = () => {
+    const API_KEY = process.env.GEMINI_API_KEY;
+    if (!API_KEY) {
+        console.error("CRITICAL: GEMINI_API_KEY is missing.");
+        throw new Error("GEMINI_API_KEY environment variable not set");
+    }
+    return new GoogleGenAI({ apiKey: API_KEY });
 };
 
 // --- Helper Functions ---
@@ -148,21 +159,42 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
     }
     `;
 
-    // Strategy: Groq Compound (Web Search + Reasoning) -> Compound Mini (Fallback)
-    const models = ['groq/compound', 'groq/compound-mini'];
+    // Strategy: Groq Compound -> Compound Mini -> GPT-OSS 120B -> Gemini 2.5 Flash -> Gemini 2.5 Flash Lite
+    const planProviders = [
+        { type: 'groq', model: 'groq/compound' },
+        { type: 'groq', model: 'groq/compound-mini' },
+        { type: 'groq', model: 'openai/gpt-oss-120b' },
+        { type: 'gemini', model: 'gemini-2.5-flash' },
+        { type: 'gemini', model: 'gemini-2.5-flash-lite' },
+    ];
 
-    for (const model of models) {
+    for (const provider of planProviders) {
         try {
-            console.log(`Attempting generateInvestmentPlan with model: ${model}`);
-            const completion = await getGroqClient().chat.completions.create({
-                messages: [{ role: 'user', content: prompt }],
-                model: model,
-                response_format: { type: "json_object" },
-                max_tokens: 5000,
-                temperature: 0.5, // Balanced creativity and coherence
-            });
+            console.log(`Attempting generateInvestmentPlan with ${provider.type}/${provider.model}`);
 
-            const content = completion.choices[0]?.message?.content;
+            let content = "";
+
+            if (provider.type === 'groq') {
+                const completion = await getGroqClient().chat.completions.create({
+                    messages: [{ role: 'user', content: prompt }],
+                    model: provider.model,
+                    response_format: { type: "json_object" },
+                    max_tokens: 5000,
+                    temperature: 0.5,
+                });
+                content = completion.choices[0]?.message?.content || "";
+            } else {
+                // Gemini Fallback
+                const response = await getGeminiClient().models.generateContent({
+                    model: provider.model,
+                    contents: prompt,
+                    config: {
+                        responseMimeType: 'application/json',
+                    }
+                });
+                content = response.text || "";
+            }
+
             if (!content) throw new Error("No content returned");
 
             // Sanitize JSON
@@ -171,7 +203,7 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
 
             const sanitized = sanitizeInvestmentPlan(plan);
 
-            // Map AI sources to groundingChunks if available in the raw plan
+            // Map AI sources to groundingChunks
             if (plan.sources && Array.isArray(plan.sources)) {
                 sanitized.groundingChunks = plan.sources.map((source: any) => ({
                     web: {
@@ -185,14 +217,12 @@ export const generateInvestmentPlan = async (profile: UserProfile): Promise<Inve
             return JSON.parse(JSON.stringify(sanitized));
 
         } catch (e: any) {
-            console.error(`Model ${model} failed:`, e);
-            if (model === models[models.length - 1]) {
-                throw new Error(`All models failed to generate plan. Last error: ${e.message}`);
-            }
-            // Continue to next model
+            console.error(`Provider ${provider.type}/${provider.model} failed:`, e.message);
+            // Continue to next provider
         }
     }
-    throw new Error("Unexpected error in generateInvestmentPlan");
+    // If we reach here, ALL models failed.
+    throw new Error("AI_LIMIT_REACHED");
 };
 
 export const sendMessageToChat = async (history: ChatMessage[], message: string): Promise<string> => {

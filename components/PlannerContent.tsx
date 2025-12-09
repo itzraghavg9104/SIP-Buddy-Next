@@ -124,10 +124,16 @@ const Planner: React.FC = () => {
         handlePlanGenerated(plan, profile);
 
       }, 800); // Slightly longer delay to let user see the 100% bar
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+    } catch (err: any) {
       console.error(err);
       setIsLoading(false);
+
+      if (err.message && err.message.includes("AI_LIMIT_REACHED")) {
+        // Show gentle, user-friendly error
+        setError("Our AI servers are currently maximizing their brainpower! 🧠💥 Please wait a moment and try again.");
+      } else {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+      }
     }
   };
 
