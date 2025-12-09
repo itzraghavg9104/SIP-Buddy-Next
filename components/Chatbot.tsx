@@ -177,7 +177,7 @@ const Chatbot: React.FC = () => {
       {isOpen && (
         <div
           ref={chatbotRef}
-          className="fixed bottom-20 right-6 w-full max-w-lg h-[80vh] max-h-[700px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 transition-all duration-300 ease-in-out origin-bottom-right transform scale-100 opacity-100 border border-slate-200"
+          className="fixed bottom-4 right-4 sm:bottom-20 sm:right-6 w-[calc(100%-2rem)] sm:w-full sm:max-w-lg h-[85vh] sm:h-[80vh] sm:max-h-[700px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 transition-all duration-300 ease-in-out origin-bottom-right transform scale-100 opacity-100 border border-slate-200"
         >
           <header className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50 rounded-t-2xl">
             <div className="flex items-center">
