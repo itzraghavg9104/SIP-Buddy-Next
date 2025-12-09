@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { QuizDifficulty, QuizMode, QuizQuestion, QuizResult, Page } from '../../types';
-import { generateQuizQuestions } from '../../actions/geminiActions';
+import { generateQuizQuestions } from '../../actions/groqActions';
 import { IconTrophy, IconClock, IconBrain, IconTarget, IconSparkles, IconParty, IconChecklist, IconX, IconArrowUp } from '../../components/Icons';
 
 interface FinIQChallengeProps {

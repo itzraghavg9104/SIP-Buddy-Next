@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { InvestmentPlan, RiskTolerance, UserProfile } from '../types';
-import { generateInvestmentPlan } from '../actions/geminiActions';
+import { generateInvestmentPlan } from '../actions/groqActions';
 import { IconSparkles } from '../components/Icons';
 import { useGlobalContext } from '../context/GlobalContext';
 import { useRouter } from 'next/navigation';

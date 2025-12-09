@@ -1,48 +1,15 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { IconBrandMessenger, IconSend, IconX, IconSparkles, IconUser, IconMicrophone, IconPlayerStop, IconVolume, IconPlayerPlay } from './Icons';
-import { sendMessageToChat, textToSpeech, transcribeAudio } from '../actions/geminiActions';
+import { IconBrandMessenger, IconSend, IconX, IconSparkles, IconUser, IconMicrophone, IconPlayerStop, IconVolume } from './Icons';
+import { sendMessageToChat } from '../actions/groqActions';
+import { transcribeAudio } from '../actions/geminiActions';
+import { speakText, stopSpeech } from '../services/ttsService';
 import { ChatMessage } from '../types';
 import { logoIcon } from '../assets/logo';
 import SafeImage from './SafeImage';
-import { decode, decodeAudioData } from '../services/audioUtils';
-
-// A simple markdown to HTML converter to handle bold text and lists.
-const parseMarkdownToHTML = (markdown: string): string => {
-  const lines = markdown.split('\n');
-  let html = '';
-  let inList = false;
-
-  for (let line of lines) {
-    // Bold text
-    line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // List items
-    if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
-      if (!inList) {
-        html += '<ul>';
-        inList = true;
-      }
-      html += `<li>${line.trim().substring(2)}</li>`;
-    } else {
-      if (inList) {
-        html += '</ul>';
-        inList = false;
-      }
-      if (line.trim().length > 0) {
-        html += `<p>${line}</p>`;
-      }
-    }
-  }
-
-  if (inList) {
-    html += '</ul>';
-  }
-
-  return html;
-};
-
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,34 +23,45 @@ const Chatbot: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState<number | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const chatbotRef = useRef<HTMLDivElement>(null);
 
-  const stopCurrentAudio = () => {
-    if (audioSourceRef.current) {
-      audioSourceRef.current.stop();
-      audioSourceRef.current.disconnect();
-      audioSourceRef.current = null;
+  // Auto-collapse on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (chatbotRef.current && !chatbotRef.current.contains(event.target as Node) && isOpen) {
+        // Check if the click was on the toggle button (which is outside this ref)
+        // We'll rely on the fact that if the user clicks the toggle button, it will toggle safely.
+        // But if we close it here, the toggle button might re-open it due to event bubbling or logic overlap.
+        // Safest is to check if it's NOT the toggle button.
+        const toggleBtn = document.getElementById('chatbot-toggle-btn');
+        if (toggleBtn && toggleBtn.contains(event.target as Node)) {
+          return;
+        }
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
     }
-    setMessages(prev => prev.map(m => ({ ...m, isPlaying: false })));
-  };
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
 
   useEffect(() => {
-    // Listen for custom event to open chatbot from other components
     const handleOpenChat = () => setIsOpen(true);
     window.addEventListener('open-chatbot', handleOpenChat);
 
-    if (isOpen) {
-      // Initialize AudioContext on user interaction
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-      }
-    } else {
-      stopCurrentAudio();
+    if (!isOpen) {
+      stopSpeech();
+      setSpeakingMessageId(null);
     }
 
     return () => {
@@ -95,33 +73,16 @@ const Chatbot: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const playAudio = async (base64Audio: string, messageIndex: number) => {
-    if (!audioContextRef.current) return;
-    stopCurrentAudio();
-
-    try {
-      setMessages(prev => prev.map((m, i) => ({ ...m, isPlaying: i === messageIndex })));
-      const audioBuffer = await decodeAudioData(decode(base64Audio), audioContextRef.current, 24000, 1);
-      const source = audioContextRef.current.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(audioContextRef.current.destination);
-      source.start();
-      source.onended = () => {
-        setMessages(prev => prev.map((m, i) => i === messageIndex ? { ...m, isPlaying: false } : m));
-        audioSourceRef.current = null;
-      };
-      audioSourceRef.current = source;
-    } catch (error) {
-      console.error("Failed to play audio:", error);
-      setMessages(prev => prev.map(m => ({ ...m, isPlaying: false })));
-    }
-  };
-
-  const toggleAudio = (base64Audio: string, messageIndex: number) => {
-    if (messages[messageIndex].isPlaying) {
-      stopCurrentAudio();
+  const handleSpeak = (text: string, index: number) => {
+    if (speakingMessageId === index) {
+      stopSpeech();
+      setSpeakingMessageId(null);
     } else {
-      playAudio(base64Audio, messageIndex);
+      setSpeakingMessageId(index);
+      speakText(text, () => {
+        // onEnd callback: reset state when speech finishes
+        setSpeakingMessageId(null);
+      });
     }
   };
 
@@ -135,9 +96,14 @@ const Chatbot: React.FC = () => {
 
     try {
       const responseText = await sendMessageToChat(messages, input);
-      const audioData = await textToSpeech(responseText);
-      const modelMessage: ChatMessage = { role: 'model', text: responseText, audioData, isPlaying: false };
-      setMessages((prev) => [...prev, modelMessage]);
+      const modelMessage: ChatMessage = { role: 'model', text: responseText };
+
+      setMessages((prev) => {
+        const newMessages = [...prev, modelMessage];
+        // Auto-speak removed
+        return newMessages;
+      });
+
     } catch (error) {
       console.error('Chatbot error:', error);
       const errorMessage: ChatMessage = {
@@ -203,6 +169,7 @@ const Chatbot: React.FC = () => {
   return (
     <>
       <button
+        id="chatbot-toggle-btn"
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-110 z-50 border-2 border-white"
         aria-label="Toggle Chatbot"
@@ -211,7 +178,10 @@ const Chatbot: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-20 right-6 w-full max-w-sm h-[70vh] max-h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 transition-all duration-300 ease-in-out origin-bottom-right transform scale-100 opacity-100">
+        <div
+          ref={chatbotRef}
+          className="fixed bottom-20 right-6 w-full max-w-lg h-[80vh] max-h-[700px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 transition-all duration-300 ease-in-out origin-bottom-right transform scale-100 opacity-100 border border-slate-200"
+        >
           <header className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50 rounded-t-2xl">
             <div className="flex items-center">
               <SafeImage
@@ -220,7 +190,7 @@ const Chatbot: React.FC = () => {
                 alt="SIP Buddy Icon"
                 className="h-8 w-8 rounded-full"
               />
-              <h2 className="text-lg font-semibold ml-3 text-slate-800">SIP Buddy</h2>
+              <h2 className="text-lg font-semibold ml-3 text-slate-800">SIP Buddy Assistant</h2>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600">
               <IconX />
@@ -239,19 +209,28 @@ const Chatbot: React.FC = () => {
                     />
                   </div>
                 )}
-                <div className={`max-w-xs md:max-w-md px-4 py-2.5 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none shadow-sm'}`}>
+                <div className={`max-w-[75%] md:max-w-[85%] px-4 py-2.5 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none shadow-sm'}`}>
                   <div className="flex items-start gap-2">
                     {msg.role === 'model' ? (
-                      <div
-                        className="prose prose-sm prose-slate max-w-none break-words"
-                        dangerouslySetInnerHTML={{ __html: parseMarkdownToHTML(msg.text) }}
-                      />
+                      <div className="prose prose-sm prose-slate max-w-none break-words overflow-x-auto">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            table: ({ node, ...props }) => <table className="min-w-full border-collapse border border-slate-300 my-2" {...props} />,
+                            th: ({ node, ...props }) => <th className="border border-slate-300 px-2 py-1 bg-slate-100 font-semibold" {...props} />,
+                            td: ({ node, ...props }) => <td className="border border-slate-300 px-2 py-1" {...props} />,
+                            a: ({ node, ...props }) => <a className="text-blue-600 underline" target="_blank" rel="noopener noreferrer" {...props} />
+                          }}
+                        >
+                          {msg.text}
+                        </ReactMarkdown>
+                      </div>
                     ) : (
-                      <p className="text-sm break-words">{msg.text}</p>
+                      <p className="text-sm break-words whitespace-pre-wrap">{msg.text}</p>
                     )}
-                    {msg.role === 'model' && msg.audioData && (
-                      <button onClick={() => toggleAudio(msg.audioData!, index)} className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0">
-                        {msg.isPlaying ? <IconPlayerStop className="h-4 w-4 text-red-500" /> : <IconPlayerPlay className="h-4 w-4" />}
+                    {msg.role === 'model' && (
+                      <button onClick={() => handleSpeak(msg.text, index)} className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0 ml-2 mt-1">
+                        {speakingMessageId === index ? <IconPlayerStop className="h-4 w-4 text-red-500" /> : <IconVolume className="h-4 w-4" />}
                       </button>
                     )}
                   </div>
