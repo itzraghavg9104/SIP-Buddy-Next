@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { auth } from '../services/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { savePlan } from '../services/firestoreService';
+import { generateInvestmentPlan } from '../actions/groqActions';
 import { InvestmentPlan, UserProfile, SavedPlan, Page } from '../types';
 
 // Define the shape of the context
@@ -30,6 +31,10 @@ interface GlobalContextType {
     handlePlanLoginConfirm: () => void;
     handlePlanLoginCancel: () => void;
     refreshEmailVerification: () => Promise<void>;
+    // Background Generation
+    isGeneratingPlan: boolean;
+    generationProgress: number;
+    startPlanGeneration: (profile: UserProfile) => Promise<void>;
 }
 
 export interface CurrentPlanState {
@@ -50,6 +55,10 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     const [currentPlan, setCurrentPlan] = useState<CurrentPlanState | null>(null);
     const [isEmailVerified, setIsEmailVerified] = useState(false);
     const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
+
+    // Background Generation State
+    const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+    const [generationProgress, setGenerationProgress] = useState(0);
 
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [isPlanLoginModalOpen, setIsPlanLoginModalOpen] = useState(false);
@@ -180,6 +189,45 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const startPlanGeneration = async (profile: UserProfile) => {
+        setIsGeneratingPlan(true);
+        setGenerationProgress(0);
+
+        // Start simulation loop (runs independently)
+        const startTime = Date.now();
+        const animationDuration = 180000; // 3 minutes
+
+        const timerId = setInterval(() => {
+            const elapsedTime = Date.now() - startTime;
+            // Linearly progress to 95% over 3 minutes
+            const calculatedProgress = Math.min((elapsedTime / animationDuration) * 100, 95);
+            setGenerationProgress(calculatedProgress);
+        }, 100);
+
+        try {
+            const plan = await generateInvestmentPlan(profile);
+
+            // Success
+            clearInterval(timerId);
+            setGenerationProgress(100);
+
+            // Allow UI to show 100% briefly
+            setTimeout(() => {
+                setIsGeneratingPlan(false);
+                handlePlanGenerated(plan, profile);
+            }, 800);
+
+        } catch (error) {
+            console.error("Plan generation failed:", error);
+            clearInterval(timerId);
+            setIsGeneratingPlan(false);
+            setGenerationProgress(0);
+            // Ideally we'd set a global error state here, but for now we'll just stop
+            // You might want to add 'generationError' to context later
+            throw error; // Re-throw so PlannerContent can catch if it's mounted
+        }
+    };
+
     return (
         <GlobalContext.Provider value={{
             user,
@@ -202,7 +250,10 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
             handleLoginFromModal,
             handlePlanLoginConfirm,
             handlePlanLoginCancel,
-            refreshEmailVerification
+            refreshEmailVerification,
+            isGeneratingPlan,
+            generationProgress,
+            startPlanGeneration
         }}>
             {children}
         </GlobalContext.Provider>

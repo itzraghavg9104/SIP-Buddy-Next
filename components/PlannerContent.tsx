@@ -19,7 +19,7 @@ const loadingSteps = [
 ];
 
 const Planner: React.FC = () => {
-  const { user, handlePlanGenerated, setIsPlanLoginModalOpen } = useGlobalContext();
+  const { user, handlePlanGenerated, setIsPlanLoginModalOpen, isGeneratingPlan, generationProgress, startPlanGeneration } = useGlobalContext();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -34,39 +34,9 @@ const Planner: React.FC = () => {
     stepUpPercentage: '10',
   });
   const [isStepUpEnabled, setIsStepUpEnabled] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Removed local isLoading/progress in favor of Global Context
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
-  const animationFrameRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (isLoading) {
-      setProgress(0);
-      const startTime = Date.now();
-      // Animation duration: 3 minutes (180,000 ms)
-      const animationDuration = 180000;
-
-      const animate = () => {
-        const elapsedTime = Date.now() - startTime;
-        // Linearly progress to 95% over 3 minutes
-        const calculatedProgress = Math.min((elapsedTime / animationDuration) * 100, 95);
-
-        setProgress(calculatedProgress);
-
-        if (calculatedProgress < 95 && isLoading) {
-          animationFrameRef.current = requestAnimationFrame(animate);
-        }
-      };
-
-      animationFrameRef.current = requestAnimationFrame(animate);
-    }
-
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [isLoading]);
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -94,7 +64,6 @@ const Planner: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
 
     // Convert form data strings to numbers for the API
@@ -111,27 +80,11 @@ const Planner: React.FC = () => {
     };
 
     try {
-      const plan = await generateInvestmentPlan(profile);
-      // Success: Jump to 100% and show completion
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      setProgress(100);
-
-      // Allow the UI to render the 100% state briefly before switching views
-      // Allow the UI to render the 100% state briefly before switching views
-      setTimeout(() => {
-        // Do NOT set isLoading(false) here. We want to keep the "Loading" screen (which will now show "Redirecting")
-        // visible until the route actually changes or the parent component unmounts.
-        // This prevents the form from flashing back into view.
-
-        // Handle Plan Generated Logic via Context
-        handlePlanGenerated(plan, profile);
-
-      }, 800); // Slightly longer delay to let user see the 100% bar
+      // Start background generation via Global Context
+      await startPlanGeneration(profile);
+      // Navigation is handled by Context on success
     } catch (err: any) {
       console.error(err);
-      setIsLoading(false);
 
       if (err.message && err.message.includes("AI_LIMIT_REACHED")) {
         // Show gentle, user-friendly error
@@ -142,9 +95,9 @@ const Planner: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (isGeneratingPlan) {
     const currentStepIndex = Math.min(
-      Math.floor((progress / 100) * loadingSteps.length),
+      Math.floor((generationProgress / 100) * loadingSteps.length),
       loadingSteps.length - 1
     );
 
@@ -164,20 +117,20 @@ const Planner: React.FC = () => {
               />
             </div>
             <h2 className="text-2xl font-bold text-slate-800">Generating Your Plan</h2>
-            {progress === 100 ? (
+            {generationProgress === 100 ? (
               <p className="text-green-600 mt-2 font-bold animate-pulse">Plan successfully generated! Redirecting...</p>
-            ) : progress >= 95 ? (
+            ) : generationProgress >= 95 ? (
               <p className="text-amber-600 mt-2 font-medium animate-pulse">It is taking longer than usual... wrapping things up!</p>
             ) : (
               <p className="text-slate-500 mt-2">Our AI is analyzing thousands of data points...</p>
             )}
 
             {/* Estimated Time */}
-            {progress < 95 && (
+            {generationProgress < 95 && (
               <p className="text-xs text-slate-400 mt-2">
                 Estimated time remaining: {
                   (() => {
-                    const msRemaining = Math.max(0, 180000 - (progress / 100) * 180000);
+                    const msRemaining = Math.max(0, 180000 - (generationProgress / 100) * 180000);
                     const minutes = Math.floor(msRemaining / 60000);
                     const seconds = Math.floor((msRemaining % 60000) / 1000);
                     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
@@ -220,7 +173,13 @@ const Planner: React.FC = () => {
           {/* Progress bar */}
           <div className="mt-8 relative pt-1">
             <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-slate-100">
-              <div style={{ width: `${progress}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 ease-out"></div>
+              <div style={{ width: `${generationProgress}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 ease-out"></div>
+            </div>
+
+            <div className="text-center mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <p className="text-sm font-medium text-slate-700">
+                Do not close the window, you can explore our other feature meanwhile.
+              </p>
             </div>
           </div>
 
@@ -228,7 +187,7 @@ const Planner: React.FC = () => {
             <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative text-sm">
               <strong className="font-bold">Error: </strong>
               <span className="block sm:inline">{error}</span>
-              <button onClick={() => { setIsLoading(false); setError(null); }} className="mt-2 underline block mx-auto font-semibold">Go back to form</button>
+              <button onClick={() => { setError(null); }} className="mt-2 underline block mx-auto font-semibold">Try Again</button>
             </div>
           )}
         </div>
@@ -406,8 +365,8 @@ const Planner: React.FC = () => {
             </div>
           </div>
           <div className="pt-6 text-center">
-            <button type="submit" disabled={isLoading} className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed">
-              {isLoading ? (
+            <button type="submit" disabled={isGeneratingPlan} className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed">
+              {isGeneratingPlan ? (
                 <IconSparkles className="w-6 h-6 mr-3 animate-spin" />
               ) : (
                 <SafeImage
@@ -417,7 +376,7 @@ const Planner: React.FC = () => {
                   fallback={<IconSparkles className="w-6 h-6 mr-3" />}
                 />
               )}
-              {isLoading ? 'Generating Your Plan...' : 'Generate My AI Plan'}
+              {isGeneratingPlan ? 'Generating Your Plan...' : 'Generate My AI Plan'}
             </button>
           </div>
         </form>
