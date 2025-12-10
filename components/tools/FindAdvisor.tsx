@@ -108,8 +108,8 @@ const FindAdvisor: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8" style={{ height: 'calc(100vh - 350px)', minHeight: '550px' }}>
-        <div className="lg:col-span-1 bg-slate-200 rounded-xl overflow-hidden shadow-lg border border-slate-300">
+      <div className="grid lg:grid-cols-2 gap-8 h-auto lg:h-[calc(100vh-350px)] min-h-[550px]">
+        <div className="lg:col-span-1 bg-slate-200 rounded-xl overflow-hidden shadow-lg border border-slate-300 h-[300px] lg:h-full">
           <iframe
             width="100%"
             height="100%"

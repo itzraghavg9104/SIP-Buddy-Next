@@ -6,6 +6,8 @@ import { generateInvestmentPlan } from '../actions/groqActions';
 import { IconSparkles } from '../components/Icons';
 import { useGlobalContext } from '../context/GlobalContext';
 import { useRouter } from 'next/navigation';
+import { logoIcon } from '../assets/logo';
+import SafeImage from './SafeImage';
 
 const loadingSteps = [
   'Analyzing your financial profile...',
@@ -41,17 +43,17 @@ const Planner: React.FC = () => {
     if (isLoading) {
       setProgress(0);
       const startTime = Date.now();
-      // Animation duration for reaching 90%. The last 10% is reserved for the actual completion.
-      const animationDuration = 12000;
+      // Animation duration: 3 minutes (180,000 ms)
+      const animationDuration = 180000;
 
       const animate = () => {
         const elapsedTime = Date.now() - startTime;
-        // Linearly progress to 90%
-        const calculatedProgress = Math.min((elapsedTime / animationDuration) * 100, 90);
+        // Linearly progress to 95% over 3 minutes
+        const calculatedProgress = Math.min((elapsedTime / animationDuration) * 100, 95);
 
         setProgress(calculatedProgress);
 
-        if (calculatedProgress < 90 && isLoading) {
+        if (calculatedProgress < 95 && isLoading) {
           animationFrameRef.current = requestAnimationFrame(animate);
         }
       };
@@ -154,7 +156,18 @@ const Planner: React.FC = () => {
               <IconSparkles className="h-8 w-8 text-blue-600" />
             </div>
             <h2 className="text-2xl font-bold text-slate-800">Generating Your Plan</h2>
-            <p className="text-slate-500 mt-2">Our AI is analyzing thousands of data points...</p>
+            {progress >= 95 ? (
+              <p className="text-amber-600 mt-2 font-medium animate-pulse">It is taking longer than usual... wrapping things up!</p>
+            ) : (
+              <p className="text-slate-500 mt-2">Our AI is analyzing thousands of data points...</p>
+            )}
+
+            {/* Estimated Time */}
+            {progress < 95 && (
+              <p className="text-xs text-slate-400 mt-2">
+                Estimated time remaining: {Math.max(0, Math.ceil((180000 - (progress / 100) * 180000) / 60000))} min
+              </p>
+            )}
           </div>
 
           <div className="space-y-4 relative z-10">
@@ -224,7 +237,7 @@ const Planner: React.FC = () => {
           <div className="bg-blue-100 p-3 rounded-full mr-4">
             <IconSparkles className="h-6 w-6 text-blue-600" />
           </div>
-          <h2 className="text-2xl font-semibold">Create Your Investment Plan</h2>
+          <h2 className="text-2xl font-semibold">Generate My AI Plan</h2>
         </div>
         <p className="text-slate-500 mb-8 -mt-4 ml-16">Fill in your financial details to get AI-powered recommendations</p>
 
@@ -372,7 +385,16 @@ const Planner: React.FC = () => {
           </div>
           <div className="pt-6 text-center">
             <button type="submit" disabled={isLoading} className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed">
-              <IconSparkles className={`w-6 h-6 mr-3 ${isLoading ? 'animate-spin' : ''}`} />
+              {isLoading ? (
+                <IconSparkles className="w-6 h-6 mr-3 animate-spin" />
+              ) : (
+                <SafeImage
+                  src={logoIcon}
+                  alt="AI"
+                  className="w-6 h-6 mr-3 brightness-0 invert"
+                  fallback={<IconSparkles className="w-6 h-6 mr-3" />}
+                />
+              )}
               {isLoading ? 'Generating Your Plan...' : 'Generate My AI Plan'}
             </button>
           </div>
