@@ -86,9 +86,9 @@ const FindAdvisor: React.FC = () => {
       <div className="mb-4">
         <button
           onClick={() => router.push('/more')}
-          className="flex items-center text-slate-500 hover:text-slate-800 transition-colors font-medium"
+          className="flex items-center text-sm font-semibold text-blue-600 hover:underline"
         >
-          <IconArrowLeft className="h-5 w-5 mr-1" /> Back
+          <IconArrowLeft className="h-4 w-4 mr-1" /> Back
         </button>
       </div>
       <div className="text-center mb-6">

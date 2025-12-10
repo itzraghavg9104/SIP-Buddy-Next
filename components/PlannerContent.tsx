@@ -119,8 +119,11 @@ const Planner: React.FC = () => {
       setProgress(100);
 
       // Allow the UI to render the 100% state briefly before switching views
+      // Allow the UI to render the 100% state briefly before switching views
       setTimeout(() => {
-        setIsLoading(false);
+        // Do NOT set isLoading(false) here. We want to keep the "Loading" screen (which will now show "Redirecting")
+        // visible until the route actually changes or the parent component unmounts.
+        // This prevents the form from flashing back into view.
 
         // Handle Plan Generated Logic via Context
         handlePlanGenerated(plan, profile);
@@ -152,7 +155,7 @@ const Planner: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500"></div>
 
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full mb-4 animate-pulse">
+            <div className="inline-flex items-center justify-center bg-blue-50 rounded-full mb-4 animate-pulse p-3">
               <SafeImage
                 src={logoIcon}
                 alt="AI"
@@ -161,7 +164,9 @@ const Planner: React.FC = () => {
               />
             </div>
             <h2 className="text-2xl font-bold text-slate-800">Generating Your Plan</h2>
-            {progress >= 95 ? (
+            {progress === 100 ? (
+              <p className="text-green-600 mt-2 font-bold animate-pulse">Plan successfully generated! Redirecting...</p>
+            ) : progress >= 95 ? (
               <p className="text-amber-600 mt-2 font-medium animate-pulse">It is taking longer than usual... wrapping things up!</p>
             ) : (
               <p className="text-slate-500 mt-2">Our AI is analyzing thousands of data points...</p>
@@ -246,7 +251,7 @@ const Planner: React.FC = () => {
 
       <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
         <div className="flex items-center mb-6">
-          <div className="bg-blue-100 p-3 rounded-full mr-4">
+          <div className="bg-blue-100 p-2 rounded-full mr-4">
             <SafeImage
               src={logoIcon}
               alt="AI"
