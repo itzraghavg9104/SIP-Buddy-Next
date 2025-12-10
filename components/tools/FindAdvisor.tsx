@@ -4,7 +4,8 @@
 import React, { useState, useEffect } from 'react';
 import { findFinancialAdvisors } from '../../actions/geminiActions';
 import { FinancialAdvisor, GroundingChunk } from '../../types';
-import { IconInfoCircle, IconMapPin, IconPhone, IconWorld } from '../../components/Icons';
+import { IconInfoCircle, IconMapPin, IconPhone, IconWorld, IconArrowLeft } from '../../components/Icons';
+import { useRouter } from 'next/navigation';
 
 const DEFAULT_MAP_URL = 'https://www.google.com/maps?q=India&z=5&output=embed';
 
@@ -16,6 +17,7 @@ const FindAdvisor: React.FC = () => {
   const [mapUrl, setMapUrl] = useState(DEFAULT_MAP_URL);
   const [selectedAdvisor, setSelectedAdvisor] = useState<FinancialAdvisor | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
 
   const fetchAdvisors = async (location: { latitude: number; longitude: number } | { query: string }) => {
     setIsLoading(true);
@@ -81,6 +83,14 @@ const FindAdvisor: React.FC = () => {
 
   return (
     <div>
+      <div className="mb-4">
+        <button
+          onClick={() => router.push('/more')}
+          className="flex items-center text-slate-500 hover:text-slate-800 transition-colors font-medium"
+        >
+          <IconArrowLeft className="h-5 w-5 mr-1" /> Back
+        </button>
+      </div>
       <div className="text-center mb-6">
         <h1 className="text-3xl font-bold text-slate-900 mb-1">Find a Financial Advisor</h1>
         <p className="text-slate-600">Discover registered advisors near you based on live data.</p>

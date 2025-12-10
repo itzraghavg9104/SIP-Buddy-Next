@@ -153,7 +153,12 @@ const Planner: React.FC = () => {
 
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full mb-4 animate-pulse">
-              <IconSparkles className="h-8 w-8 text-blue-600" />
+              <SafeImage
+                src={logoIcon}
+                alt="AI"
+                className="h-10 w-10"
+                fallback={<IconSparkles className="h-8 w-8 text-blue-600" />}
+              />
             </div>
             <h2 className="text-2xl font-bold text-slate-800">Generating Your Plan</h2>
             {progress >= 95 ? (
@@ -165,7 +170,14 @@ const Planner: React.FC = () => {
             {/* Estimated Time */}
             {progress < 95 && (
               <p className="text-xs text-slate-400 mt-2">
-                Estimated time remaining: {Math.max(0, Math.ceil((180000 - (progress / 100) * 180000) / 60000))} min
+                Estimated time remaining: {
+                  (() => {
+                    const msRemaining = Math.max(0, 180000 - (progress / 100) * 180000);
+                    const minutes = Math.floor(msRemaining / 60000);
+                    const seconds = Math.floor((msRemaining % 60000) / 1000);
+                    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                  })()
+                }
               </p>
             )}
           </div>
@@ -235,9 +247,14 @@ const Planner: React.FC = () => {
       <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
         <div className="flex items-center mb-6">
           <div className="bg-blue-100 p-3 rounded-full mr-4">
-            <IconSparkles className="h-6 w-6 text-blue-600" />
+            <SafeImage
+              src={logoIcon}
+              alt="AI"
+              className="h-8 w-8"
+              fallback={<IconSparkles className="h-6 w-6 text-blue-600" />}
+            />
           </div>
-          <h2 className="text-2xl font-semibold">Generate My AI Plan</h2>
+          <h2 className="text-2xl font-bold text-slate-800">Generate My AI Plan</h2>
         </div>
         <p className="text-slate-500 mb-8 -mt-4 ml-16">Fill in your financial details to get AI-powered recommendations</p>
 

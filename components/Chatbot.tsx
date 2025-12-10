@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { IconBrandMessenger, IconSend, IconX, IconSparkles, IconUser, IconMicrophone, IconPlayerStop, IconVolume } from './Icons';
+import { useGlobalContext } from '../context/GlobalContext';
 import { sendMessageToChat } from '../actions/groqActions';
 import { transcribeAudio } from '../actions/geminiActions';
 import { speakText, stopSpeech } from '../services/ttsService';
@@ -15,6 +16,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
 const Chatbot: React.FC = () => {
+  const { user } = useGlobalContext();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -197,12 +199,12 @@ const Chatbot: React.FC = () => {
             {messages.map((msg, index) => (
               <div key={index} className={`flex items-start gap-3 my-4 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                 {msg.role === 'model' && (
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
                     <SafeImage
                       src={logoIcon}
                       fallback={<IconSparkles className="h-7 w-7 text-blue-600" />}
                       alt="SIP Buddy Icon"
-                      className="h-7 w-7 rounded-full"
+                      className="h-8 w-8 rounded-full"
                     />
                   </div>
                 )}
@@ -253,20 +255,24 @@ const Chatbot: React.FC = () => {
                   </div>
                 </div>
                 {msg.role === 'user' && (
-                  <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0">
-                    <IconUser className="h-5 w-5 text-slate-600" />
+                  <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {user?.photoURL ? (
+                      <img src={user.photoURL} alt="User" className="w-full h-full object-cover" />
+                    ) : (
+                      <IconUser className="h-5 w-5 text-slate-600" />
+                    )}
                   </div>
                 )}
               </div>
             ))}
             {isLoading && (
               <div className="flex items-start gap-3 my-4">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
                   <SafeImage
                     src={logoIcon}
                     fallback={<IconSparkles className="h-7 w-7 text-blue-600" />}
                     alt="SIP Buddy Icon"
-                    className="h-7 w-7 rounded-full"
+                    className="h-8 w-8 rounded-full"
                   />
                 </div>
                 <div className="max-w-xs md:max-w-md px-4 py-2.5 rounded-2xl bg-white text-slate-700 rounded-bl-none shadow-sm flex items-center">
