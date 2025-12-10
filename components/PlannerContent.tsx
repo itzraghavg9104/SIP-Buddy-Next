@@ -108,7 +108,7 @@ const Planner: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500"></div>
 
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center bg-blue-50 rounded-full mb-4 animate-pulse p-3">
+            <div className="inline-flex items-center justify-center bg-blue-50 rounded-full mb-4 animate-pulse p-1.5">
               <SafeImage
                 src={logoIcon}
                 alt="AI"
@@ -210,7 +210,7 @@ const Planner: React.FC = () => {
 
       <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
         <div className="flex items-center mb-6">
-          <div className="bg-blue-100 p-2 rounded-full mr-4">
+          <div className="bg-blue-100 p-1.5 rounded-full mr-4">
             <SafeImage
               src={logoIcon}
               alt="AI"

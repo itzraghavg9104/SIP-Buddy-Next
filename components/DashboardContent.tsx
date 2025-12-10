@@ -12,6 +12,7 @@ import {
   YAxis,
   CartesianGrid,
   Legend,
+  Sector,
 } from 'recharts';
 import { IconChevronDown, IconInfoCircle, IconLayoutDashboard, IconListDetails, IconChartPie, IconWorld } from '../components/Icons';
 import ComparisonModal from '../components/ComparisonModal';
@@ -23,6 +24,34 @@ import { useRouter } from 'next/navigation';
 import EmailVerificationBanner from '../components/EmailVerificationBanner';
 
 const COLORS = ['#3b82f6', '#10b981', '#ef4444', '#f97316', '#a855f7', '#84cc16', '#f59e0b', '#06b6d4', '#ec4899', '#6366f1'];
+
+const renderActiveShape = (props: any) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+
+  return (
+    <g>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 6}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+      <Sector
+        cx={cx}
+        cy={cy}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        innerRadius={outerRadius + 6}
+        outerRadius={outerRadius + 10}
+        fill={fill}
+        opacity={0.3}
+      />
+    </g>
+  );
+};
 
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
@@ -103,6 +132,12 @@ const Dashboard: React.FC = () => {
   const router = useRouter();
 
   const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({});
+  const [activeIndex, setActiveIndex] = useState(0); // Initialize with first slice highlighted or -1
+
+  const onPieEnter = (_: any, index: number) => {
+    setActiveIndex(index);
+  };
+
 
   const [selectedFundsForComparison, setSelectedFundsForComparison] = useState<Fund[]>([]);
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
@@ -363,9 +398,24 @@ const Dashboard: React.FC = () => {
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={investmentPlan!.assetAllocation || []} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={110} fill="#8884d8" labelLine={false} isAnimationActive={!isExporting}>
+                  <Pie
+                    // @ts-ignore
+                    activeIndex={activeIndex}
+                    activeShape={renderActiveShape}
+                    data={investmentPlan!.assetAllocation || []}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={0}
+                    outerRadius={110}
+                    fill="#8884d8"
+                    dataKey="value"
+                    onMouseEnter={onPieEnter}
+                    isAnimationActive={!isExporting}
+                    // Remove generic outline
+                    style={{ outline: "none" }}
+                  >
                     {(investmentPlan!.assetAllocation || []).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} style={{ outline: 'none' }} />
                     ))}
                   </Pie>
                   <RechartsTooltip content={<CustomTooltip />} />

@@ -7,6 +7,7 @@ import Chatbot from './Chatbot';
 import OnboardingTour from './OnboardingTour';
 import LoginRequiredModal from './LoginRequiredModal';
 import PlanGeneratedLoginModal from './PlanGeneratedLoginModal';
+import PlanReadyNotification from './PlanReadyNotification';
 import { usePathname } from 'next/navigation';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -38,6 +39,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                 onClose={handlePlanLoginCancel}
                 onLogin={handlePlanLoginConfirm}
             />
+            <PlanReadyNotification />
         </>
     );
 }

@@ -35,6 +35,9 @@ interface GlobalContextType {
     isGeneratingPlan: boolean;
     generationProgress: number;
     startPlanGeneration: (profile: UserProfile) => Promise<void>;
+    // Notification
+    showPlanNotification: boolean;
+    dismissPlanNotification: () => void;
 }
 
 export interface CurrentPlanState {
@@ -59,6 +62,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     // Background Generation State
     const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
     const [generationProgress, setGenerationProgress] = useState(0);
+    const [showPlanNotification, setShowPlanNotification] = useState(false);
 
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [isPlanLoginModalOpen, setIsPlanLoginModalOpen] = useState(false);
@@ -92,8 +96,8 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
                 });
                 router.push('/dashboard');
                 setAuthRedirectPlan(null);
-            } else if (currentUser && pathname === '/auth') {
-                // After login/signup, redirect to Planner
+            } else if (currentUser && pathname === '/auth' && !currentPlan) {
+                // Only redirect to planner if we don't have a plan waiting
                 router.push('/planner');
             } else if (!currentUser) {
                 const protectedRoutes = ['/dashboard', '/profile', '/my-plans'];
@@ -104,17 +108,29 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
             }
         });
         return () => unsubscribe();
-    }, [authRedirectPlan, pathname, router]);
+    }, [authRedirectPlan, pathname, router, currentPlan]);
 
     const handlePlanGenerated = (plan: InvestmentPlan, profile: UserProfile) => {
         if (user) {
             setCurrentPlan({ planData: plan, userProfile: profile, isSaved: false });
-            router.push('/dashboard');
+
+            // Smart Navigation Logic
+            // If user is on the planner page, redirect to dashboard as usual
+            if (pathname === '/planner') {
+                router.push('/dashboard');
+            } else {
+                // If user is elsewhere, show notification
+                setShowPlanNotification(true);
+            }
         } else {
             console.log('Plan generated without login - showing modal');
             setAuthRedirectPlan({ plan, profile });
             setIsPlanLoginModalOpen(true);
         }
+    };
+
+    const dismissPlanNotification = () => {
+        setShowPlanNotification(false);
     };
 
     const handleCreateNewPlan = () => {
@@ -253,7 +269,9 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
             refreshEmailVerification,
             isGeneratingPlan,
             generationProgress,
-            startPlanGeneration
+            startPlanGeneration,
+            showPlanNotification,
+            dismissPlanNotification
         }}>
             {children}
         </GlobalContext.Provider>
