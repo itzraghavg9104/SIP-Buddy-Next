@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { auth } from '../services/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
@@ -52,6 +52,12 @@ const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     const router = useRouter();
     const pathname = usePathname();
+    const pathnameRef = useRef(pathname);
+
+    // Keep ref in sync with pathname changes
+    useEffect(() => {
+        pathnameRef.current = pathname;
+    }, [pathname]);
 
     const [user, setUser] = useState<User | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
@@ -116,7 +122,9 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
             // Smart Navigation Logic
             // If user is on the planner page, redirect to dashboard as usual
-            if (pathname === '/planner') {
+            // Smart Navigation Logic
+            // Check the LIVE pathname via ref to avoid stale closure in async callbacks
+            if (pathnameRef.current === '/planner') {
                 router.push('/dashboard');
             } else {
                 // If user is elsewhere, show notification
