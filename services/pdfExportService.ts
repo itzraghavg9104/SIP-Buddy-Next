@@ -1,5 +1,4 @@
 import { logoFull, logoIcon } from '../assets/logo';
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 // --- ADDED IMPORT ---
 // Fix: Removed the import of the IconSparkles component because it cannot be passed as a URL.
@@ -222,6 +221,7 @@ export const exportDashboardToPDF = async (
     const expandedButtons: HTMLButtonElement[] = [];
 
     try {
+        const { jsPDF } = await import('jspdf/dist/jspdf.es.min.js');
         onProgressUpdate('Initializing PDF export...');
         const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
         const pdfWidth = pdf.internal.pageSize.getWidth();
